@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resumen de compra — Overshark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="app-header">
+      <div class="app-icon" aria-hidden="true">🚚</div>
+      <div class="app-header-text">
+        <h1>Resumen de compra</h1>
+        <p>Elige el tipo de env&iacute;o y los productos. El texto se genera solo &mdash; solo c&oacute;pialo al chat.</p>
+      </div>
+    </header>
+
+
+    <div class="tabs-wrap">
+      <div id="wrap-tabs-overshark" class="tabs" role="tablist" aria-label="Overshark — tipo de envío">
+        <button type="button" role="tab" id="tab-prov" aria-selected="true" aria-controls="panel-prov">📦 Provincia (Shalom)</button>
+        <button type="button" role="tab" id="tab-lima" aria-selected="false" aria-controls="panel-lima">🏍️ Delivery Lima</button>
+        <button type="button" role="tab" id="tab-almacen" aria-selected="false" aria-controls="panel-almacen">🏭 Recojo almacén</button>
+      </div>
+      <button type="button" id="btn-borrar-todo" class="btn btn-borrar-todo" title="Borra todos los datos de golpe">🗑 Borrar todo</button>
+    </div>
+
+    <div id="panel-prov" class="panel active" role="tabpanel" aria-labelledby="tab-prov">
+      <div class="cliente-panel-head">
+        <h2>Datos provincia &mdash; Shalom</h2>
+      </div>
+      <label for="p-nombre">Nombre completo</label>
+      <input id="p-nombre" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+      <label for="p-celular">Celular</label>
+      <div class="field-wrap">
+        <input id="p-celular" type="tel" autocomplete="tel" placeholder="9xxxxxxxx" />
+        <div class="field-msg" id="p-celular-msg"></div>
+      </div>
+      <label for="p-dni">Número DNI</label>
+      <div class="field-wrap">
+        <input id="p-dni" type="text" inputmode="numeric" placeholder="12345678" />
+        <div class="field-msg" id="p-dni-msg"></div>
+      </div>
+      <label for="p-provincia">Departamento</label>
+      <input id="p-provincia" type="text" placeholder="Ej. La Libertad" />
+      <label for="p-depto">Provincia</label>
+      <input id="p-depto" type="text" placeholder="Ej. Trujillo" />
+      <label for="p-sede">Sede Shalom — busca por distrito, provincia o dirección</label>
+      <div class="sede-wrap" data-scope="p">
+        <div class="sede-row">
+          <input id="p-sede" class="sede-input" type="text" value="Shalom" placeholder="Escribe para buscar sedes…" autocomplete="off" />
+          <button type="button" class="btn btn-secondary sede-clear" title="Restablecer">↺</button>
+        </div>
+        <div class="sede-drop" role="listbox" aria-label="Sedes Shalom"></div>
+        <p class="sede-hint">Busca por <strong>distrito</strong>, <strong>provincia</strong>, <strong>departamento</strong> o <strong>dirección</strong>. Al elegir, se completan los campos arriba automáticamente.</p>
+      </div>
+    </div>
+
+    <div id="panel-lima" class="panel" role="tabpanel" aria-labelledby="tab-lima" hidden>
+      <div class="cliente-panel-head">
+        <h2>Delivery Lima</h2>
+      </div>
+      <label for="l-nombre">Nombre completo</label>
+      <input id="l-nombre" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+      <label for="l-celular">Número celular</label>
+      <div class="field-wrap">
+        <input id="l-celular" type="tel" autocomplete="tel" placeholder="9xxxxxxxx" />
+        <div class="field-msg" id="l-celular-msg"></div>
+      </div>
+      <label for="l-dni">DNI</label>
+      <div class="field-wrap">
+        <input id="l-dni" type="text" inputmode="numeric" placeholder="12345678" />
+        <div class="field-msg" id="l-dni-msg"></div>
+      </div>
+      <label for="l-ubicacion">Ubicación en tiempo real (mandar)</label>
+      <input id="l-ubicacion" type="text" placeholder="Link o referencia de ubicación" />
+      <div id="l-cob-badge" class="cob-badge" aria-live="polite">
+        <span class="cob-badge-icon"></span>
+        <div class="cob-badge-text">
+          <div class="cob-badge-msg"></div>
+          <div class="cob-badge-sub"></div>
+        </div>
+      </div>
+      <label for="l-distrito">Distrito</label>
+      <div class="dist-wrap" style="display: flex; gap: 0.5rem; align-items: stretch;">
+        <div style="position:relative; flex:1;">
+          <input id="l-distrito" type="text" placeholder="Escribe para buscar distrito..." autocomplete="off" />
+          <div class="dist-drop" id="l-distrito-drop" role="listbox"></div>
+        </div>
+        <button type="button" class="btn" id="btn-detect-ip" title="Detectar distrito por IP" style="padding: 0 0.8rem; flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border); color: var(--text2);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="panel-almacen" class="panel" role="tabpanel" aria-labelledby="tab-almacen" hidden>
+      <div class="cliente-panel-head">
+        <h2>Recojo en almacén</h2>
+      </div>
+      <label for="a-nombre">Nombre completo</label>
+      <input id="a-nombre" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+      <label for="a-celular">Número celular</label>
+      <div class="field-wrap">
+        <input id="a-celular" type="tel" autocomplete="tel" placeholder="9xxxxxxxx" />
+        <div class="field-msg" id="a-celular-msg"></div>
+      </div>
+      <label for="a-dni">DNI</label>
+      <div class="field-wrap">
+        <input id="a-dni" type="text" inputmode="numeric" placeholder="12345678" />
+        <div class="field-msg" id="a-dni-msg"></div>
+      </div>
+    </div>
+
+
+
+    <div id="panel-cuenta" class="panel always">
+      <div class="cliente-panel-head">
+        <h2>Cuenta</h2>
+      </div>
+      <div class="cuenta-grid">
+        <div class="cuenta-caja" role="group" aria-labelledby="cuenta-titulo-pago">
+          <div class="cuenta-caja-titulo" id="cuenta-titulo-pago">Pago</div>
+          <div class="cuenta-caja-cuerpo">
+            <div class="cuenta-options">
+              <label class="choice" for="cuenta-contra">
+                <input type="radio" name="cuenta-tipo" id="cuenta-contra" value="contra" checked />
+                Contra entrega
+              </label>
+              <label class="choice" for="cuenta-completo">
+                <input type="radio" name="cuenta-tipo" id="cuenta-completo" value="completo" />
+                Pago completo
+              </label>
+            </div>
+            <label class="cuenta-tras-radios" for="cuenta-pago">Cuánto pagó</label>
+            <input id="cuenta-pago" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej. 30 o S/ 30" />
+          </div>
+        </div>
+        <div class="cuenta-caja" role="group" aria-labelledby="cuenta-titulo-debe">
+          <div class="cuenta-caja-titulo" id="cuenta-titulo-debe">Debe</div>
+          <div class="cuenta-caja-cuerpo">
+            <label for="cuenta-debe">Cuánto debe</label>
+            <input id="cuenta-debe" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej. 120, 89.90 o S/ 150" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <datalist id="lista-polos-overshark"></datalist>
+    <datalist id="lista-polos-bravos"></datalist>
+
+    <div class="panel always">
+      <div class="products-header">
+        <h2 id="productos-titulo">Productos Overshark</h2>
+        <div class="products-header-btns">
+          <input type="text" id="custom-combo-name" placeholder="Nombre de promo (opcional)" title="Puedes editar este texto que aparecerá en el resumen y excel" style="padding: .5rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: .8rem; outline: none; width: 220px;" />
+          <select id="promo-select" style="padding: .5rem; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: .8rem; outline: none; cursor: pointer; max-width: 190px;">
+            <option value="" data-combo="">Cargar Promoción...</option>
+            <option value="pique_5_99" data-combo="CAMISERO PIQUE 5 X 99">Camisero Pique 5x99</option>
+            <option value="wafle_cam_4_99" data-combo="CAMISERO WAFLE 4 X 99">Camisero Wafle 4x99</option>
+            <option value="clasico_10_99" data-combo="CLÁSICO JERSEY 9 X 99 + 1 REGALO">Clásico Jersey 9x99 + 1 de regalo</option>
+            <option value="wafle_6_99" data-combo="MANGA CORTA WAFLE 5 X 99 + 1 REGALO">Manga corta Wafle 5x99 + 1 de regalo</option>
+            <option value="ml_wafle_4_99" data-combo="MANGALARGA WAFLE 4 X 99">Mangalarga Wafle 4x99</option>
+            <option value="ml_jersey_7_99" data-combo="MANGALARGA JERSEY 7 X 99">Mangalarga Jersey 7x99</option>
+            <option value="camisa_wafle_3_99" data-combo="CAMISA WAFLE 3 X 99">Camisa Wafle 3x99 soles</option>
+            <option value="mixtura" data-combo="PROMOCIÓN MIXTURA 6 X 99">Promoción Mixtura</option>
+            <option value="bellaca" data-combo="PROMOCIÓN BELLACA 6 X 99">Promoción Bellaca (6x99)</option>
+            <option value="flow" data-combo="PROMOCIÓN FLOW 7 X 99">Promoción Flow (7x99)</option>
+            <option value="salvaje" data-combo="PROMOCIÓN SALVAJE 6 X 99">Promoción Salvaje (6x99)</option>
+            <option value="baby_7_99" data-combo="BABY TEE 7 X 99">Baby tee 7x99</option>
+            <option value="baby_3_50" data-combo="BABY TEE 3 X 50">Baby tee 3x50</option>
+          </select>
+          <button type="button" class="btn btn-ghost" id="add-product">+ Añadir producto</button>
+        </div>
+      </div>
+      <p class="hint" id="productos-hint">Catálogo <strong>Overshark</strong> (polos). Producto y talla; si hay cuadros de color, cada color es una fila con cantidad.</p>
+      <div id="products-list"></div>
+    </div>
+
+    <div class="panel always">
+      <div class="cliente-panel-head">
+        <h2>📋 Texto para copiar</h2>
+      </div>
+      <textarea id="output" readonly spellcheck="false" aria-label="Texto generado"></textarea>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btn-copy">📋 Copiar al portapapeles</button>
+        <button type="button" class="btn btn-secondary" id="btn-refresh">↺ Actualizar texto</button>
+      </div>
+    </div>
+
+    <div class="panel always">
+      <div class="cliente-panel-head">
+        <h2>🧾 Planilla de ventas</h2>
+        <div class="cliente-panel-actions">
+          <button type="button" class="btn btn-primary" id="btn-push-sheet" title="Llena la siguiente fila vacía con los datos de la venta actual (arriba)">➕ Añadir venta a fila</button>
+          <button type="button" class="btn btn-secondary" id="btn-export-sheet-pdf" title="Exportar planilla completa en una sola hoja PDF">🖨️ Exportar PDF (1 hoja)</button>
+        </div>
+      </div>
+      <p class="hint">Usa <strong>Añadir venta a fila</strong> para pasar la venta actual a la siguiente fila libre. El formato sigue tu hoja escaneada.</p>
+
+      <div id="sales-sheet-export" aria-label="Zona para exportar a PDF">
+      <div class="sheet-wrap" aria-label="Planilla principal">
+        <table class="sales-sheet" aria-label="Planilla diaria de ventas">
+          <thead>
+            <tr>
+              <th class="col-n" rowspan="2">N°</th>
+              <th class="col-cel" rowspan="2">CELULAR</th>
+              <th class="col-nom" rowspan="2">NOMBRES</th>
+              <th class="col-dni" rowspan="2">DNI</th>
+              <th class="col-metodo" rowspan="2">MÉTODO<br>DE PAGO</th>
+              <th class="col-hora" rowspan="2">HORA</th>
+              <th class="col-ftiq" rowspan="2">ETIQ.</th>
+              <th class="col-for" rowspan="2">FOR.</th>
+              <th class="col-sis" rowspan="2">SIS.</th>
+              <th class="col-cod" rowspan="2">CÓDIGO<br>PUBLICIDAD</th>
+              <th class="col-marca" rowspan="2">MARCA</th>
+              <th class="col-lima" rowspan="2">LIMA</th>
+              <th class="col-prov" rowspan="2">PROV</th>
+              <th colspan="2">CONTRA ENTREGA</th>
+              <th class="col-pago-completo" rowspan="2">PAGO COMPLETO</th>
+              <th class="col-combo" rowspan="2">TIPO DE COMBO</th>
+            </tr>
+            <tr>
+              <th class="col-separo">SEPARO</th>
+              <th class="col-resta">RESTA</th>
+            </tr>
+          </thead>
+          <tbody id="sales-sheet-body"></tbody>
+        </table>
+      </div>
+
+      <div class="sheet-footer-wrap" aria-label="Datos adicionales de planilla">
+        <table class="sheet-footer" aria-label="Datos adicionales">
+          <thead>
+            <tr>
+              <th class="f-cel">CELULAR DE VENTA</th>
+              <th class="f-vend">VENDEDOR</th>
+              <th class="f-firma">FIRMA</th>
+              <th class="f-fecha">FECHA</th>
+              <th class="f-obs">OBSERVACIÓN / SUGERENCIAS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="f-cel" contenteditable="true"></td>
+              <td class="f-vend" contenteditable="true"></td>
+              <td class="f-firma" contenteditable="true"></td>
+              <td class="f-fecha" contenteditable="true"></td>
+              <td class="f-obs" contenteditable="true"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status">Copiado</div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  
+
+  
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+<script src="script.js"></script>
+</body>
+</html>
