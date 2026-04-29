@@ -3,6 +3,15 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText } from 'lucide-react';
 
+const abrevMetodo = (m: string) => {
+  if (!m) return 'I.T';
+  const l = m.toLowerCase();
+  if (l.includes('yape') || l.includes('import')) return 'I.T';
+  if (l.includes('completo')) return 'P.C';
+  if (l.includes('contra')) return 'C.E';
+  return m.slice(0, 4).toUpperCase();
+};
+
 export default function PlanillaPanel({ sales }: { sales: any[] }) {
   const [exporting, setExporting] = useState(false);
 
@@ -181,7 +190,7 @@ export default function PlanillaPanel({ sales }: { sales: any[] }) {
                   <td contentEditable suppressContentEditableWarning>{sale.cel}</td>
                   <td contentEditable suppressContentEditableWarning>{sale.nom}</td>
                   <td contentEditable suppressContentEditableWarning>{sale.dni}</td>
-                  <td contentEditable suppressContentEditableWarning>I.T</td>
+                  <td contentEditable suppressContentEditableWarning>{abrevMetodo(sale.metodoPago)}</td>
                   <td contentEditable suppressContentEditableWarning>{sale.hora}</td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>

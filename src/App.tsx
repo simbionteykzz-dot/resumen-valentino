@@ -76,13 +76,8 @@ export default function App() {
         products:         productRows,
       };
       try {
-        const body = new URLSearchParams({ data: JSON.stringify(payload) });
-        await fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString()
-        });
+        const getUrl = `${url}?data=${encodeURIComponent(JSON.stringify(payload))}`;
+        await fetch(getUrl, { method: 'GET', mode: 'no-cors' });
         setSheetsStatus('ok');
       } catch {
         setSheetsStatus('error');
