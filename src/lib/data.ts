@@ -43,23 +43,27 @@ export const ENVIO_PROVINCIA_SOLES = 12;
 export const ENVIO_LIMA_SOLES = 14;
 
 export const PROMOS_DATA: Record<string, {name: string, comboData: string, price: number, list: {n: string, q: number}[]}> = {
-  "pique_5_99": { name: "Camisero Pique 5x99", comboData: "CAMISERO PIQUE 5 X 99", price: 99, list: [{n:"CAMISERO PIKE", q:5}] },
-  "wafle_cam_4_99": { name: "Camisero Wafle 4x99", comboData: "CAMISERO WAFLE 4 X 99", price: 99, list: [{n:"WAFFLE CAMISERO", q:4}] },
-  "clasico_10_99": { name: "Clásico Jersey 9x99 + 1 de regalo", comboData: "CLÁSICO JERSEY 9 X 99 + 1 REGALO", price: 99, list: [{n:"CLASICO", q:10}] },
-  "wafle_6_99": { name: "Manga corta Wafle 5x99 + 1 de regalo", comboData: "MANGA CORTA WAFLE 5 X 99 + 1 REGALO", price: 99, list: [{n:"WAFFLE", q:6}] },
-  "ml_wafle_4_99": { name: "Mangalarga Wafle 4x99", comboData: "MANGALARGA WAFLE 4 X 99", price: 99, list: [{n:"WAFFLE MANGA LARGA", q:4}] },
-  "ml_jersey_7_99": { name: "Mangalarga Jersey 7x99", comboData: "MANGALARGA JERSEY 7 X 99", price: 99, list: [{n:"JERSEY MANGA LARGA", q:7}] },
-  "camisa_wafle_3_99": { name: "Camisa Wafle 3x99 soles", comboData: "CAMISA WAFLE 3 X 99", price: 99, list: [{n:"CAMISA WAFFLE", q:3}] },
-  "mixtura": { name: "Promoción Mixtura", comboData: "PROMOCIÓN MIXTURA 6 X 99", price: 99, list: [{n:"CLASICO", q:2}, {n:"WAFFLE", q:2}, {n:"CAMISERO PIKE", q:2}] },
-  "bellaca": { name: "Promoción Bellaca (6x99)", comboData: "PROMOCIÓN BELLACA 6 X 99", price: 99, list: [{n:"CLASICO", q:3}, {n:"WAFFLE", q:1}, {n:"CAMISERO PIKE", q:1}, {n:"WAFFLE MANGA LARGA", q:1}] },
-  "flow": { name: "Promoción Flow (7x99)", comboData: "PROMOCIÓN FLOW 7 X 99", price: 99, list: [{n:"CLASICO", q:5}, {n:"CAMISERO PIKE", q:2}] },
-  "salvaje": { name: "Promoción Salvaje (6x99)", comboData: "PROMOCIÓN SALVAJE 6 X 99", price: 99, list: [{n:"WAFFLE CAMISERO", q:2}, {n:"CLASICO", q:4}] },
-  "baby_7_99": { name: "Baby tee 7x99", comboData: "BABY TEE 7 X 99", price: 99, list: [{n:"BABY TY", q:7}] },
-  "baby_3_50": { name: "Baby tee 3x50", comboData: "BABY TEE 3 X 50", price: 50, list: [{n:"BABY TY", q:3}] },
-  "wafle_clasico_6_99": { name: "Wafle Clásico 6x99", comboData: "WAFLE CLASICO 6 X 99", price: 99, list: [{n:"WAFFLE", q:6}] },
-  "clasicos_10_99": { name: "Clásicos 10x99", comboData: "CLASICOS 10 X 99", price: 99, list: [{n:"CLASICO", q:10}] },
-  "notch_pique_5_99": { name: "Cuello Notch Pique 5x99", comboData: "CUELLO NOTCH PIQUE 5 X 99", price: 99, list: [{n:"CUELLO NOTCH PIQUE", q:5}] },
-  "notch_wafle_4_99": { name: "Cuello Notch Wafle 4x99", comboData: "CUELLO NOTCH WAFLE 4 X 99", price: 99, list: [{n:"CUELLO NOTCH WAFLE", q:4}] }
+  // Promos individuales por modelo
+  "pique_5_99":        { name: "Camisero Pique 5×99",      comboData: "CAMISERO PIQUE 5 X 99",      price: 99, list: [{n:"CAMISERO PIKE",      q:5}] },
+  "wafle_cam_4_99":    { name: "Camisero Wafle 4×99",      comboData: "CAMISERO WAFLE 4 X 99",      price: 99, list: [{n:"WAFFLE CAMISERO",    q:4}] },
+  "clasico_10_99":     { name: "Clásico 10×99",            comboData: "CLASICO 10 X 99",            price: 99, list: [{n:"CLASICO",            q:10}] },
+  "wafle_6_99":        { name: "Manga corta Wafle 6×99",   comboData: "MANGA CORTA WAFLE 6 X 99",   price: 99, list: [{n:"WAFFLE",            q:6}] },
+  "ml_wafle_4_99":     { name: "Mangalarga Wafle 4×99",    comboData: "MANGALARGA WAFLE 4 X 99",    price: 99, list: [{n:"WAFFLE MANGA LARGA", q:4}] },
+  "ml_jersey_7_99":    { name: "Mangalarga Jersey 7×99",   comboData: "MANGALARGA JERSEY 7 X 99",   price: 99, list: [{n:"JERSEY MANGA LARGA", q:7}] },
+  "camisa_wafle_3_99": { name: "Camisa Wafle 3×99",        comboData: "CAMISA WAFLE 3 X 99",        price: 99, list: [{n:"CAMISA WAFFLE",      q:3}] },
+  // Baby Ty (ambos modelos)
+  "baby_ty_7_99":        { name: "Baby Ty 7×99",           comboData: "BABY TY 7 X 99",            price: 99, list: [{n:"BABY TY",           q:7}] },
+  "baby_ty_manga_7_99":  { name: "Baby Ty Manga 7×99",     comboData: "BABY TY MANGA 7 X 99",      price: 99, list: [{n:"BABY TY MANGA",     q:7}] },
+  "baby_ty_3_50":        { name: "Baby Ty 3×50",           comboData: "BABY TY 3 X 50",            price: 50, list: [{n:"BABY TY",           q:3}] },
+  "baby_ty_manga_3_50":  { name: "Baby Ty Manga 3×50",     comboData: "BABY TY MANGA 3 X 50",      price: 50, list: [{n:"BABY TY MANGA",     q:3}] },
+  // Promociones mixtas
+  "mixtura": { name: "Promoción Mixtura 6×99",  comboData: "PROMOCIÓN MIXTURA 6 X 99",  price: 99, list: [{n:"CAMISERO JERSEY", q:2}, {n:"WAFFLE", q:2}, {n:"CAMISERO PIKE", q:2}] },
+  "bellaca":  { name: "Promoción Bellaca 6×99", comboData: "PROMOCIÓN BELLACA 6 X 99",  price: 99, list: [{n:"CLASICO", q:3}, {n:"WAFFLE", q:1}, {n:"CAMISERO PIKE", q:1}, {n:"WAFFLE MANGA LARGA", q:1}] },
+  "flow":     { name: "Promoción Flow 7×99",    comboData: "PROMOCIÓN FLOW 7 X 99",     price: 99, list: [{n:"CLASICO", q:5}, {n:"CAMISERO PIKE", q:2}] },
+  "salvaje":  { name: "Promoción Salvaje 6×99", comboData: "PROMOCIÓN SALVAJE 6 X 99",  price: 99, list: [{n:"WAFFLE CAMISERO", q:2}, {n:"CLASICO", q:4}] },
+  // Cuello Notch
+  "notch_pique_5_99": { name: "Cuello Notch Pique 5×99", comboData: "CUELLO NOTCH PIQUE 5 X 99", price: 99, list: [{n:"CUELLO NOTCH PIQUE", q:5}] },
+  "notch_wafle_4_99": { name: "Cuello Notch Wafle 4×99", comboData: "CUELLO NOTCH WAFLE 4 X 99", price: 99, list: [{n:"CUELLO NOTCH WAFLE", q:4}] },
 };
 
 export const DISTRITOS = [

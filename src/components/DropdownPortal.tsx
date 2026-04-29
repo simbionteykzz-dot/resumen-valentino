@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 
 interface DropdownPortalProps {
   isOpen: boolean;
-  anchorRef: React.RefObject<HTMLElement>;
+  anchorRef: React.RefObject<HTMLElement | null>;
   onClose: () => void;
   children: React.ReactNode;
   className?: string;

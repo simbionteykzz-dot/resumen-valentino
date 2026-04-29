@@ -25,6 +25,8 @@ export default function App() {
   const [customComboName, setCustomComboName] = useState("");
   const [sales, setSales] = useState<any[]>([]);
   const [promoPrice, setPromoPrice] = useState<string | number>("");
+  const [sheetsWebhookUrl, setSheetsWebhookUrl] = useState(() => localStorage.getItem('sheets_webhook_url') || '');
+  const [sheetsStatus, setSheetsStatus] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
 
   const handleClientChange = (field: keyof ClientData, value: string) => {
     setClientData(prev => ({ ...prev, [field]: value }));
@@ -42,6 +44,90 @@ export default function App() {
     setPromoPrice("");
   };
 
+  const sendToSheets = async (saleData: any, prods: any[]) => {
+    const url = sheetsWebhookUrl.trim();
+    if (!url) return;
+    setSheetsStatus('sending');
+
+    const productRows = prods.map((p: any) => {
+      const qty = p.colorLines?.length > 0
+        ? p.colorLines.reduce((s: number, cl: any) => s + cl.qty, 0)
+        : p.qty;
+      const price = p.promoPricePerUnit != null
+        ? Math.round(p.promoPricePerUnit * qty * 100) / 100
+        : (POL_PRECIOS_OVERSHARK[p.name] || 0) * qty;
+      return { name: p.name.toUpperCase(), qty, price };
+    });
+
+    const limaOProv = saleData.limaMark === 'X' ? 'LIMA' : saleData.provMark === 'X' ? 'PROVINCIA' : 'ALMACEN';
+    const isAppsScript = url.includes('script.google.com');
+
+    if (isAppsScript) {
+      const payload = {
+        celular:          saleData.cel || '',
+        nombre:           saleData.nom || '',
+        dni:              saleData.dni || '',
+        limaOProv,
+        total:            saleData.totalTotal || '',
+        debe:             saleData.resta  || '',
+        separo:           saleData.separo || '',
+        metodoPago:       saleData.metodoPago || '',
+        codigoPublicidad: saleData.codigoPublicidad || '',
+        products:         productRows,
+      };
+      try {
+        const body = new URLSearchParams({ data: JSON.stringify(payload) });
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+        setSheetsStatus('ok');
+      } catch {
+        setSheetsStatus('error');
+      }
+    } else {
+      const now = new Date();
+      const fechaStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+      const row: Record<string, any> = {
+        "Marca temporal":       fechaStr,
+        "EMPRESA":              "OVERSHARK",
+        "VENDEDOR":             "VALENTINO",
+        "CELULAR":              saleData.cel || '',
+        "NUMERO DE CELULAR":    saleData.cel || '',
+        "LIMA O PROVINCIA":     limaOProv,
+        "NOMBRE DE CLIENTE":    saleData.nom || '',
+        "DNI":                  saleData.dni || '',
+        "MONTO TOTAL":          saleData.totalTotal || '',
+        "A CUENTA (DEBE)":      saleData.resta  || '',
+        "SEPARO":               saleData.separo || '',
+        "METODO DE PAGO":       saleData.metodoPago || '',
+        "CUENTA DE ABONO":      "OTRO",
+        "CODIGO DE PUBLICIDAD": saleData.codigoPublicidad || '',
+        "ESTADO DE PEDIDO":     "PENDIENTE",
+      };
+      const slots = Math.min(productRows.length, 3);
+      for (let i = 0; i < slots; i++) {
+        row[`PRODUCTO (${i + 1})`] = productRows[i].name;
+        row[`CANTIDAD (${i + 1})`] = productRows[i].qty;
+        row[`PRECIO (${i + 1})`]   = productRows[i].price;
+      }
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ data: [row] })
+        });
+        setSheetsStatus(res.ok ? 'ok' : 'error');
+      } catch {
+        setSheetsStatus('error');
+      }
+    }
+
+    setTimeout(() => setSheetsStatus('idle'), 3000);
+  };
+
   const getShippingCost = () => {
     if (tab === 'prov') return ENVIO_PROVINCIA_SOLES;
     if (tab === 'lima') return ENVIO_LIMA_SOLES;
@@ -50,28 +136,24 @@ export default function App() {
 
   const sumCatalogPolosSoles = () => {
     let sum = 0;
-    let hasComboOverride = promoPrice !== "" && Number(promoPrice) > 0;
-    let comboMonto = hasComboOverride ? Number(promoPrice) : 0;
 
     products.forEach(p => {
-      // Si el producto pertenece a un combo importado, su precio ya pre-existe en comboMonto
-      if (hasComboOverride && p.promoName !== "" && p.promoName != null) {
-        return;
-      }
+      const qty = p.colorLines && p.colorLines.length > 0
+        ? p.colorLines.reduce((s: number, cl: any) => s + cl.qty, 0)
+        : p.qty;
 
-      const tl = p.name.trim().toLowerCase();
-      const canon = Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
-      let unit = canon && POL_PRECIOS_OVERSHARK[canon] != null ? Number(POL_PRECIOS_OVERSHARK[canon]) : 0;
-      if (isNaN(unit) || unit < 0) unit = 0;
-
-      if (p.colorLines && p.colorLines.length > 0) {
-        p.colorLines.forEach((cl: any) => sum += unit * cl.qty);
+      if (p.promoName && p.promoPricePerUnit != null) {
+        sum += p.promoPricePerUnit * qty;
       } else {
-        sum += unit * p.qty;
+        const tl = p.name.trim().toLowerCase();
+        const canon = Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
+        let unit = canon && POL_PRECIOS_OVERSHARK[canon] != null ? Number(POL_PRECIOS_OVERSHARK[canon]) : 0;
+        if (isNaN(unit) || unit < 0) unit = 0;
+        sum += unit * qty;
       }
     });
 
-    return Math.round((comboMonto + sum) * 100) / 100;
+    return Math.round(sum * 100) / 100;
   };
 
   const parseMoneyPE = (raw: string) => {
@@ -92,25 +174,23 @@ export default function App() {
   const totalPagar = calcularTotalPagar();
 
   useEffect(() => {
-    if (cuentaData.tipo === 'completo') {
+    if (cuentaData.tipo === 'completo' || cuentaData.tipo === 'yape') {
       setCuentaData(prev => ({ ...prev, debe: "0" }));
-    } else {
-      if (cuentaData.pago && totalPagar > 0) {
-        const pagoN = parseMoneyPE(cuentaData.pago);
-        if (!isNaN(pagoN)) {
-          let d = totalPagar - pagoN;
-          setCuentaData(prev => ({ ...prev, debe: (d < 0 ? 0 : d).toString() }));
-        }
-      } else if (!cuentaData.pago && products.length > 0) {
-        setCuentaData(prev => ({ ...prev, debe: totalPagar.toString() }));
-      } else if (products.length === 0) {
-        setCuentaData(prev => ({ ...prev, debe: "" }));
+    } else if (cuentaData.pago && totalPagar > 0) {
+      const pagoN = parseMoneyPE(cuentaData.pago);
+      if (!isNaN(pagoN)) {
+        let d = totalPagar - pagoN;
+        setCuentaData(prev => ({ ...prev, debe: (d < 0 ? 0 : d).toString() }));
       }
+    } else if (!cuentaData.pago && products.length > 0) {
+      setCuentaData(prev => ({ ...prev, debe: totalPagar.toString() }));
+    } else if (products.length === 0) {
+      setCuentaData(prev => ({ ...prev, debe: "" }));
     }
   }, [products, promoPrice, tab, cuentaData.pago, cuentaData.tipo]);
 
   const buildCuentaBlock = () => {
-    const texto = cuentaData.tipo === 'contra' ? "Contra entrega" : "Pago completo";
+    const texto = cuentaData.tipo === 'contra' ? "Contra entrega" : cuentaData.tipo === 'yape' ? "Yape Import Textil" : "Pago completo";
     const shippingValue = tab === 'prov' ? ENVIO_PROVINCIA_SOLES : (tab === 'lima' ? ENVIO_LIMA_SOLES : 0);
     const shippingStr = shippingValue > 0 ? `\nEnvio: ${shippingValue}` : "";
 
@@ -249,22 +329,21 @@ export default function App() {
     if (totalQty < 1) return "";
     if (customComboName.trim() !== "") return `${totalQty} ${customComboName.trim()}`;
 
-    const namesStr = orderedNames.join(" ");
+    const toInitials = (name: string) => name.split(" ").map((w: string) => w[0]).join("");
+    const initialsStr = orderedNames.map(toInitials).join(" ");
+
     if (tab === 'lima') {
-      let outLima = `${totalQty} ${namesStr}`.trim();
+      let outLima = `${totalQty} ${initialsStr}`.trim();
       return outLima.length > 320 ? outLima.slice(0, 317) + "..." : outLima;
     }
 
-    const env = getShippingCost();
     const catSum = sumCatalogPolosSoles();
     const base = catSum > 0 ? catSum : 0;
-    let net = base > 0 ? Math.round((base - env) * 100) / 100 : 0;
-    if (net < 0) net = 0;
 
     let priceStr = "";
-    if (base > 0) priceStr = net % 1 === 0 ? String(Math.round(net)) : net.toFixed(2);
+    if (base > 0) priceStr = base % 1 === 0 ? String(Math.round(base)) : base.toFixed(2);
 
-    let out = `${namesStr}    ${totalQty}${priceStr !== "" ? " X " + priceStr : ""}`;
+    let out = `${totalQty}${priceStr !== "" ? " X " + priceStr : ""} ${initialsStr}`.trim();
     return out.length > 320 ? out.slice(0, 317) + "..." : out;
   };
 
@@ -282,7 +361,7 @@ export default function App() {
       }
     });
 
-    const isCompleto = cuentaData.tipo === 'completo';
+    const isCompleto = cuentaData.tipo === 'completo' || cuentaData.tipo === 'yape';
     const newSale = {
       cel: clientData.celular,
       nom: clientData.nombre,
@@ -295,25 +374,40 @@ export default function App() {
       separo: isCompleto ? "" : cuentaData.pago,
       resta: isCompleto ? "" : cuentaData.debe,
       pagoCompletoTxt: isCompleto ? totalPagar.toString() : "",
+      metodoPago: cuentaData.tipo === 'contra' ? 'Contra entrega' : cuentaData.tipo === 'yape' ? 'Yape Import Textil' : 'Pago completo',
       combo: formatTipoComboSheet(),
       qtyN: totalQty,
       totalTotal: totalPagar
     };
 
     setSales([...sales, newSale]);
+    sendToSheets(newSale, products);
   };
 
   return (
-    <div className="wrap" style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <header className="app-header" style={{ marginBottom: '2rem', padding: '1rem', background: '#080d12', borderRadius: '12px', border: '1px solid #1a2733', display: 'flex', alignItems: 'center' }}>
-        <div className="app-icon" aria-hidden="true" style={{ background: 'linear-gradient(135deg, #00e696, #00a36b)', borderRadius: '12px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1rem', color: '#000' }}><Truck size={24} /></div>
-        <div className="app-header-text">
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0 }}>Resumen de compra</h1>
-          <p style={{ color: '#638d99', fontSize: '0.9rem', margin: 0 }}>Elige el tipo de envío y los productos. El texto se genera solo — solo cópialo al chat.</p>
+    <div className="wrap" style={{ maxWidth: '1140px', margin: '0 auto' }}>
+      <header className="app-header" style={{ marginBottom: '1.5rem', padding: '1.1rem 1.5rem', background: 'linear-gradient(135deg, #100c08, #1a1208)', borderRadius: '14px', border: '1px solid #2a1f14', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(255,107,0,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="app-icon" aria-hidden="true" style={{ background: 'linear-gradient(135deg, #ff6b00, #e05500)', borderRadius: '12px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0, boxShadow: '0 4px 16px rgba(255,107,0,0.35)' }}><Truck size={22} /></div>
+          <div>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>OVERSHARK <span style={{ color: '#ff6b00' }}>Ventas</span></h1>
+            <p style={{ color: '#a08060', fontSize: '0.82rem', margin: 0 }}>Genera el resumen y registra la venta al instante</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ventas hoy</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ff6b00', lineHeight: 1 }}>{sales.length}</div>
+          </div>
+          <div style={{ width: '1px', height: '2.5rem', background: '#2a1f14' }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total S/</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{sales.reduce((a: number, s: any) => a + (Number(s.totalTotal) || 0), 0).toFixed(0)}</div>
+          </div>
         </div>
       </header>
 
-      <div className="tabs-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border2)', paddingBottom: '1rem' }}>
+      <div className="tabs-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border2)', paddingBottom: '1rem' }}>
         <div className="tabs" style={{ display: 'flex', gap: '4px', background: 'var(--surface2)', borderRadius: '40px', padding: '6px', border: '1px solid var(--surface3)' }}>
           <button 
             style={{ 
@@ -321,8 +415,8 @@ export default function App() {
               padding: '0.6rem 1.5rem', 
               fontSize: '0.85rem', 
               fontWeight: 700, 
-              background: tab === 'prov' ? 'var(--accent)' : 'transparent', 
-              color: tab === 'prov' ? '#000' : 'var(--muted)', 
+              background: tab === 'prov' ? 'var(--accent)' : 'transparent',
+              color: tab === 'prov' ? '#fff' : 'var(--muted)',
               border: 'none', 
               cursor: 'pointer', 
               display: 'flex', 
@@ -341,8 +435,8 @@ export default function App() {
               padding: '0.6rem 1.5rem', 
               fontSize: '0.85rem', 
               fontWeight: 700, 
-              background: tab === 'lima' ? 'var(--accent)' : 'transparent', 
-              color: tab === 'lima' ? '#000' : 'var(--muted)', 
+              background: tab === 'lima' ? 'var(--accent)' : 'transparent',
+              color: tab === 'lima' ? '#fff' : 'var(--muted)',
               border: 'none', 
               cursor: 'pointer', 
               display: 'flex', 
@@ -361,8 +455,8 @@ export default function App() {
               padding: '0.6rem 1.5rem', 
               fontSize: '0.85rem', 
               fontWeight: 700, 
-              background: tab === 'almacen' ? 'var(--accent)' : 'transparent', 
-              color: tab === 'almacen' ? '#000' : 'var(--muted)', 
+              background: tab === 'almacen' ? 'var(--accent)' : 'transparent',
+              color: tab === 'almacen' ? '#fff' : 'var(--muted)',
               border: 'none', 
               cursor: 'pointer', 
               display: 'flex', 
@@ -397,20 +491,40 @@ export default function App() {
         </button>
       </div>
 
-      <ClientePanel tab={tab} data={clientData} onChange={handleClientChange} />
-      
-      <CuentaPanel data={cuentaData} onChange={handleCuentaChange} totalPagar={totalPagar} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.45fr)', gap: '1.25rem', alignItems: 'start' }}>
+        <div>
+          <ClientePanel tab={tab} data={clientData} onChange={handleClientChange} />
+          <CuentaPanel data={cuentaData} onChange={handleCuentaChange} totalPagar={totalPagar} />
+        </div>
+        <div>
+          <ProductosPanel
+            products={products}
+            setProducts={setProducts}
+            customComboName={customComboName}
+            setCustomComboName={setCustomComboName}
+            promoPrice={promoPrice}
+            setPromoPrice={setPromoPrice}
+          />
+          <OutputPanel outputText={outputStr} onAddSale={pushSale} clientCelular={clientData.celular} />
+        </div>
+      </div>
 
-      <ProductosPanel 
-        products={products} 
-        setProducts={setProducts} 
-        customComboName={customComboName} 
-        setCustomComboName={setCustomComboName} 
-        promoPrice={promoPrice}
-        setPromoPrice={setPromoPrice}
-      />
-
-      <OutputPanel outputText={outputStr} onRefresh={() => {}} onAddSale={pushSale} />
+      {/* Google Sheets webhook config */}
+      <div style={{ marginTop: '1.25rem', background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+          Google Sheets
+        </span>
+        <input
+          placeholder="URL Apps Script o SheetDB..."
+          value={sheetsWebhookUrl}
+          onChange={e => { setSheetsWebhookUrl(e.target.value); localStorage.setItem('sheets_webhook_url', e.target.value); }}
+          className="form-input"
+          style={{ flex: 1, minWidth: '260px', padding: '0.4rem 0.75rem', fontSize: '0.82rem', margin: 0 }}
+        />
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap', color: sheetsStatus === 'ok' ? 'var(--accent)' : sheetsStatus === 'error' ? '#ef4444' : sheetsStatus === 'sending' ? '#facc15' : sheetsWebhookUrl ? 'var(--accent)' : 'var(--muted)' }}>
+          {sheetsStatus === 'ok' ? '✓ Enviado' : sheetsStatus === 'error' ? '✗ Error al enviar' : sheetsStatus === 'sending' ? '⏳ Enviando...' : sheetsWebhookUrl ? '● Conectado' : '○ Sin configurar'}
+        </span>
+      </div>
 
       <CierreCajaPanel sales={sales} />
 

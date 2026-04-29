@@ -1,6 +1,0 @@
-{
-  "name": "Overshark Resumen",
-  "description": "Sistema de gestión y resúmenes de venta. Incluye logística de provincias y delivery local, catálogos, combos y generación de planillas en PDF.",
-  "requestFramePermissions": [],
-  "majorCapabilities": []
-}
