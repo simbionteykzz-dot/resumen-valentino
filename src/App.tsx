@@ -15,13 +15,20 @@ import RespuestasPanel from './components/panels/RespuestasPanel';
 import NegociacionPanel from './components/panels/NegociacionPanel';
 import RankingPanel from './components/panels/RankingPanel';
 import SeguimientoPanel from './components/panels/SeguimientoPanel';
+import AdminDashboard from './components/panels/AdminDashboard';
 import { Trash2, Store, Bike, Package, Truck, BarChart3, Wrench } from 'lucide-react';
 import { POL_PRECIOS_OVERSHARK, ENVIO_PROVINCIA_SOLES, ENVIO_LIMA_SOLES, POL_VARIANTES_OVERSHARK } from './lib/data';
 import { FRASES_RESUMEN, RECOMENDACIONES_RESUMEN } from './lib/boosters';
-import type { ClientData, CuentaData, BoosterState, ToastState, Sale } from './types';
+import { getProfile } from './lib/supabase';
+import type { ClientData, CuentaData, BoosterState, ToastState, Sale, Profile } from './types';
 
 export default function App() {
   const { user, loading, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (user?.id) getProfile(user.id).then(setProfile);
+  }, [user?.id]);
 
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -314,6 +321,23 @@ export default function App() {
   }
 
   if (!user) return <LoginPage />;
+
+  if (profile?.role === 'admin') {
+    return (
+      <>
+        <AdminDashboard
+          adminName={vendedorName}
+          profiles={[]}
+          onSignOut={signOut}
+        />
+        {toast && (
+          <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
+            {toast.type === 'ok' ? '✓' : '⚠'} {toast.msg}
+          </div>
+        )}
+      </>
+    );
+  }
 
   const totalSoles = sales.reduce((a: number, s: any) => a + (Number(s.totalTotal) || 0), 0);
 

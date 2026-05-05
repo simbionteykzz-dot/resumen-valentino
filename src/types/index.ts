@@ -63,3 +63,23 @@ export interface ToastState {
   type: 'ok' | 'err';
   leaving: boolean;
 }
+
+export interface Profile {
+  id: string;
+  full_name: string;
+  role: 'admin' | 'vendedor';
+}
+
+export interface AdminSale extends Sale {
+  vendorName: string;
+  fecha: string;
+}
+
+export interface VendorStats {
+  id: string;
+  name: string;
+  salesCount: number;
+  totalRevenue: number;
+  totalItems: number;
+  avgPerSale: number;
+}
