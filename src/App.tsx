@@ -324,7 +324,7 @@ export default function App() {
           totalSoles={totalSoles}
           metaDiaria={metaDiaria}
           onMetaChange={v => { setMetaDiaria(v); localStorage.setItem('overshark_meta', String(v)); }}
-          userEmail={user.email}
+          userName={vendedorName}
           onSignOut={signOut}
         />
 
