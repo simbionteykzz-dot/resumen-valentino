@@ -221,7 +221,8 @@ export default function App() {
     return '\n\n- PRODUCTO -\n' + finalBlocks.join('\n\n') + '\n';
   };
 
-  const vendedorName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'VENDEDOR') as string).toUpperCase();
+  const emailPrefix = user?.email?.split('@')[0] || 'VENDEDOR';
+  const vendedorName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
 
   const cadenitaStr = boosters.cadenitas <= 0 ? '' : boosters.cadenitas === 1
     ? '\n\nCADENITA DE REGALO 🎁'
