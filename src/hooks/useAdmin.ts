@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getAllSalesAdmin, getAllProfiles } from '../lib/supabase';
+import { getAllSalesAdmin, getAllProfiles, anularVentaDB } from '../lib/supabase';
 import type { AdminSale, Profile, VendorStats } from '../types';
 
 const today = new Date().toISOString().split('T')[0];
@@ -20,6 +20,7 @@ export function useAdmin() {
 
   const [search, setSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState('todas');
+  const [brandFilter, setBrandFilter] = useState('todas');
   const [codPublicidad, setCodPublicidad] = useState('');
   const [vendorSearch, setVendorSearch] = useState('');
   const [celFilter, setCelFilter] = useState('');
@@ -60,6 +61,10 @@ export function useAdmin() {
   const filteredSales = useMemo(() => {
     let r = allSales;
 
+    if (brandFilter !== 'todas') {
+      const lbl = brandFilter.toUpperCase();
+      r = r.filter(s => (s.marcaLabel || 'OVER').toUpperCase().includes(lbl));
+    }
     if (search) {
       const q = search.toLowerCase();
       r = r.filter(s =>
@@ -78,14 +83,14 @@ export function useAdmin() {
     if (metodoPagoFilter !== 'todos') r = r.filter(s => s.metodoPago === metodoPagoFilter);
 
     return r;
-  }, [allSales, search, regionFilter, codPublicidad, vendorSearch, celFilter, estadoFilter, metodoPagoFilter]);
+  }, [allSales, brandFilter, search, regionFilter, codPublicidad, vendorSearch, celFilter, estadoFilter, metodoPagoFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredSales.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const paginatedSales = filteredSales.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const clearFilters = () => {
-    setSearch(''); setRegionFilter('todas'); setCodPublicidad('');
+    setSearch(''); setRegionFilter('todas'); setBrandFilter('todas'); setCodPublicidad('');
     setVendorSearch(''); setCelFilter(''); setEstadoFilter([]);
     setMetodoPagoFilter('todos'); setExactDate(''); setMonthFilter('');
     setDateFrom(firstOfMonth); setDateTo(today); setPage(1);
@@ -95,11 +100,16 @@ export function useAdmin() {
     const totalRevenue = filteredSales.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0);
     const totalItems = filteredSales.reduce((a, s) => a + (Number(s.qtyN) || 0), 0);
     const avgPerSale = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+    const deudaTotal = filteredSales.reduce((a, s) => {
+      const v = parseFloat(s.resta || '0');
+      return a + (isNaN(v) ? 0 : v);
+    }, 0);
     return {
       salesCount: filteredSales.length,
       totalRevenue: Math.round(totalRevenue * 100) / 100,
       totalItems,
       avgPerSale: Math.round(avgPerSale * 100) / 100,
+      deudaTotal: Math.round(deudaTotal * 100) / 100,
     };
   }, [filteredSales]);
 
@@ -119,12 +129,41 @@ export function useAdmin() {
     })).sort((a, b) => b.totalRevenue - a.totalRevenue);
   }, [filteredSales]);
 
+  const brandStats = useMemo(() => {
+    const map: Record<string, { label: string; count: number; revenue: number; items: number }> = {};
+    filteredSales.forEach(s => {
+      const label = (s.marcaLabel || 'OVER').toUpperCase();
+      if (!map[label]) map[label] = { label, count: 0, revenue: 0, items: 0 };
+      map[label].count++;
+      map[label].revenue += Number(s.totalTotal) || 0;
+      map[label].items += Number(s.qtyN) || 0;
+    });
+    return Object.values(map)
+      .map(b => ({ ...b, revenue: Math.round(b.revenue * 100) / 100 }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [filteredSales]);
+
+  const salesByDay = useMemo((): [string, number][] => {
+    const map: Record<string, number> = {};
+    filteredSales.forEach(s => { if (s.fecha) map[s.fecha] = (map[s.fecha] || 0) + 1; });
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-30);
+  }, [filteredSales]);
+
+  const anularVenta = async (id: string) => {
+    if (!id || !window.confirm('¿Anular esta venta?')) return;
+    const ok = await anularVentaDB(id);
+    if (ok) {
+      setAllSales(prev => prev.map(s => s._dbId === id ? { ...s, metodoPago: 'Anulado' } : s));
+    }
+  };
+
   return {
     allSales, filteredSales, paginatedSales, profiles, loading,
     dateFrom, setDateFrom, dateTo, setDateTo,
     exactDate, setExactDate, monthFilter, setMonthFilter,
     search, setSearch,
     regionFilter, setRegionFilter,
+    brandFilter, setBrandFilter,
     codPublicidad, setCodPublicidad,
     vendorSearch, setVendorSearch,
     celFilter, setCelFilter,
@@ -132,8 +171,8 @@ export function useAdmin() {
     metodoPagoFilter, setMetodoPagoFilter,
     showFilters, setShowFilters,
     page: safePage, setPage, totalPages,
-    globalStats, vendorStats,
+    globalStats, vendorStats, brandStats, salesByDay,
     refresh: loadData, clearFilters,
-    getRegion, getEstado,
+    getRegion, getEstado, anularVenta,
   };
 }

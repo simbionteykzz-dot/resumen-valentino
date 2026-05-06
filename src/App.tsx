@@ -32,6 +32,43 @@ export default function App() {
   const VARIANTES_ACTIVOS = isBravos ? BRV_VARIANTES : POL_VARIANTES_OVERSHARK;
 
   useEffect(() => {
+    const r = document.documentElement.style;
+    if (isBravos) {
+      r.setProperty('--accent',       '#7c3aed');
+      r.setProperty('--accent2',      '#5b23c4');
+      r.setProperty('--accent-glow',  'rgba(124,58,237,.15)');
+      r.setProperty('--accent-soft',  'rgba(124,58,237,.08)');
+      r.setProperty('--ok',           '#7c3aed');
+      r.setProperty('--ok-soft',      'rgba(124,58,237,.1)');
+      r.setProperty('--bg',           '#07050f');
+      r.setProperty('--bg2',          '#0d0a16');
+      r.setProperty('--surface',      '#0d0a16');
+      r.setProperty('--surface2',     '#130d1e');
+      r.setProperty('--surface3',     '#1c1430');
+      r.setProperty('--border',       '#2a1a40');
+      r.setProperty('--border2',      '#2a1a40');
+      r.setProperty('--muted',        '#9070b0');
+      r.setProperty('--muted2',       '#7050a0');
+    } else {
+      r.setProperty('--accent',       '#ff6b00');
+      r.setProperty('--accent2',      '#e05500');
+      r.setProperty('--accent-glow',  'rgba(255,107,0,.15)');
+      r.setProperty('--accent-soft',  'rgba(255,107,0,.08)');
+      r.setProperty('--ok',           '#ff6b00');
+      r.setProperty('--ok-soft',      'rgba(255,107,0,.1)');
+      r.setProperty('--bg',           '#080604');
+      r.setProperty('--bg2',          '#0f0c09');
+      r.setProperty('--surface',      '#0f0c09');
+      r.setProperty('--surface2',     '#16110d');
+      r.setProperty('--surface3',     '#1f1710');
+      r.setProperty('--border',       '#2a1f14');
+      r.setProperty('--border2',      '#2a1f14');
+      r.setProperty('--muted',        '#a08060');
+      r.setProperty('--muted2',       '#8a6040');
+    }
+  }, [isBravos]);
+
+  useEffect(() => {
     if (user?.id) getProfile(user.id).then(setProfile);
   }, [user?.id]);
 
@@ -365,15 +402,85 @@ export default function App() {
           onMetaChange={v => { setMetaDiaria(v); localStorage.setItem('overshark_meta', String(v)); }}
           userName={vendedorName}
           onSignOut={signOut}
+          brand={brand}
         />
 
         {/* ── Selector de marca ── */}
-        <div style={{ display: 'flex', gap: '6px', background: 'var(--surface2)', borderRadius: '40px', padding: '5px', border: '1px solid var(--surface3)', width: 'fit-content', marginBottom: '1.25rem' }}>
-          {(['overshark', 'bravos'] as const).map(b => (
-            <button key={b} onClick={() => { setBrand(b); setProducts([]); setCustomComboName(''); setPromoPrice(''); }} style={{ borderRadius: '30px', padding: '0.5rem 1.4rem', fontSize: '0.85rem', fontWeight: 800, background: brand === b ? (b === 'bravos' ? '#7c3aed' : 'var(--accent)') : 'transparent', color: brand === b ? '#fff' : 'var(--muted)', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'all 0.2s' }}>
-              {b === 'overshark' ? '🦈 Overshark' : '💪 Bravos'}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.75rem' }}>
+          {([
+            {
+              id: 'overshark', label: 'OVERSHARK', sub: 'Polos & Camiseros', tag: 'Colección activa',
+              icon: '/over-icon.png', color: '#ff6b00', colorDim: '#c44e00',
+              grad: 'linear-gradient(135deg, #1a0e04, #241408)',
+              gradActive: 'linear-gradient(135deg, #1f0f04, #2e1a08)',
+              glow: 'rgba(255,107,0,0.18)', border: '#3a2010',
+            },
+            {
+              id: 'bravos', label: 'BRAVOS', sub: 'Poleras & Pantalones', tag: 'Colección activa',
+              icon: '/brav-icon.png', color: '#7c3aed', colorDim: '#5b23c4',
+              grad: 'linear-gradient(135deg, #100a1a, #160d24)',
+              gradActive: 'linear-gradient(135deg, #130c1e, #1e1030)',
+              glow: 'rgba(124,58,237,0.18)', border: '#2a1a40',
+            },
+          ] as const).map(b => {
+            const active = brand === b.id;
+            return (
+              <button
+                key={b.id}
+                onClick={() => { setBrand(b.id); setProducts([]); setCustomComboName(''); setPromoPrice(''); }}
+                style={{
+                  position: 'relative', overflow: 'hidden',
+                  display: 'flex', alignItems: 'center', gap: '1rem',
+                  padding: '1rem 1.5rem',
+                  borderRadius: '18px',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s',
+                  border: `2px solid ${active ? b.color : b.border}`,
+                  background: active ? b.gradActive : b.grad,
+                  outline: 'none',
+                  minWidth: '230px',
+                  boxShadow: active ? `0 6px 28px ${b.glow}, inset 0 1px 0 rgba(255,255,255,0.06)` : 'none',
+                  flex: 1,
+                  maxWidth: '300px',
+                }}
+              >
+                {/* Glow blob activo */}
+                {active && (
+                  <div style={{
+                    position: 'absolute', top: '-30px', right: '-20px',
+                    width: '100px', height: '100px', borderRadius: '50%',
+                    background: b.color, opacity: 0.12, filter: 'blur(30px)',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                {/* Icono */}
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '14px', flexShrink: 0,
+                  background: active ? `linear-gradient(135deg, ${b.color}33, ${b.color}11)` : `${b.color}11`,
+                  border: `1.5px solid ${active ? b.color + '55' : b.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: active ? `0 4px 16px ${b.glow}` : 'none',
+                }}>
+                  <img src={b.icon} alt={b.label} style={{ width: '34px', height: '34px', objectFit: 'contain' }} />
+                </div>
+                {/* Texto */}
+                <div style={{ textAlign: 'left', flex: 1 }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? b.color : '#6b7280', letterSpacing: '0.06em', lineHeight: 1 }}>
+                    {b.label}
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: active ? '#c0a080' : '#4a4a5a', marginTop: '3px', fontWeight: 500 }}>
+                    {b.sub}
+                  </div>
+                  {active && (
+                    <div style={{ marginTop: '5px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${b.color}22`, border: `1px solid ${b.color}44`, borderRadius: '20px', padding: '2px 8px' }}>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: b.color }} />
+                      <span style={{ fontSize: '0.65rem', color: b.color, fontWeight: 700, letterSpacing: '0.04em' }}>ACTIVO</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <div className="tabs-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border2)', paddingBottom: '1rem' }}>

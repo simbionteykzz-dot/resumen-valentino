@@ -127,3 +127,11 @@ export function ventaFromDB(row: VentaDB): Sale {
     _dbId: row.id,
   };
 }
+
+export async function anularVentaDB(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .update({ metodo_pago: 'Anulado' })
+    .eq('id', id);
+  return !error;
+}

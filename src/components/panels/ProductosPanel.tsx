@@ -30,7 +30,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
     setProducts(products.map((p: any) => p.id === id ? { ...p, [field]: value } : p));
 
   const handlePromoLoad = (key: string) => {
-    const pData = PROMOS_DATA[key];
+    const pData = PROMOS[key];
     if (!pData) return;
     const ts = Date.now();
     const baseQty = pData.list.reduce((acc, item) => acc + item.q, 0);

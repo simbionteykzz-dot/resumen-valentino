@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
-import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package } from 'lucide-react';
+import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle } from 'lucide-react';
 import type { Profile } from '../../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -20,6 +20,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     exactDate, setExactDate, monthFilter, setMonthFilter,
     search, setSearch,
     regionFilter, setRegionFilter,
+    brandFilter, setBrandFilter,
     codPublicidad, setCodPublicidad,
     vendorSearch, setVendorSearch,
     celFilter, setCelFilter,
@@ -27,9 +28,9 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     metodoPagoFilter, setMetodoPagoFilter,
     showFilters, setShowFilters,
     page, setPage, totalPages,
-    globalStats, vendorStats,
+    globalStats, vendorStats, brandStats, salesByDay,
     refresh, clearFilters,
-    getRegion, getEstado,
+    getRegion, getEstado, anularVenta,
   } = useAdmin();
 
   const startIdx = (page - 1) * 50;
@@ -79,20 +80,30 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     text2: '#ffffff',
   };
 
-  const btn = (variant: 'accent' | 'ghost' | 'danger' | 'info'): React.CSSProperties => ({
+  const btn = (variant: 'accent' | 'ghost' | 'danger' | 'info' | 'active'): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: '0.4rem',
     padding: '0.45rem 0.9rem', borderRadius: '8px',
     fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
-    border: variant === 'ghost' ? '1px solid #2a1f14' : 'none',
+    border: variant === 'ghost' ? '1px solid #2a1f14' : variant === 'active' ? '1px solid rgba(255,107,0,0.6)' : 'none',
     background: variant === 'accent' ? 'linear-gradient(135deg,#ff6b00,#e05500)'
       : variant === 'danger' ? 'rgba(239,68,68,0.12)'
       : variant === 'info' ? 'rgba(56,200,245,0.1)'
+      : variant === 'active' ? 'rgba(255,107,0,0.15)'
       : 'rgba(22,17,13,0.9)',
     color: variant === 'accent' ? '#000'
       : variant === 'danger' ? '#ef4444'
       : variant === 'info' ? '#38c8f5'
+      : variant === 'active' ? '#ff6b00'
       : S.muted,
   });
+
+  const getBrandColor = (label: string) => {
+    const l = (label || '').toUpperCase();
+    if (l.includes('BRV') || l.includes('BRAVOS')) return { bg: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: 'rgba(124,58,237,0.3)' };
+    return { bg: 'rgba(255,107,0,0.12)', color: '#ff6b00', border: 'rgba(255,107,0,0.3)' };
+  };
+
+  const maxVendorRevenue = vendorStats.length > 0 ? vendorStats[0].totalRevenue : 1;
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#080604 0%,#130d08 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
@@ -122,13 +133,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
       <div style={{ maxWidth: '1500px', margin: '0 auto', padding: '1.5rem 2rem' }}>
 
-        {/* KPI cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.25rem' }}>
+        {/* ── KPI cards (5) ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', marginBottom: '1rem' }}>
           {[
             { label: 'Ventas', value: globalStats.salesCount, color: S.accent, icon: <ShoppingBag size={18} /> },
             { label: 'Total S/', value: `S/${globalStats.totalRevenue.toLocaleString()}`, color: '#38c8f5', icon: <DollarSign size={18} /> },
             { label: 'Prendas', value: globalStats.totalItems, color: '#a78bfa', icon: <Package size={18} /> },
             { label: 'Promedio/venta', value: `S/${globalStats.avgPerSale}`, color: '#00e696', icon: <BarChart3 size={18} /> },
+            { label: 'Deuda total S/', value: globalStats.deudaTotal > 0 ? `S/${globalStats.deudaTotal.toFixed(0)}` : 'S/0', color: globalStats.deudaTotal > 0 ? '#ef4444' : '#a08060', icon: <AlertTriangle size={18} /> },
           ].map(k => (
             <div key={k.label} style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem', borderLeft: `3px solid ${k.color}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: k.color, marginBottom: '0.4rem' }}>
@@ -140,25 +152,87 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           ))}
         </div>
 
-        {/* Ranking */}
-        {vendorStats.length > 0 && (
-          <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem' }}>Ranking de Vendedores</div>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              {vendorStats.map((v, i) => (
-                <div key={v.id} style={{ background: i === 0 ? 'rgba(255,107,0,0.08)' : 'rgba(22,17,13,0.8)', border: `1px solid ${i === 0 ? 'rgba(255,107,0,0.3)' : '#2a1f14'}`, borderRadius: '10px', padding: '0.6rem 1rem', minWidth: '150px' }}>
-                  <div style={{ fontSize: '0.7rem', color: S.muted, marginBottom: '0.2rem' }}>
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`} {v.name}
+        {/* ── Desglose por marca ── */}
+        {brandStats.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+            {brandStats.map(b => {
+              const bc = getBrandColor(b.label);
+              const pct = globalStats.totalRevenue > 0 ? Math.round((b.revenue / globalStats.totalRevenue) * 100) : 0;
+              return (
+                <div key={b.label} style={{ background: bc.bg, border: `1px solid ${bc.border}`, borderRadius: '10px', padding: '0.65rem 1.1rem', display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 900, fontSize: '0.8rem', color: bc.color, letterSpacing: '0.06em' }}>{b.label}</span>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.6rem', color: S.muted, textTransform: 'uppercase', fontWeight: 700 }}>Ventas</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 900, color: bc.color }}>{b.count}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.6rem', color: S.muted, textTransform: 'uppercase', fontWeight: 700 }}>Ingresos</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 900, color: bc.color }}>S/{b.revenue.toLocaleString()}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.6rem', color: S.muted, textTransform: 'uppercase', fontWeight: 700 }}>Prendas</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 900, color: bc.color }}>{b.items}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.6rem', color: S.muted, textTransform: 'uppercase', fontWeight: 700 }}>Part.</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 900, color: bc.color }}>{pct}%</div>
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 900, color: S.accent, fontSize: '1rem' }}>S/{v.totalRevenue.toLocaleString()}</div>
-                  <div style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount} ventas · {v.totalItems} prendas</div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Toolbar */}
+        {/* ── Ranking + Gráfico por día ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: vendorStats.length > 0 ? '1fr 320px' : '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+
+          {/* Ranking mejorado */}
+          {vendorStats.length > 0 && (
+            <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem' }}>Ranking de Vendedores</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {vendorStats.map((v, i) => {
+                  const pct = globalStats.totalRevenue > 0 ? Math.round((v.totalRevenue / globalStats.totalRevenue) * 100) : 0;
+                  const barPct = maxVendorRevenue > 0 ? Math.round((v.totalRevenue / maxVendorRevenue) * 100) : 0;
+                  const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+                  return (
+                    <div key={v.id} style={{ background: i === 0 ? 'rgba(255,107,0,0.07)' : 'rgba(22,17,13,0.6)', border: `1px solid ${i === 0 ? 'rgba(255,107,0,0.25)' : '#2a1f14'}`, borderRadius: '8px', padding: '0.55rem 0.85rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: S.text }}>
+                          {medal} {v.name}
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount}v · {v.totalItems}p</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a78bfa', background: 'rgba(167,139,250,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
+                        </div>
+                      </div>
+                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${barPct}%`, background: i === 0 ? 'linear-gradient(90deg,#ff6b00,#ffaa44)' : 'linear-gradient(90deg,#3a2a18,#5a3a22)', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Gráfico de ventas por día */}
+          {salesByDay.length > 0 && (
+            <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem' }}>Ventas por día</div>
+              <SalesByDayChart data={salesByDay} accent={S.accent} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem' }}>
+                <span style={{ fontSize: '0.62rem', color: S.muted }}>{salesByDay[0]?.[0]?.slice(5)}</span>
+                <span style={{ fontSize: '0.62rem', color: S.muted }}>{salesByDay[salesByDay.length - 1]?.[0]?.slice(5)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Toolbar ── */}
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
             <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: S.muted }} />
@@ -166,6 +240,17 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               placeholder="Buscar por cliente, vendedor, celular o DNI..."
               style={{ width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem', border: '1px solid #2a1f14', borderRadius: '8px', fontSize: '0.82rem', background: 'rgba(10,16,23,0.6)', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
           </div>
+
+          {/* Filtro rápido por marca */}
+          <div style={{ display: 'flex', gap: '0.25rem' }}>
+            {(['todas', 'OVER', 'BRV'] as const).map(b => (
+              <button key={b} onClick={() => { setBrandFilter(b); setPage(1); }}
+                style={{ ...btn(brandFilter === b ? 'active' : 'ghost'), padding: '0.45rem 0.7rem', fontSize: '0.75rem', minWidth: '48px', justifyContent: 'center' }}>
+                {b === 'todas' ? 'Todas' : b}
+              </button>
+            ))}
+          </div>
+
           <button onClick={() => setShowFilters(p => !p)} style={{ ...btn('ghost') }}>
             <Filter size={13} /> Filtros {showFilters ? '∧' : '∨'}
           </button>
@@ -181,7 +266,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </button>
         </div>
 
-        {/* Filtros */}
+        {/* ── Filtros ── */}
         {showFilters && (
           <div style={{ background: S.surface2, border: S.border, borderRadius: '12px', padding: '1.25rem', marginBottom: '0.75rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.75rem 1rem', marginBottom: '1rem' }}>
@@ -231,7 +316,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </div>
         )}
 
-        {/* Contador + paginación */}
+        {/* ── Contador + paginación ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
           <span style={{ fontSize: '0.78rem', color: S.muted }}>
             Mostrando {filteredSales.length === 0 ? '0–0' : `${startIdx + 1}–${endIdx}`} de {filteredSales.length} registros
@@ -239,13 +324,13 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
 
-        {/* Tabla */}
+        {/* ── Tabla ── */}
         <div ref={tableRef} style={{ background: 'rgba(10,16,23,0.7)', border: '1px solid #2a1f14', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg,rgba(255,107,0,0.15),rgba(224,85,0,0.1))', borderBottom: '2px solid rgba(255,107,0,0.3)' }}>
-                  {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'].map(h => (
+                  {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO', ''].map(h => (
                     <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#ff6b00', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
@@ -255,14 +340,20 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   const region = getRegion(s);
                   const estado = getEstado(s);
                   const regionColor = region === 'Lima' ? { bg: 'rgba(56,200,245,0.1)', color: '#38c8f5' } : region === 'Provincia' ? { bg: 'rgba(255,107,0,0.1)', color: '#ff6b00' } : { bg: 'rgba(167,139,250,0.1)', color: '#a78bfa' };
-                  const estadoColor = estado === 'PAGO COMPLETO' ? { bg: 'rgba(0,230,150,0.1)', color: '#00e696' } : estado === 'CONTRA ENTREGA' ? { bg: 'rgba(255,107,0,0.1)', color: '#ff6b00' } : { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' };
+                  const estadoColor = estado === 'PAGO COMPLETO' ? { bg: 'rgba(0,230,150,0.1)', color: '#00e696' } : estado === 'CONTRA ENTREGA' ? { bg: 'rgba(255,107,0,0.1)', color: '#ff6b00' } : estado === 'ANULADO' ? { bg: 'rgba(239,68,68,0.08)', color: '#ef4444' } : { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' };
+                  const bc = getBrandColor(s.marcaLabel || 'OVER');
+                  const isAnulado = estado === 'ANULADO';
                   return (
                     <tr key={s._dbId ?? i}
-                      style={{ borderBottom: '1px solid rgba(42,31,20,0.5)', background: i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)', transition: 'background 0.15s' }}
+                      style={{ borderBottom: '1px solid rgba(42,31,20,0.5)', background: isAnulado ? 'rgba(239,68,68,0.03)' : i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)', transition: 'background 0.15s', opacity: isAnulado ? 0.6 : 1 }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,0,0.04)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)')}>
+                      onMouseLeave={e => (e.currentTarget.style.background = isAnulado ? 'rgba(239,68,68,0.03)' : i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)')}>
                       <td style={td}>{s.fecha ?? '—'}</td>
-                      <td style={{ ...td, fontWeight: 700, color: '#f0e6d8' }}>{s.marcaLabel || 'OVER'}</td>
+                      <td style={td}>
+                        <span style={{ background: bc.bg, color: bc.color, border: `1px solid ${bc.border}`, borderRadius: '5px', padding: '0.15rem 0.55rem', fontWeight: 800, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
+                          {s.marcaLabel || 'OVER'}
+                        </span>
+                      </td>
                       <td style={{ ...td, color: '#ff6b00', fontWeight: 700 }}>{s.vendorName}</td>
                       <td style={{ ...td, color: '#a08060' }}>{s.hora ?? '—'}</td>
                       <td style={td}>
@@ -280,12 +371,22 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       <td style={td}>{s.codigoPublicidad || '—'}</td>
                       <td style={td}>{s.metodoPago || '—'}</td>
                       <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#a08060' }}>{s.combo || '—'}</td>
+                      <td style={{ ...td, padding: '0.3rem 0.5rem' }}>
+                        {!isAnulado && s._dbId && (
+                          <button
+                            onClick={() => anularVenta(s._dbId!)}
+                            title="Anular venta"
+                            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: '#ef4444', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            ✕ Anular
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
                 {paginatedSales.length === 0 && (
                   <tr>
-                    <td colSpan={15} style={{ padding: '3rem', textAlign: 'center', color: '#a08060', fontSize: '0.85rem' }}>
+                    <td colSpan={16} style={{ padding: '3rem', textAlign: 'center', color: '#a08060', fontSize: '0.85rem' }}>
                       {loading ? 'Cargando ventas...' : 'Sin registros para los filtros seleccionados'}
                     </td>
                   </tr>
@@ -299,6 +400,28 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function SalesByDayChart({ data, accent }: { data: [string, number][]; accent: string }) {
+  const max = Math.max(...data.map(([, v]) => v), 1);
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '80px' }}>
+      {data.map(([fecha, count]) => (
+        <div key={fecha} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', gap: '2px' }}>
+          <span style={{ fontSize: '0.55rem', color: '#a08060', fontWeight: 700 }}>{count}</span>
+          <div
+            title={`${fecha.slice(5)}: ${count} ventas`}
+            style={{
+              width: '100%', minWidth: '4px',
+              height: `${Math.max(8, (count / max) * 68)}px`,
+              background: count === max ? `linear-gradient(180deg,${accent},#e05500)` : 'rgba(255,107,0,0.35)',
+              borderRadius: '2px 2px 0 0',
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }

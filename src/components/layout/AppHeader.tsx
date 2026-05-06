@@ -1,4 +1,4 @@
-import { Truck, Target, LogOut } from 'lucide-react';
+import { Target, LogOut } from 'lucide-react';
 
 interface AppHeaderProps {
   salesCount: number;
@@ -7,6 +7,7 @@ interface AppHeaderProps {
   onMetaChange: (v: number) => void;
   userName?: string;
   onSignOut: () => void;
+  brand?: 'overshark' | 'bravos';
 }
 
 export default function AppHeader({
@@ -16,36 +17,45 @@ export default function AppHeader({
   onMetaChange,
   userName,
   onSignOut,
+  brand = 'overshark',
 }: AppHeaderProps) {
   const pct = metaDiaria > 0 ? Math.min(100, (salesCount / metaDiaria) * 100) : 0;
   const reached = salesCount >= metaDiaria;
+
+  const isBravos = brand === 'bravos';
+  const accent = isBravos ? '#7c3aed' : '#ff6b00';
+  const accentLight = isBravos ? '#9f6ef5' : '#ffaa44';
+  const headerBg = isBravos ? 'linear-gradient(135deg, #0d0a14, #130d1e)' : 'linear-gradient(135deg, #100c08, #1a1208)';
+  const headerBorder = isBravos ? '#1e1430' : '#2a1f14';
+  const headerShadow = isBravos ? '0 4px 24px rgba(124,58,237,0.1)' : '0 4px 24px rgba(255,107,0,0.08)';
+  const mutedColor = isBravos ? '#8070a0' : '#a08060';
+  const brandName = isBravos ? 'BRAVOS' : 'OVERSHARK';
+  const brandIcon = isBravos ? '/brav-icon.png' : '/over-icon.png';
 
   return (
     <header style={{
       marginBottom: '1.5rem',
       padding: '1.1rem 1.5rem',
-      background: 'linear-gradient(135deg, #100c08, #1a1208)',
+      background: headerBg,
       borderRadius: '14px',
-      border: '1px solid #2a1f14',
-      boxShadow: '0 4px 24px rgba(255,107,0,0.08)',
+      border: `1px solid ${headerBorder}`,
+      boxShadow: headerShadow,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #ff6b00, #e05500)',
-            borderRadius: '12px', width: '48px', height: '48px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', flexShrink: 0,
-            boxShadow: '0 4px 16px rgba(255,107,0,0.35)',
-          }}>
-            <Truck size={22} />
-          </div>
+          <img src={brandIcon} alt={brandName} style={{
+            width: '48px', height: '48px', borderRadius: '12px',
+            objectFit: 'contain', flexShrink: 0,
+            boxShadow: `0 4px 16px ${accent}55`,
+            background: `${accent}22`,
+            padding: '4px',
+          }} />
           <div>
             <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
-              OVERSHARK <span style={{ color: '#ff6b00' }}>Ventas</span>
+              {brandName} <span style={{ color: accent }}>Ventas</span>
             </h1>
-            <p style={{ color: '#a08060', fontSize: '0.82rem', margin: 0 }}>
+            <p style={{ color: mutedColor, fontSize: '0.82rem', margin: 0 }}>
               Genera el resumen y registra la venta al instante
             </p>
           </div>
@@ -54,19 +64,19 @@ export default function AppHeader({
         {/* Stats + user */}
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ventas hoy</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ff6b00', lineHeight: 1 }}>{salesCount}</div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: mutedColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ventas hoy</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: accent, lineHeight: 1 }}>{salesCount}</div>
           </div>
-          <div style={{ width: '1px', height: '2.5rem', background: '#2a1f14' }} />
+          <div style={{ width: '1px', height: '2.5rem', background: headerBorder }} />
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total S/</div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: mutedColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total S/</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{totalSoles.toFixed(0)}</div>
           </div>
           {userName && (
             <>
-              <div style={{ width: '1px', height: '2.5rem', background: '#2a1f14' }} />
+              <div style={{ width: '1px', height: '2.5rem', background: headerBorder }} />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ff6b00', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
                   {userName}
                 </span>
                 <button
@@ -96,19 +106,19 @@ export default function AppHeader({
 
       {/* Meta diaria */}
       <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <Target size={14} style={{ color: '#a08060', flexShrink: 0 }} />
+        <Target size={14} style={{ color: mutedColor, flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <div className="meta-bar-track">
             <div
               className="meta-bar-fill"
               style={{
                 width: `${pct}%`,
-                background: reached ? '#00e696' : 'linear-gradient(90deg, #ff6b00, #ffaa44)',
+                background: reached ? '#00e696' : `linear-gradient(90deg, ${accent}, ${accentLight})`,
               }}
             />
           </div>
         </div>
-        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: reached ? '#00e696' : '#a08060', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: reached ? '#00e696' : mutedColor, whiteSpace: 'nowrap' }}>
           {salesCount} / {metaDiaria}
         </span>
         <input
@@ -121,9 +131,9 @@ export default function AppHeader({
           style={{
             width: '52px',
             background: 'rgba(255,255,255,0.05)',
-            border: '1px solid #2a1f14',
+            border: `1px solid ${headerBorder}`,
             borderRadius: '6px',
-            color: '#a08060',
+            color: mutedColor,
             fontSize: '0.78rem',
             fontWeight: 800,
             padding: '0.2rem 0.4rem',

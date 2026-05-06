@@ -1,6 +1,6 @@
 export const POLOS_CATALOGO_OVERSHARK = [
   "BABY TY", "BABY TY MANGA", "CAMISA WAFFLE", "CAMISERO PIKE",
-  "CLASICO", "CUELLO CHINO", "CUELLO CHINO WAFFLE", "JERSEY MANGA LARGA", "OVERSIZE",
+  "CLASICO", "CUELLO CHINO", "CUELLO CHINO WAFFLE", "JERSEY MANGA LARGA",
   "WAFFLE", "WAFFLE CAMISERO", "WAFFLE MANGA LARGA", "CUELLO NOTCH PIQUE", "CUELLO NOTCH WAFLE"
 ];
 
@@ -24,7 +24,6 @@ export const POL_VARIANTES_OVERSHARK: Record<string, { tallas: string[], colores
   "CUELLO CHINO": { tallas: TALLAS_SMLXL, colores: COLORES_CUELLO_CHINO },
   "CUELLO CHINO WAFFLE": { tallas: TALLAS_SMLXL, colores: COLORES_CUELLO_CHINO_WAFFLE },
   "JERSEY MANGA LARGA": { tallas: TALLAS_SMLXL, colores: COLORES_JERSEY_ML },
-  "OVERSIZE": { tallas: TALLAS_SMLXL, colores: COLORES_15_POLO },
   "WAFFLE": { tallas: TALLAS_SMLXL, colores: COLORES_15_POLO },
   "WAFFLE CAMISERO": { tallas: TALLAS_SMLXL, colores: COLORES_15_POLO },
   "WAFFLE MANGA LARGA": { tallas: TALLAS_SMLXL, colores: COLORES_15_POLO },
@@ -35,7 +34,7 @@ export const POL_VARIANTES_OVERSHARK: Record<string, { tallas: string[], colores
 export const POL_PRECIOS_OVERSHARK: Record<string, number> = {
   "BABY TY": 45, "BABY TY MANGA": 45, "CAMISA WAFFLE": 45,
   "CAMISERO PIKE": 45, "CLASICO": 45, "CUELLO CHINO": 45, "CUELLO CHINO WAFFLE": 45,
-  "JERSEY MANGA LARGA": 45, "OVERSIZE": 45, "WAFFLE": 45, "WAFFLE CAMISERO": 45,
+  "JERSEY MANGA LARGA": 45, "WAFFLE": 45, "WAFFLE CAMISERO": 45,
   "WAFFLE MANGA LARGA": 45, "CUELLO NOTCH PIQUE": 45, "CUELLO NOTCH WAFLE": 45
 };
 
@@ -73,11 +72,11 @@ export const POLOS_CATALOGO_BRAVOS = [
 ];
 
 export const BRV_VARIANTES: Record<string, { tallas: string[], colores: string }> = {
-  "POLERA BOXYFIT":   { tallas: TALLAS_SML, colores: "" },
-  "POLERA NERU":      { tallas: TALLAS_SML, colores: "" },
-  "PANTALON BRATZ":   { tallas: TALLAS_SML, colores: "" },
-  "PANTALON OPRA":    { tallas: TALLAS_SML, colores: "" },
-  "CLASICOS DE REGALO": { tallas: TALLAS_SML, colores: "" },
+  "POLERA BOXYFIT":     { tallas: TALLAS_SML,   colores: "Azul, Beige, Cemento, Denim, Negro, Pacay, P. Rosa, Perla, Vino" },
+  "POLERA NERU":        { tallas: TALLAS_SMLXL, colores: "Azul, Beige, Botella, Cemento, Denim, Melange, Negro, Topo, Pacay, P. Rosa, Perla, Plomo, Vino" },
+  "PANTALON BRATZ":     { tallas: TALLAS_SML,   colores: "Beige, Cemento, Denim, P. Rosa, Perla" },
+  "PANTALON OPRA":      { tallas: TALLAS_SML,   colores: "Azul, Beige, Botella, Cemento, Denim, Negro, Pacay, P. Rosa, Perla, Plomo" },
+  "CLASICOS DE REGALO": { tallas: TALLAS_SMLXL, colores: "Cemento, Negro" },
 };
 
 export const BRV_PRECIOS: Record<string, number> = {
