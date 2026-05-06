@@ -16,11 +16,10 @@ import NegociacionPanel from './components/panels/NegociacionPanel';
 import RankingPanel from './components/panels/RankingPanel';
 import SeguimientoPanel from './components/panels/SeguimientoPanel';
 import AdminDashboard from './components/panels/AdminDashboard';
-import { Trash2, Store, Bike, Package, Truck, BarChart3, Wrench, RefreshCw } from 'lucide-react';
+import { Trash2, Store, Bike, Package, Truck, BarChart3, Wrench } from 'lucide-react';
 import { POL_PRECIOS_OVERSHARK, ENVIO_PROVINCIA_SOLES, ENVIO_LIMA_SOLES, POL_VARIANTES_OVERSHARK, BRV_PRECIOS, BRV_VARIANTES } from './lib/data';
 import { FRASES_RESUMEN, RECOMENDACIONES_RESUMEN } from './lib/boosters';
 import { getProfile } from './lib/supabase';
-import { useStock } from './hooks/useStock';
 import type { ClientData, CuentaData, BoosterState, ToastState, Sale, Profile } from './types';
 
 export default function App() {
@@ -83,8 +82,6 @@ export default function App() {
 
   const { sales, selectedDate, setSelectedDate, loadingSync, syncError, addSale, deleteSale } =
     useSales(user?.id, showToast);
-
-  const { getStock, loading: stockLoading, lastSync: stockLastSync, syncFromOdoo } = useStock();
 
   const [tab, setTab] = useState<'prov' | 'lima' | 'almacen'>('prov');
   const [clientData, setClientData] = useState<ClientData>({
@@ -338,23 +335,6 @@ export default function App() {
       }
     }
 
-    // Validación de stock (solo productos con colores Y talla seleccionada)
-    const stockErrors: string[] = [];
-    products.forEach((p: any) => {
-      if (!p.size || !p.colorLines?.length) return;
-      p.colorLines.forEach((cl: any) => {
-        const available = getStock(p.name, cl.color, p.size);
-        if (available !== null && cl.qty > available) {
-          stockErrors.push(
-            `${p.name} — ${cl.color} talla ${p.size}: pediste ${cl.qty} pero solo hay ${available} disponibles`
-          );
-        }
-      });
-    });
-    if (stockErrors.length > 0) {
-      window.alert(`⛔ Sin stock suficiente:\n\n${stockErrors.join('\n')}`);
-      return;
-    }
     const now = new Date();
     const hora = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     let totalQty = 0;
@@ -425,20 +405,7 @@ export default function App() {
     <>
       <div className="wrap" style={{ maxWidth: '1140px', margin: '0 auto' }}>
         {profile?.role === 'admin' && (
-          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.6rem' }}>
-            <button
-              onClick={async () => {
-                const r = await syncFromOdoo();
-                if (r.ok) showToast(`Stock actualizado — ${r.synced} variantes`, 'ok');
-                else showToast(`Error sync: ${r.error ?? 'desconocido'}`, 'err');
-              }}
-              disabled={stockLoading}
-              title={stockLastSync ? `Última sync: ${stockLastSync.toLocaleTimeString()}` : 'Sincronizar stock desde Odoo'}
-              style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', color: '#22c55e', cursor: stockLoading ? 'wait' : 'pointer', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', opacity: stockLoading ? 0.6 : 1 }}
-            >
-              <RefreshCw size={14} style={{ animation: stockLoading ? 'spin 1s linear infinite' : undefined }} />
-              {stockLoading ? 'Sincronizando...' : 'Sync Stock Odoo'}
-            </button>
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
             <button onClick={() => setAdminMode('admin')} style={{ background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.3)', borderRadius: '8px', color: '#ff6b00', cursor: 'pointer', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               ← Volver al Panel Admin
             </button>
@@ -556,7 +523,7 @@ export default function App() {
             <BoostersPanel boosters={boosters} onChange={handleBoosterChange} productCount={products.length} />
           </div>
           <div>
-            <ProductosPanel products={products} setProducts={setProducts} customComboName={customComboName} setCustomComboName={setCustomComboName} promoPrice={promoPrice} setPromoPrice={setPromoPrice} brand={brand} getStock={getStock} />
+            <ProductosPanel products={products} setProducts={setProducts} customComboName={customComboName} setCustomComboName={setCustomComboName} promoPrice={promoPrice} setPromoPrice={setPromoPrice} brand={brand} />
             <OutputPanel outputText={outputStr} onAddSale={handlePushSale} clientCelular={clientData.celular} clientNombre={clientData.nombre} />
           </div>
         </div>

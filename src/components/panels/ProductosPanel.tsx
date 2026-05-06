@@ -5,26 +5,7 @@ import {
   POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA,
 } from '../../lib/data';
 
-function StockBadge({ qty }: { qty: number | null }) {
-  if (qty === null) return null;
-  if (qty === 0) return (
-    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ef4444', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '1px 6px', flexShrink: 0 }}>
-      Agotado
-    </span>
-  );
-  if (qty <= 5) return (
-    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '6px', padding: '1px 6px', flexShrink: 0 }}>
-      ⚠ {qty} uds
-    </span>
-  );
-  return (
-    <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '6px', padding: '1px 6px', flexShrink: 0 }}>
-      {qty} uds
-    </span>
-  );
-}
-
-export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice, brand = 'overshark', getStock }: any) {
+export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice, brand = 'overshark' }: any) {
   const isBravos = brand === 'bravos';
   const CATALOGO = isBravos ? POLOS_CATALOGO_BRAVOS : POLOS_CATALOGO_OVERSHARK;
   const VARIANTES = isBravos ? BRV_VARIANTES : POL_VARIANTES_OVERSHARK;
@@ -296,26 +277,22 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               {/* Color lines */}
               {hasColorLines && (
                 <div className="pc-color-lines">
-                  {p.colorLines.map((cL: any) => {
-                    const stockQty = (getStock && p.size) ? getStock(p.name, cL.color, p.size) : null;
-                    return (
-                      <div key={cL.color} className="pc-color-line">
-                        <span className="pc-color-name">{cL.color}</span>
-                        {p.size && <StockBadge qty={stockQty} />}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <span className="pc-lbl" style={{ margin: 0 }}>Cant.</span>
-                          <div className="qty-stepper" style={{ height: '2rem' }}>
-                            <button className="qty-btn" onClick={() => updateColorQty(p.id, cL.color, -1)}>−</button>
-                            <input value={cL.qty} readOnly style={{ height: '2rem', color: (stockQty !== null && cL.qty > stockQty) ? '#ef4444' : undefined }} />
-                            <button className="qty-btn" onClick={() => updateColorQty(p.id, cL.color, 1)}>+</button>
-                          </div>
+                  {p.colorLines.map((cL: any) => (
+                    <div key={cL.color} className="pc-color-line">
+                      <span className="pc-color-name">{cL.color}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span className="pc-lbl" style={{ margin: 0 }}>Cant.</span>
+                        <div className="qty-stepper" style={{ height: '2rem' }}>
+                          <button className="qty-btn" onClick={() => updateColorQty(p.id, cL.color, -1)}>−</button>
+                          <input value={cL.qty} readOnly style={{ height: '2rem' }} />
+                          <button className="qty-btn" onClick={() => updateColorQty(p.id, cL.color, 1)}>+</button>
                         </div>
-                        <button className="pc-color-rm" onClick={() => removeColorLine(p.id, cL.color)} title="Quitar color">
-                          <X size={11} />
-                        </button>
                       </div>
-                    );
-                  })}
+                      <button className="pc-color-rm" onClick={() => removeColorLine(p.id, cL.color)} title="Quitar color">
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
