@@ -34,23 +34,24 @@ export default function App() {
   useEffect(() => {
     const r = document.documentElement.style;
     if (isBravos) {
-      r.setProperty('--accent',       '#7c3aed');
-      r.setProperty('--accent2',      '#5b23c4');
-      r.setProperty('--accent-glow',  'rgba(124,58,237,.15)');
-      r.setProperty('--accent-soft',  'rgba(124,58,237,.08)');
-      r.setProperty('--ok',           '#7c3aed');
-      r.setProperty('--ok-soft',      'rgba(124,58,237,.1)');
-      r.setProperty('--bg',           '#07050f');
-      r.setProperty('--bg2',          '#0d0a16');
-      r.setProperty('--surface',      '#0d0a16');
-      r.setProperty('--surface2',     '#130d1e');
-      r.setProperty('--surface3',     '#1c1430');
-      r.setProperty('--border',       '#2a1a40');
-      r.setProperty('--border2',      '#2a1a40');
-      r.setProperty('--text',         '#e0d8f8');
-      r.setProperty('--text2',        '#ffffff');
-      r.setProperty('--muted',        '#9070b0');
-      r.setProperty('--muted2',       '#7050a0');
+      /* Warm Orange / Peach palette — Bravos */
+      r.setProperty('--accent',       '#EB7347');
+      r.setProperty('--accent2',      '#c85a30');
+      r.setProperty('--accent-glow',  'rgba(235,115,71,.18)');
+      r.setProperty('--accent-soft',  'rgba(235,115,71,.09)');
+      r.setProperty('--ok',           '#EB7347');
+      r.setProperty('--ok-soft',      'rgba(235,115,71,.12)');
+      r.setProperty('--bg',           '#FFF8F0');
+      r.setProperty('--bg2',          '#FAE9D5');
+      r.setProperty('--surface',      '#FFFFFF');
+      r.setProperty('--surface2',     '#FFF5EC');
+      r.setProperty('--surface3',     '#FFEDD5');
+      r.setProperty('--border',       'rgba(235,115,71,.3)');
+      r.setProperty('--border2',      'rgba(200,90,48,.25)');
+      r.setProperty('--text',         '#5c2a14');
+      r.setProperty('--text2',        '#3d1a0a');
+      r.setProperty('--muted',        '#b07040');
+      r.setProperty('--muted2',       '#FDAC68');
     } else {
       /* Sage Green palette — Overshark (Sea Glass + Desired Collection) */
       r.setProperty('--accent',       '#45834D');
@@ -444,10 +445,10 @@ export default function App() {
             },
             {
               id: 'bravos', label: 'BRAVOS', sub: 'Poleras & Pantalones', tag: 'Colección activa',
-              icon: '/brav-icon.png', color: '#7c3aed', colorDim: '#5b23c4',
-              grad: 'linear-gradient(135deg, #100a1a, #160d24)',
-              gradActive: 'linear-gradient(135deg, #130c1e, #1e1030)',
-              glow: 'rgba(124,58,237,0.18)', border: '#2a1a40',
+              icon: '/brav-icon.png', color: '#EB7347', colorDim: '#c85a30',
+              grad: 'linear-gradient(135deg, #fff8f0, #faebd7)',
+              gradActive: 'linear-gradient(135deg, #faebd7, #fdd9b5)',
+              glow: 'rgba(235,115,71,0.18)', border: 'rgba(235,115,71,.3)',
             },
           ] as const).map(b => {
             const active = brand === b.id;
@@ -495,7 +496,7 @@ export default function App() {
                   <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? b.color : '#6b7280', letterSpacing: '0.06em', lineHeight: 1 }}>
                     {b.label}
                   </div>
-                  <div style={{ fontSize: '0.74rem', color: active ? (b.id === 'bravos' ? '#c0a0f0' : '#68A877') : '#6a7a68', marginTop: '3px', fontWeight: 500 }}>
+                  <div style={{ fontSize: '0.74rem', color: active ? (b.id === 'bravos' ? '#FFA85D' : '#68A877') : '#6a7a68', marginTop: '3px', fontWeight: 500 }}>
                     {b.sub}
                   </div>
                   {active && (

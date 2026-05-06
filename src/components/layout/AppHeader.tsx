@@ -23,13 +23,13 @@ export default function AppHeader({
   const reached = salesCount >= metaDiaria;
 
   const isBravos = brand === 'bravos';
-  const accent = isBravos ? '#7c3aed' : '#45834D';
-  const accentLight = isBravos ? '#9f6ef5' : '#8FCA97';
-  const headerBg = isBravos ? 'linear-gradient(135deg, #0d0a14, #130d1e)' : 'linear-gradient(135deg, #ffffff, #F2FBF5)';
-  const headerBorder = isBravos ? '#1e1430' : 'rgba(104,168,119,.38)';
-  const headerShadow = isBravos ? '0 4px 24px rgba(124,58,237,0.1)' : '0 4px 24px rgba(69,131,77,.1)';
-  const mutedColor = isBravos ? '#8070a0' : '#517861';
-  const titleColor = isBravos ? '#fff' : '#162e20';
+  const accent = isBravos ? '#EB7347' : '#45834D';
+  const accentLight = isBravos ? '#FFA85D' : '#8FCA97';
+  const headerBg = isBravos ? 'linear-gradient(135deg, #ffffff, #FFF5EC)' : 'linear-gradient(135deg, #ffffff, #F2FBF5)';
+  const headerBorder = isBravos ? 'rgba(235,115,71,.3)' : 'rgba(104,168,119,.38)';
+  const headerShadow = isBravos ? '0 4px 24px rgba(235,115,71,.12)' : '0 4px 24px rgba(69,131,77,.1)';
+  const mutedColor = isBravos ? '#b07040' : '#517861';
+  const titleColor = isBravos ? '#3d1a0a' : '#162e20';
   const brandName = isBravos ? 'BRAVOS' : 'OVERSHARK';
   const brandIcon = isBravos ? '/brav-icon.png' : '/over-icon.png';
 

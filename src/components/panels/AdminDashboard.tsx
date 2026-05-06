@@ -576,7 +576,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
   const getBrandColor = (label: string) => {
     const l = (label || '').toUpperCase();
-    if (l.includes('BRV') || l.includes('BRAVOS')) return { bg: 'rgba(124,58,237,0.12)', color: '#7c3aed', border: 'rgba(124,58,237,0.3)' };
+    if (l.includes('BRV') || l.includes('BRAVOS')) return { bg: 'rgba(235,115,71,0.12)', color: '#EB7347', border: 'rgba(235,115,71,0.3)' };
     return { bg: 'rgba(69,131,77,0.1)', color: '#45834D', border: 'rgba(69,131,77,0.3)' };
   };
 
@@ -621,7 +621,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           {[
             { label: 'Ventas', value: globalStats.salesCount, color: S.accent, icon: <ShoppingBag size={18} /> },
             { label: 'Total S/', value: `S/${globalStats.totalRevenue.toLocaleString()}`, color: '#1e6fa0', icon: <DollarSign size={18} /> },
-            { label: 'Prendas', value: globalStats.totalItems, color: '#7c3aed', icon: <Package size={18} /> },
+            { label: 'Prendas', value: globalStats.totalItems, color: '#EB7347', icon: <Package size={18} /> },
             { label: 'Promedio/venta', value: `S/${globalStats.avgPerSale}`, color: '#45834D', icon: <BarChart3 size={18} /> },
             { label: 'Deuda total S/', value: globalStats.deudaTotal > 0 ? `S/${globalStats.deudaTotal.toFixed(0)}` : 'S/0', color: globalStats.deudaTotal > 0 ? '#ef4444' : '#517861', icon: <AlertTriangle size={18} /> },
           ].map(k => (
@@ -680,7 +680,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 const barPct = maxRev > 0 ? Math.round((p.revenue / maxRev) * 100) : 0;
                 const totalRev = pubStats.reduce((a, x) => a + x.revenue, 0);
                 const pct = totalRev > 0 ? Math.round((p.revenue / totalRev) * 100) : 0;
-                const hue = [S.accent, '#1e6fa0', '#7c3aed', '#68A877', '#f59e0b', '#ec4899'][i % 6];
+                const hue = [S.accent, '#1e6fa0', '#EB7347', '#68A877', '#f59e0b', '#ec4899'][i % 6];
                 return (
                   <div key={p.code} style={{ background: 'rgba(242,251,245,.5)', border: '1px solid rgba(104,168,119,.25)', borderRadius: '8px', padding: '0.5rem 0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
@@ -722,7 +722,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                           <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount}v · {v.totalItems}p</span>
                           <span style={{ fontSize: '0.8rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed', background: 'rgba(124,58,237,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#EB7347', background: 'rgba(235,115,71,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
                         </div>
                       </div>
                       <div style={{ height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -994,7 +994,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       <div>
                         <div style={{ fontSize: '0.75rem', color: S.text, fontWeight: 600, marginBottom: '0.15rem' }}>{s.combo || 'Sin detalle'}</div>
                         <div style={{ fontSize: '0.68rem', color: S.muted }}>{s.marcaLabel || 'OVER'} · {s.vendorName} · {region}</div>
-                        {s.codigoPublicidad && <div style={{ fontSize: '0.65rem', color: '#7c3aed', marginTop: '0.1rem' }}>Pub: {s.codigoPublicidad}</div>}
+                        {s.codigoPublicidad && <div style={{ fontSize: '0.65rem', color: '#EB7347', marginTop: '0.1rem' }}>Pub: {s.codigoPublicidad}</div>}
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.88rem', fontWeight: 900, color: S.accent }}>S/{s.totalTotal ?? 0}</div>
