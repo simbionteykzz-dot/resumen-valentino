@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
-import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil } from 'lucide-react';
+import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown } from 'lucide-react';
 import type { Profile } from '../../types';
 import type { AdminSale } from '../../types';
 import { jsPDF } from 'jspdf';
@@ -60,6 +60,117 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   const clientHistory = historyClient
     ? allSales.filter(s => s.cel === historyClient.cel).sort((a, b) => (b.fecha ?? '').localeCompare(a.fecha ?? ''))
     : [];
+
+  const exportClientPDF = () => {
+    if (!historyClient || clientHistory.length === 0) return;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    const mg = 14;
+
+    // Header
+    doc.setFillColor(10, 14, 20);
+    doc.rect(0, 0, W, 44, 'F');
+    doc.setFillColor(255, 107, 0);
+    doc.rect(0, 0, 4, 44, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LIVEX AGENCY', mg + 4, 13);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(56, 200, 245);
+    doc.text('Historial de Cliente', mg + 4, 20);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text(historyClient.nom.toUpperCase(), mg + 4, 29);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(255, 107, 0);
+    doc.text(historyClient.cel, mg + 4, 36);
+
+    doc.setFontSize(7);
+    doc.setTextColor(100, 80, 55);
+    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W - mg, 39, { align: 'right' });
+
+    // KPI boxes
+    const totalRevenue = clientHistory.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0);
+    const totalDeuda = clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0);
+    const kpis = [
+      { label: 'COMPRAS', value: String(clientHistory.length), rgb: [56, 200, 245] as [number, number, number] },
+      { label: 'TOTAL S/', value: `S/${totalRevenue.toLocaleString()}`, rgb: [0, 230, 150] as [number, number, number] },
+      { label: 'DEUDA S/', value: `S/${totalDeuda.toFixed(0)}`, rgb: totalDeuda > 0 ? [239, 68, 68] as [number, number, number] : [100, 100, 100] as [number, number, number] },
+    ];
+    const boxW = (W - mg * 2 - 8) / 3;
+    kpis.forEach((k, i) => {
+      const x = mg + i * (boxW + 4);
+      doc.setFillColor(18, 24, 32);
+      doc.roundedRect(x, 50, boxW, 24, 2, 2, 'F');
+      doc.setFillColor(...k.rgb);
+      doc.rect(x, 50, boxW, 2, 'F');
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...k.rgb);
+      doc.text(k.label, x + boxW / 2, 58, { align: 'center' });
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text(k.value, x + boxW / 2, 69, { align: 'center' });
+    });
+
+    // Table
+    autoTable(doc, {
+      startY: 82,
+      head: [['FECHA', 'COMBO', 'MARCA', 'VENDEDOR', 'TOTAL S/', 'ESTADO', 'DEBE']],
+      body: clientHistory.map(s => {
+        const estado = getEstado(s);
+        return [
+          s.fecha ?? '—',
+          (s.combo ?? 'Sin detalle').substring(0, 40),
+          s.marcaLabel || 'OVER',
+          s.vendorName ?? '—',
+          `S/${s.totalTotal ?? 0}`,
+          estado,
+          s.resta && parseFloat(s.resta) > 0 ? `S/${s.resta}` : '—',
+        ];
+      }),
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [190, 165, 140], lineColor: [35, 28, 20], lineWidth: 0.25 },
+      headStyles: { fillColor: [20, 28, 38], textColor: [255, 107, 0], fontStyle: 'bold', fontSize: 7.5 },
+      alternateRowStyles: { fillColor: [16, 20, 28] },
+      bodyStyles: { fillColor: [12, 16, 22] },
+      columnStyles: {
+        4: { textColor: [0, 230, 150], fontStyle: 'bold' },
+        5: { fontStyle: 'bold' },
+        6: { textColor: [239, 68, 68] },
+      },
+      didParseCell: (data) => {
+        if (data.section !== 'body' || data.column.index !== 5) return;
+        const v = String(data.cell.raw);
+        if (v === 'PAGO COMPLETO') data.cell.styles.textColor = [0, 230, 150];
+        else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [255, 160, 50];
+        else if (v === 'ANULADO') data.cell.styles.textColor = [239, 68, 68];
+      },
+      didDrawPage: (data) => {
+        const totalPages = doc.getNumberOfPages();
+        doc.setDrawColor(255, 107, 0);
+        doc.setLineWidth(0.4);
+        doc.line(mg, H - 8, W - mg, H - 8);
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 75, 50);
+        doc.text(`Livex Agency · ${historyClient.nom} · ${historyClient.cel}`, mg, H - 4.5);
+        doc.text(`Página ${data.pageNumber} de ${totalPages}`, W - mg, H - 4.5, { align: 'right' });
+      },
+      margin: { top: 82, left: mg, right: mg, bottom: 12 },
+    });
+
+    doc.save(`cliente_${historyClient.cel}_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const openEdit = (s: AdminSale) => {
     setEditingId(s._dbId ?? null);
@@ -673,9 +784,17 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', marginBottom: '0.2rem' }}>{historyClient.nom}</div>
                   <div style={{ fontSize: '0.78rem', color: '#38c8f5', fontWeight: 700 }}>{historyClient.cel}</div>
                 </div>
-                <button onClick={() => setHistoryClient(null)} style={{ background: 'transparent', border: 'none', color: '#a08060', cursor: 'pointer' }}>
-                  <X size={18} />
-                </button>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <button
+                    onClick={exportClientPDF}
+                    title="Descargar resumen en PDF"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.75rem', borderRadius: '7px', border: '1px solid rgba(56,200,245,0.3)', background: 'rgba(56,200,245,0.08)', color: '#38c8f5', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 800 }}>
+                    <FileDown size={13} /> PDF
+                  </button>
+                  <button onClick={() => setHistoryClient(null)} style={{ background: 'transparent', border: 'none', color: '#a08060', cursor: 'pointer' }}>
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
               {/* Resumen del cliente */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginTop: '0.85rem' }}>
