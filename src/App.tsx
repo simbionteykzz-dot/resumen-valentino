@@ -322,13 +322,16 @@ export default function App() {
 
   if (!user) return <LoginPage />;
 
-  if (profile?.role === 'admin') {
+  const [adminMode, setAdminMode] = useState<'admin' | 'vendedor'>('admin');
+
+  if (profile?.role === 'admin' && adminMode === 'admin') {
     return (
       <>
         <AdminDashboard
           adminName={vendedorName}
           profiles={[]}
           onSignOut={signOut}
+          onSwitchToVendedor={() => setAdminMode('vendedor')}
         />
         {toast && (
           <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
@@ -344,6 +347,13 @@ export default function App() {
   return (
     <>
       <div className="wrap" style={{ maxWidth: '1140px', margin: '0 auto' }}>
+        {profile?.role === 'admin' && (
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={() => setAdminMode('admin')} style={{ background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.3)', borderRadius: '8px', color: '#ff6b00', cursor: 'pointer', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              ← Volver al Panel Admin
+            </button>
+          </div>
+        )}
         <AppHeader
           salesCount={sales.length}
           totalSoles={totalSoles}
