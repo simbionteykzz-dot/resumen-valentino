@@ -33,10 +33,10 @@ export function useAdmin() {
 
   const loadData = async () => {
     setLoading(true);
-    const [sales, profs] = await Promise.all([
-      getAllSalesAdmin(effectiveDateFrom, effectiveDateTo),
-      getAllProfiles(),
-    ]);
+    const profs = await getAllProfiles();
+    const profilesMap: Record<string, string> = {};
+    profs.forEach(p => { if (p.id) profilesMap[p.id] = p.full_name ?? p.id; });
+    const sales = await getAllSalesAdmin(effectiveDateFrom, effectiveDateTo, profilesMap);
     setAllSales(sales);
     setProfiles(profs);
     setLoading(false);

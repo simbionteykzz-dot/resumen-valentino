@@ -71,17 +71,17 @@ export async function getAllProfiles(): Promise<Profile[]> {
   return (data ?? []) as Profile[];
 }
 
-export async function getAllSalesAdmin(dateFrom: string, dateTo: string): Promise<AdminSale[]> {
+export async function getAllSalesAdmin(dateFrom: string, dateTo: string, profilesMap?: Record<string, string>): Promise<AdminSale[]> {
   const { data, error } = await supabase
     .from('ventas')
-    .select('*, profiles(full_name)')
+    .select('*')
     .gte('fecha', dateFrom)
     .lte('fecha', dateTo)
     .order('created_at', { ascending: false });
   if (error || !data) return [];
   return data.map((row: any) => ({
     ...ventaFromDBRaw(row),
-    vendorName: row.profiles?.full_name ?? 'Desconocido',
+    vendorName: profilesMap?.[row.user_id] ?? row.user_id ?? 'Desconocido',
     fecha: row.fecha ?? '',
   })) as AdminSale[];
 }
