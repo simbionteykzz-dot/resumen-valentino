@@ -46,6 +46,14 @@ export interface Sale {
   combo: string;
   qtyN: number;
   totalTotal: number;
+  // Destino
+  sede?: string;
+  provincia?: string;
+  depto?: string;
+  distrito?: string;
+  ubicacion?: string;
+  // Detalle completo con colores y tallas
+  detalle?: string;
   _dbId?: string;
 }
 

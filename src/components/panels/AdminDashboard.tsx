@@ -254,18 +254,48 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     rowHalf([['Celular', s.cel || '—', [56, 200, 245]], ['DNI', s.dni || '—']]);
     rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [255, 107, 0]]]);
 
+    // Destino según región
+    if (region === 'Provincia' && (s.sede || s.provincia || s.depto)) {
+      y += 1;
+      if (s.sede) row('Sede Shalom', s.sede, [255, 160, 50]);
+      if (s.provincia || s.depto) rowHalf([['Departamento', s.provincia || '—'], ['Provincia', s.depto || '—']]);
+    } else if (region === 'Lima' && (s.distrito || s.ubicacion)) {
+      y += 1;
+      if (s.distrito) row('Distrito', s.distrito, [56, 200, 245]);
+      if (s.ubicacion) {
+        const ubLines = doc.splitTextToSize(s.ubicacion, W - mg * 2 - 44);
+        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 95, 70);
+        doc.text('Ubicación', mg, y);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(220, 200, 180);
+        doc.text(ubLines, mg + 42, y);
+        y += ubLines.length * 6 + 1;
+      }
+    }
+
     y += 2;
     section('DETALLE DEL PEDIDO');
-    // Combo puede ser largo — wrapearlo
-    const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', W - mg * 2 - 44);
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120, 95, 70);
-    doc.text('Combo', mg, y);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(220, 200, 180);
-    doc.text(comboLines, mg + 42, y);
-    y += comboLines.length * 6 + 1;
+
+    // Detalle completo con colores/tallas si está disponible
+    if (s.detalle && s.detalle.trim()) {
+      const detalleLines = doc.splitTextToSize(s.detalle.trim(), W - mg * 2);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(190, 165, 130);
+      doc.text(detalleLines, mg, y);
+      y += detalleLines.length * 5.5 + 3;
+    } else {
+      // Fallback: mostrar combo resumido
+      const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', W - mg * 2 - 44);
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120, 95, 70);
+      doc.text('Combo', mg, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(220, 200, 180);
+      doc.text(comboLines, mg + 42, y);
+      y += comboLines.length * 6 + 1;
+    }
+
     rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [255, 107, 0]]]);
     if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [167, 139, 250]);
 

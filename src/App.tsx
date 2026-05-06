@@ -349,6 +349,12 @@ export default function App() {
       combo: formatTipoComboSheet(),
       qtyN: totalQty,
       totalTotal: totalPagar,
+      sede: tab === 'prov' ? (clientData.sede || '') : '',
+      provincia: tab === 'prov' ? (clientData.provincia || '') : '',
+      depto: tab === 'prov' ? (clientData.depto || '') : '',
+      distrito: tab === 'lima' ? (clientData.distrito || '') : '',
+      ubicacion: tab === 'lima' ? (clientData.ubicacion || '') : '',
+      detalle: getProductString().replace(/^\n\n- PRODUCTO -\n/, '').trim(),
     };
     addSale(newSale);
   };

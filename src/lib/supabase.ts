@@ -26,6 +26,12 @@ export interface VentaDB {
   combo: string;
   qty_n: number;
   total_total: number;
+  sede?: string;
+  provincia?: string;
+  depto?: string;
+  distrito?: string;
+  ubicacion?: string;
+  detalle?: string;
 }
 
 export function ventaToDB(
@@ -51,6 +57,12 @@ export function ventaToDB(
     combo: sale.combo ?? '',
     qty_n: sale.qtyN ?? 0,
     total_total: sale.totalTotal ?? 0,
+    sede: sale.sede ?? '',
+    provincia: sale.provincia ?? '',
+    depto: sale.depto ?? '',
+    distrito: sale.distrito ?? '',
+    ubicacion: sale.ubicacion ?? '',
+    detalle: sale.detalle ?? '',
   };
 }
 
@@ -103,6 +115,12 @@ export function ventaFromDBRaw(row: VentaDB): Sale {
     combo: row.combo,
     qtyN: row.qty_n,
     totalTotal: row.total_total,
+    sede: row.sede ?? '',
+    provincia: row.provincia ?? '',
+    depto: row.depto ?? '',
+    distrito: row.distrito ?? '',
+    ubicacion: row.ubicacion ?? '',
+    detalle: row.detalle ?? '',
     _dbId: row.id,
   };
 }
@@ -124,6 +142,12 @@ export function ventaFromDB(row: VentaDB): Sale {
     combo: row.combo,
     qtyN: row.qty_n,
     totalTotal: row.total_total,
+    sede: row.sede ?? '',
+    provincia: row.provincia ?? '',
+    depto: row.depto ?? '',
+    distrito: row.distrito ?? '',
+    ubicacion: row.ubicacion ?? '',
+    detalle: row.detalle ?? '',
     _dbId: row.id,
   };
 }
