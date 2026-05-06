@@ -172,6 +172,139 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     doc.save(`cliente_${historyClient.cel}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
+  const exportSalePDF = (s: AdminSale) => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    const mg = 18;
+    const estado = getEstado(s);
+    const region = getRegion(s);
+    const estadoRgb: [number, number, number] = estado === 'PAGO COMPLETO' ? [0, 230, 150] : estado === 'CONTRA ENTREGA' ? [255, 160, 50] : estado === 'ANULADO' ? [239, 68, 68] : [160, 128, 96];
+
+    // Fondo total
+    doc.setFillColor(8, 11, 16);
+    doc.rect(0, 0, W, H, 'F');
+
+    // Barra superior naranja
+    doc.setFillColor(255, 107, 0);
+    doc.rect(0, 0, W, 6, 'F');
+
+    // Encabezado empresa
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LIVEX AGENCY', mg, 22);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(56, 200, 245);
+    doc.text('COMPROBANTE DE COMPRA', mg, 29);
+
+    // Número de comprobante y fecha
+    doc.setFontSize(7.5);
+    doc.setTextColor(100, 80, 55);
+    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 22, { align: 'right' });
+    doc.text(`${s.fecha ?? '—'}  ${s.hora ? `· ${s.hora}` : ''}`, W - mg, 29, { align: 'right' });
+
+    // Línea separadora
+    doc.setDrawColor(255, 107, 0);
+    doc.setLineWidth(0.3);
+    doc.line(mg, 34, W - mg, 34);
+
+    // ── Bloque CLIENTE ──
+    let y = 42;
+    const section = (title: string) => {
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 107, 0);
+      doc.text(title, mg, y);
+      y += 1;
+      doc.setDrawColor(255, 107, 0, );
+      doc.setLineWidth(0.2);
+      doc.line(mg, y + 1, W - mg, y + 1);
+      y += 5;
+    };
+    const row = (label: string, value: string, valueColor?: [number, number, number]) => {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120, 95, 70);
+      doc.text(label, mg, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...(valueColor ?? [220, 200, 180] as [number, number, number]));
+      doc.text(value, mg + 42, y);
+      y += 7;
+    };
+    const rowHalf = (pairs: [string, string, ([number,number,number] | undefined)?][]) => {
+      const colW = (W - mg * 2) / pairs.length;
+      pairs.forEach(([label, value, color], i) => {
+        const x = mg + i * colW;
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(120, 95, 70);
+        doc.text(label, x, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...(color ?? [220, 200, 180] as [number, number, number]));
+        doc.text(value, x + 22, y);
+      });
+      y += 7;
+    };
+
+    section('DATOS DEL CLIENTE');
+    row('Nombre', s.nom || '—');
+    rowHalf([['Celular', s.cel || '—', [56, 200, 245]], ['DNI', s.dni || '—']]);
+    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [255, 107, 0]]]);
+
+    y += 2;
+    section('DETALLE DEL PEDIDO');
+    // Combo puede ser largo — wrapearlo
+    const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', W - mg * 2 - 44);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 95, 70);
+    doc.text('Combo', mg, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(220, 200, 180);
+    doc.text(comboLines, mg + 42, y);
+    y += comboLines.length * 6 + 1;
+    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [255, 107, 0]]]);
+    if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [167, 139, 250]);
+
+    y += 2;
+    section('RESUMEN DE PAGO');
+    row('Método de pago', s.metodoPago || '—');
+    row('Total', `S/ ${s.totalTotal ?? 0}`, [0, 230, 150]);
+    if (s.separo) row('Separo / Adelanto', `S/ ${s.separo}`, [56, 200, 245]);
+    if (s.resta && parseFloat(s.resta) > 0) row('Saldo pendiente', `S/ ${s.resta}`, [239, 68, 68]);
+
+    // Badge de estado centrado
+    y += 4;
+    const badgeW = 60;
+    const badgeX = (W - badgeW) / 2;
+    doc.setFillColor(estadoRgb[0], estadoRgb[1], estadoRgb[2]);
+    doc.setGState(new (doc as any).GState({ opacity: 0.12 }));
+    doc.roundedRect(badgeX, y, badgeW, 10, 2, 2, 'F');
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    doc.setDrawColor(...estadoRgb);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(badgeX, y, badgeW, 10, 2, 2, 'S');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...estadoRgb);
+    doc.text(estado, W / 2, y + 6.8, { align: 'center' });
+
+    // Footer
+    doc.setDrawColor(255, 107, 0);
+    doc.setLineWidth(0.3);
+    doc.line(mg, H - 16, W - mg, H - 16);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 60, 40);
+    doc.text('Livex Agency · Comprobante interno de venta', W / 2, H - 11, { align: 'center' });
+    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W / 2, H - 6, { align: 'center' });
+
+    doc.save(`comprobante_${s.cel ?? 'cliente'}_${s.fecha ?? 'sin-fecha'}.pdf`);
+  };
+
   const openEdit = (s: AdminSale) => {
     setEditingId(s._dbId ?? null);
     setEditForm(saleToForm(s));
@@ -820,23 +953,34 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               ) : clientHistory.map((s, i) => {
                 const estado = getEstado(s);
                 const estadoColor = estado === 'PAGO COMPLETO' ? '#00e696' : estado === 'CONTRA ENTREGA' ? '#ff6b00' : estado === 'ANULADO' ? '#ef4444' : '#a08060';
+                const region = getRegion(s);
                 return (
                   <div key={s._dbId ?? i} style={{ background: 'rgba(22,17,13,0.7)', border: '1px solid #2a1f14', borderRadius: '8px', padding: '0.65rem 0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#a08060' }}>{s.fecha ?? '—'}</span>
+                      <span style={{ fontSize: '0.72rem', color: '#a08060' }}>{s.fecha ?? '—'} {s.hora ? `· ${s.hora}` : ''}</span>
                       <span style={{ fontSize: '0.65rem', fontWeight: 800, color: estadoColor, background: `${estadoColor}18`, borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{estado}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                       <div>
                         <div style={{ fontSize: '0.75rem', color: '#f0e6d8', fontWeight: 600, marginBottom: '0.15rem' }}>{s.combo || 'Sin detalle'}</div>
-                        <div style={{ fontSize: '0.68rem', color: '#a08060' }}>{s.marcaLabel || 'OVER'} · {s.vendorName}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#a08060' }}>{s.marcaLabel || 'OVER'} · {s.vendorName} · {region}</div>
+                        {s.codigoPublicidad && <div style={{ fontSize: '0.65rem', color: '#a78bfa', marginTop: '0.1rem' }}>Pub: {s.codigoPublicidad}</div>}
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#00e696' }}>S/{s.totalTotal ?? 0}</div>
+                        {s.separo && <div style={{ fontSize: '0.65rem', color: '#a08060' }}>Separo: S/{s.separo}</div>}
                         {s.resta && parseFloat(s.resta) > 0 && (
                           <div style={{ fontSize: '0.68rem', color: '#ef4444', fontWeight: 700 }}>Debe S/{s.resta}</div>
                         )}
                       </div>
+                    </div>
+                    <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.45rem', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => exportSalePDF(s)}
+                        title="Descargar comprobante de esta compra"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.6rem', borderRadius: '5px', border: '1px solid rgba(255,107,0,0.25)', background: 'rgba(255,107,0,0.07)', color: '#ff6b00', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 800 }}>
+                        <FileDown size={11} /> Comprobante
+                      </button>
                     </div>
                   </div>
                 );
