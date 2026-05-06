@@ -66,6 +66,38 @@ export const PROMOS_DATA: Record<string, {name: string, comboData: string, price
   "notch_wafle_4_99": { name: "Cuello Notch Wafle 4×99", comboData: "CUELLO NOTCH WAFLE 4 X 99", price: 99, list: [{n:"CUELLO NOTCH WAFLE", q:4}] },
 };
 
+// ── BRAVOS ──────────────────────────────────────────────────────────────────
+
+export const POLOS_CATALOGO_BRAVOS = [
+  "POLERA BOXYFIT", "POLERA NERU", "PANTALON BRATZ", "PANTALON OPRA", "CLASICOS DE REGALO",
+];
+
+export const BRV_VARIANTES: Record<string, { tallas: string[], colores: string }> = {
+  "POLERA BOXYFIT":   { tallas: TALLAS_SML, colores: "" },
+  "POLERA NERU":      { tallas: TALLAS_SML, colores: "" },
+  "PANTALON BRATZ":   { tallas: TALLAS_SML, colores: "" },
+  "PANTALON OPRA":    { tallas: TALLAS_SML, colores: "" },
+  "CLASICOS DE REGALO": { tallas: TALLAS_SML, colores: "" },
+};
+
+export const BRV_PRECIOS: Record<string, number> = {
+  "POLERA BOXYFIT":   35,
+  "POLERA NERU":      35,
+  "PANTALON BRATZ":   35,
+  "PANTALON OPRA":    35,
+  "CLASICOS DE REGALO": 0,
+};
+
+export const BRV_PROMOS_DATA: Record<string, { name: string; comboData: string; price: number; list: { n: string; q: number }[] }> = {
+  "boxyfit_3_99": { name: "Boxyfit 3×99",       comboData: "POLERA BOXYFIT 3 X 99",   price: 99, list: [{ n: "POLERA BOXYFIT",   q: 3 }] },
+  "neru_3_99":    { name: "Neru 3×99",           comboData: "POLERA NERU 3 X 99",      price: 99, list: [{ n: "POLERA NERU",      q: 3 }] },
+  "bratz_3_99":   { name: "Bratz 3×99",          comboData: "PANTALON BRATZ 3 X 99",   price: 99, list: [{ n: "PANTALON BRATZ",   q: 3 }] },
+  "opra_3_99":    { name: "Opra 3×99",           comboData: "PANTALON OPRA 3 X 99",    price: 99, list: [{ n: "PANTALON OPRA",    q: 3 }] },
+  "clasicos_regalo": { name: "Clásicos de Regalo", comboData: "CLASICOS DE REGALO",   price: 0,  list: [{ n: "CLASICOS DE REGALO", q: 1 }] },
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+
 export const DISTRITOS = [
   "Ancón","Ate","Barranco","Breña","Carabayllo","Chaclacayo","Chorrillos",
   "Cieneguilla","Comas","El Agustino","Independencia","Jesús María",

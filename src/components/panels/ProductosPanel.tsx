@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, TALLAS_SMLXL } from '../../lib/data';
+import {
+  POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, TALLAS_SMLXL,
+  POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA,
+} from '../../lib/data';
 
-export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice }: any) {
+export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice, brand = 'overshark' }: any) {
+  const isBravos = brand === 'bravos';
+  const CATALOGO = isBravos ? POLOS_CATALOGO_BRAVOS : POLOS_CATALOGO_OVERSHARK;
+  const VARIANTES = isBravos ? BRV_VARIANTES : POL_VARIANTES_OVERSHARK;
+  const PROMOS = isBravos ? BRV_PROMOS_DATA : PROMOS_DATA;
+  const listId = isBravos ? 'lista-polos-bravos' : 'lista-polos-overshark';
+  const brandLabel = isBravos ? 'Bravos' : 'Overshark';
 
   const [newPromoName, setNewPromoName] = useState("");
   const [newPromoPrice, setNewPromoPrice] = useState("");
@@ -60,7 +69,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
 
   const normalizePolName = (name: string) => {
     const tl = name.trim().toLowerCase();
-    return Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
+    return Object.keys(VARIANTES).find(k => k.toLowerCase() === tl) || null;
   };
 
   const addColorLine = (id: number, color: string) =>
@@ -101,14 +110,14 @@ export default function ProductosPanel({ products, setProducts, customComboName,
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
-      <datalist id="lista-polos-overshark">
-        {POLOS_CATALOGO_OVERSHARK.map(p => <option key={p} value={p} />)}
+      <datalist id={listId}>
+        {CATALOGO.map(p => <option key={p} value={p} />)}
       </datalist>
 
       {/* ── Header ── */}
       <div className="prod-panel-head">
         <div>
-          <h2 className="prod-panel-title">Productos Overshark</h2>
+          <h2 className="prod-panel-title">Productos {brandLabel}</h2>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
             <span className="prod-chip">{products.length} {products.length === 1 ? 'ítem' : 'ítems'}</span>
             {totalPrendas > 0 && <span className="prod-chip prod-chip--accent">{totalPrendas} prendas</span>}
@@ -126,7 +135,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
       <div style={{ marginBottom: '1.25rem' }}>
         <div className="prod-section-lbl">Cargar Promoción</div>
         <div className="promo-cards-scroll">
-          {Object.entries(PROMOS_DATA).map(([k, v]) => (
+          {Object.entries(PROMOS).map(([k, v]) => (
             <button key={k} className="promo-card" onClick={() => handlePromoLoad(k)}>
               <span className="promo-card-name">{v.name}</span>
               <span className="promo-card-items">{promoItemsLabel(v.list)}</span>
@@ -194,8 +203,8 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         )}
         {products.map((p: any) => {
           const cfgKey = normalizePolName(p.name);
-          const cfg = cfgKey ? POL_VARIANTES_OVERSHARK[cfgKey] : null;
-          const tallas = cfg?.tallas || TALLAS_SMLXL;
+          const cfg = cfgKey ? VARIANTES[cfgKey] : null;
+          const tallas = cfg?.tallas || (isBravos ? ['S','M','L'] : TALLAS_SMLXL);
           const colorList = cfg?.colores ? cfg.colores.split(",").map((c: string) => c.trim()) : [];
           const hasColorLines = p.colorLines.length > 0;
 
@@ -205,7 +214,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               {/* Row 1: nombre + badge + quitar */}
               <div className="pc-row pc-head-row">
                 <input
-                  list="lista-polos-overshark"
+                  list={listId}
                   value={p.name}
                   onChange={e => updateProduct(p.id, 'name', e.target.value)}
                   placeholder="Escribe o elige producto..."

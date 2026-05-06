@@ -17,7 +17,7 @@ import RankingPanel from './components/panels/RankingPanel';
 import SeguimientoPanel from './components/panels/SeguimientoPanel';
 import AdminDashboard from './components/panels/AdminDashboard';
 import { Trash2, Store, Bike, Package, Truck, BarChart3, Wrench } from 'lucide-react';
-import { POL_PRECIOS_OVERSHARK, ENVIO_PROVINCIA_SOLES, ENVIO_LIMA_SOLES, POL_VARIANTES_OVERSHARK } from './lib/data';
+import { POL_PRECIOS_OVERSHARK, ENVIO_PROVINCIA_SOLES, ENVIO_LIMA_SOLES, POL_VARIANTES_OVERSHARK, BRV_PRECIOS, BRV_VARIANTES } from './lib/data';
 import { FRASES_RESUMEN, RECOMENDACIONES_RESUMEN } from './lib/boosters';
 import { getProfile } from './lib/supabase';
 import type { ClientData, CuentaData, BoosterState, ToastState, Sale, Profile } from './types';
@@ -26,6 +26,10 @@ export default function App() {
   const { user, loading, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [adminMode, setAdminMode] = useState<'admin' | 'vendedor'>('admin');
+  const [brand, setBrand] = useState<'overshark' | 'bravos'>('overshark');
+  const isBravos = brand === 'bravos';
+  const PRECIOS_ACTIVOS = isBravos ? BRV_PRECIOS : POL_PRECIOS_OVERSHARK;
+  const VARIANTES_ACTIVOS = isBravos ? BRV_VARIANTES : POL_VARIANTES_OVERSHARK;
 
   useEffect(() => {
     if (user?.id) getProfile(user.id).then(setProfile);
@@ -122,8 +126,8 @@ export default function App() {
         sum += p.promoPricePerUnit * qty;
       } else {
         const tl = p.name.trim().toLowerCase();
-        const canon = Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
-        let unit = canon && POL_PRECIOS_OVERSHARK[canon] != null ? Number(POL_PRECIOS_OVERSHARK[canon]) : 0;
+        const canon = Object.keys(VARIANTES_ACTIVOS).find(k => k.toLowerCase() === tl) || null;
+        let unit = canon && PRECIOS_ACTIVOS[canon] != null ? Number(PRECIOS_ACTIVOS[canon]) : 0;
         if (isNaN(unit) || unit < 0) unit = 0;
         sum += unit * qty;
       }
@@ -238,16 +242,17 @@ export default function App() {
 
   const boostersText = buildBoostersText();
 
+  const brandTag = isBravos ? 'BRAVOS' : 'OVERSHARK';
   const outputStr = (() => {
     let t = '';
     if (tab === 'prov') {
-      t = `➖OVERSHARK — DATOS PROVINCIA 🚌🚌\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}\n🗣️Provincia: ${clientData.provincia}\n😎 Departamento: ${clientData.depto}\n📌SEDE de agencia: *(${clientData.sede || 'Shalom'})*` +
+      t = `➖${brandTag} — DATOS PROVINCIA 🚌🚌\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}\n🗣️Provincia: ${clientData.provincia}\n😎 Departamento: ${clientData.depto}\n📌SEDE de agencia: *(${clientData.sede || 'Shalom'})*` +
         buildCuentaBlock() + getProductString() + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Te enviarán tu voucher entre 48 a 72 horas máximo` + boostersText;
     } else if (tab === 'lima') {
-      t = `➖OVERSHARK — DATOS DELIVERY 🏍️🏍️\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n😎 Distrito: ${clientData.distrito}\n📌Ubicacion: ${clientData.ubicacion}` +
+      t = `➖${brandTag} — DATOS DELIVERY 🏍️🏍️\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n😎 Distrito: ${clientData.distrito}\n📌Ubicacion: ${clientData.ubicacion}` +
         buildCuentaBlock() + getProductString() + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Los pedidos salen al día siguiente entre las 11 AM y a lo largo de la tarde/noche del día` + boostersText;
     } else {
-      t = `➖OVERSHARK — RECOJO EN ALMACÉN 🏭🏭\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}` +
+      t = `➖${brandTag} — RECOJO EN ALMACÉN 🏭🏭\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}` +
         buildCuentaBlock() + getProductString() + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}` + boostersText;
     }
     return t.replace(/\s+$/, '');
@@ -259,7 +264,7 @@ export default function App() {
     let totalQty = 0;
     products.forEach(p => {
       const tl = p.name.trim().toLowerCase();
-      const canon = Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
+      const canon = Object.keys(VARIANTES_ACTIVOS).find(k => k.toLowerCase() === tl) || null;
       const label = String(canon || p.name).toUpperCase().replace(/\s+/g, ' ').trim();
       if (label && !seen[label]) { seen[label] = true; orderedNames.push(label); }
       if (p.colorLines?.length > 0) p.colorLines.forEach((cl: any) => totalQty += cl.qty);
@@ -297,7 +302,7 @@ export default function App() {
       dni: clientData.dni,
       hora,
       codigoPublicidad: clientData.codigoPublicidad || 'Live',
-      marcaLabel: 'OVER',
+      marcaLabel: isBravos ? 'BRV' : 'OVER',
       limaMark: tab === 'lima' ? 'X' : '',
       provMark: tab === 'prov' ? 'X' : '',
       separo: isCompleto ? '' : cuentaData.pago,
@@ -362,6 +367,15 @@ export default function App() {
           onSignOut={signOut}
         />
 
+        {/* ── Selector de marca ── */}
+        <div style={{ display: 'flex', gap: '6px', background: 'var(--surface2)', borderRadius: '40px', padding: '5px', border: '1px solid var(--surface3)', width: 'fit-content', marginBottom: '1.25rem' }}>
+          {(['overshark', 'bravos'] as const).map(b => (
+            <button key={b} onClick={() => { setBrand(b); setProducts([]); setCustomComboName(''); setPromoPrice(''); }} style={{ borderRadius: '30px', padding: '0.5rem 1.4rem', fontSize: '0.85rem', fontWeight: 800, background: brand === b ? (b === 'bravos' ? '#7c3aed' : 'var(--accent)') : 'transparent', color: brand === b ? '#fff' : 'var(--muted)', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', transition: 'all 0.2s' }}>
+              {b === 'overshark' ? '🦈 Overshark' : '💪 Bravos'}
+            </button>
+          ))}
+        </div>
+
         <div className="tabs-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border2)', paddingBottom: '1rem' }}>
           <div className="tabs" style={{ display: 'flex', gap: '4px', background: 'var(--surface2)', borderRadius: '40px', padding: '6px', border: '1px solid var(--surface3)' }}>
             {([
@@ -386,7 +400,7 @@ export default function App() {
             <BoostersPanel boosters={boosters} onChange={handleBoosterChange} productCount={products.length} />
           </div>
           <div>
-            <ProductosPanel products={products} setProducts={setProducts} customComboName={customComboName} setCustomComboName={setCustomComboName} promoPrice={promoPrice} setPromoPrice={setPromoPrice} />
+            <ProductosPanel products={products} setProducts={setProducts} customComboName={customComboName} setCustomComboName={setCustomComboName} promoPrice={promoPrice} setPromoPrice={setPromoPrice} brand={brand} />
             <OutputPanel outputText={outputStr} onAddSale={handlePushSale} clientCelular={clientData.celular} />
           </div>
         </div>
