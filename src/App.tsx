@@ -430,7 +430,7 @@ export default function App() {
               onClick={async () => {
                 const r = await syncFromOdoo();
                 if (r.ok) showToast(`Stock actualizado — ${r.synced} variantes`, 'ok');
-                else showToast('Error al sincronizar stock', 'err');
+                else showToast(`Error sync: ${r.error ?? 'desconocido'}`, 'err');
               }}
               disabled={stockLoading}
               title={stockLastSync ? `Última sync: ${stockLastSync.toLocaleTimeString()}` : 'Sincronizar stock desde Odoo'}
