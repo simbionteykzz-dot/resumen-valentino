@@ -44,7 +44,7 @@ export function useSales(
 
   useEffect(() => {
     loadSales(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, userId]);
 
   const addSale = async (newSale: Sale) => {
     const newSales = [...sales, newSale];
