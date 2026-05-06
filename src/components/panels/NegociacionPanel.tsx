@@ -56,7 +56,7 @@ export default function NegociacionPanel({ products }: { products: any[] }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
-        <div style={{ background: 'rgba(255,107,0,0.08)', border: '1px solid rgba(255,107,0,0.2)', borderRadius: '10px', padding: '0.85rem', textAlign: 'center' }}>
+        <div style={{ background: 'rgba(69,131,77,0.08)', border: '1px solid rgba(104,168,119,0.3)', borderRadius: '10px', padding: '0.85rem', textAlign: 'center' }}>
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Prendas</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent)' }}>{stats.totalQty}</div>
         </div>
@@ -64,9 +64,9 @@ export default function NegociacionPanel({ products }: { products: any[] }) {
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--info)' }}>S/{stats.totalPrice}</div>
         </div>
-        <div style={{ background: 'rgba(0,230,150,0.08)', border: '1px solid rgba(0,230,150,0.2)', borderRadius: '10px', padding: '0.85rem', textAlign: 'center' }}>
+        <div style={{ background: 'rgba(69,131,77,0.08)', border: '1px solid rgba(104,168,119,0.25)', borderRadius: '10px', padding: '0.85rem', textAlign: 'center' }}>
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>C/U</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#00e696' }}>S/{stats.perUnit}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent)' }}>S/{stats.perUnit}</div>
         </div>
       </div>
 
@@ -77,28 +77,28 @@ export default function NegociacionPanel({ products }: { products: any[] }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {mejoresOpciones.map((op, i) => (
-              <div key={i} className="frase-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(0,230,150,0.06), rgba(0,230,150,0.02))', border: '1px solid rgba(0,230,150,0.15)', borderRadius: '10px' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '10px', flexShrink: 0, background: 'rgba(0,230,150,0.15)', border: '1px solid rgba(0,230,150,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 900, color: '#00e696' }}>+{op.add}</div>
+              <div key={i} className="frase-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(69,131,77,0.06), rgba(104,168,119,0.02))', border: '1px solid rgba(104,168,119,0.2)', borderRadius: '10px' }}>
+                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '10px', flexShrink: 0, background: 'rgba(69,131,77,0.15)', border: '1px solid rgba(104,168,119,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', fontWeight: 900, color: '#45834D' }}>+{op.add}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text2)' }}>
-                    {op.label} <span style={{ color: '#00e696', fontSize: '0.82rem' }}>→ S/{op.perUnit} c/u</span>
+                    {op.label} <span style={{ color: '#45834D', fontSize: '0.82rem' }}>→ S/{op.perUnit} c/u</span>
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
                     Agrega {op.add} prenda{op.add > 1 ? 's' : ''} más y ahorra S/{op.savings} en total
                   </div>
                 </div>
-                <ArrowRight size={16} style={{ color: 'rgba(0,230,150,0.5)', flexShrink: 0 }} />
+                <ArrowRight size={16} style={{ color: 'rgba(69,131,77,0.5)', flexShrink: 0 }} />
               </div>
             ))}
           </div>
         </>
       )}
 
-      <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(10,16,23,0.5)', border: '1px solid rgba(26,39,51,0.6)', borderRadius: '10px' }}>
+      <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(242,251,245,0.8)', border: '1px solid rgba(104,168,119,0.3)', borderRadius: '10px' }}>
         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Escala de precios</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
           {ESCALAS.map((e, i) => (
-            <span key={i} style={{ fontSize: '0.78rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: stats.totalQty >= e.qty ? 'rgba(0,230,150,0.15)' : 'rgba(26,39,51,0.6)', border: `1px solid ${stats.totalQty >= e.qty ? 'rgba(0,230,150,0.3)' : 'rgba(26,39,51,0.8)'}`, color: stats.totalQty >= e.qty ? '#00e696' : 'var(--muted)' }}>
+            <span key={i} style={{ fontSize: '0.78rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: stats.totalQty >= e.qty ? 'rgba(69,131,77,0.15)' : 'rgba(104,168,119,0.08)', border: `1px solid ${stats.totalQty >= e.qty ? 'rgba(104,168,119,0.4)' : 'rgba(104,168,119,0.2)'}`, color: stats.totalQty >= e.qty ? '#45834D' : 'var(--muted)' }}>
               {e.label} = S/{e.perUnit}/u
             </span>
           ))}

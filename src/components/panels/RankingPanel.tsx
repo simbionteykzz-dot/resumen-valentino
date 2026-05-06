@@ -24,7 +24,7 @@ export default function RankingPanel({ sales }: { sales: any[] }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {ranking.map(([name, d], i) => (
-          <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', background: i === 0 ? 'linear-gradient(135deg,rgba(250,204,21,0.08),rgba(250,204,21,0.02))' : 'rgba(10,16,23,0.3)', border: `1px solid ${i === 0 ? 'rgba(250,204,21,0.2)' : 'rgba(26,39,51,0.5)'}`, borderRadius: '10px' }}>
+          <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', background: i === 0 ? 'linear-gradient(135deg,rgba(250,204,21,.08),rgba(250,204,21,.02))' : 'rgba(242,251,245,.7)', border: `1px solid ${i === 0 ? 'rgba(250,204,21,.25)' : 'rgba(104,168,119,.3)'}`, borderRadius: '10px' }}>
             <span style={{ fontSize: '1.1rem', width: '1.5rem', textAlign: 'center', flexShrink: 0 }}>{i < 3 ? medals[i] : <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted)' }}>#{i+1}</span>}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
@@ -32,11 +32,11 @@ export default function RankingPanel({ sales }: { sales: any[] }) {
                 <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{d.ventas}v</span>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>{d.prendas}p</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00e696' }}>S/{d.ingresos}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#45834D' }}>S/{d.ingresos}</span>
                 </div>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(26,39,51,0.6)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.max(8, d.prendas / max * 100)}%`, height: '100%', borderRadius: '2px', background: i === 0 ? 'linear-gradient(90deg,#facc15,#ff6b00)' : 'rgba(255,107,0,0.4)', transition: 'width 0.5s ease' }} />
+              <div style={{ width: '100%', height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.max(8, d.prendas / max * 100)}%`, height: '100%', borderRadius: '2px', background: i === 0 ? 'linear-gradient(90deg,#facc15,#45834D)' : 'linear-gradient(90deg,rgba(104,168,119,.5),rgba(143,202,151,.4))', transition: 'width 0.5s ease' }} />
               </div>
             </div>
           </div>

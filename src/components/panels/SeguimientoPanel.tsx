@@ -55,7 +55,7 @@ export default function SeguimientoPanel() {
       </div>
 
       {showForm && (
-        <div style={{ background: 'rgba(10,16,23,0.5)', border: '1px solid rgba(255,107,0,0.2)', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}>
+        <div style={{ background: 'rgba(242,251,245,0.9)', border: '1px solid rgba(104,168,119,0.3)', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 140px' }}>
             <div className="pc-lbl">Nombre</div>
             <input className="form-input" placeholder="Cliente..." value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} style={{ padding: '0.5rem 0.7rem', fontSize: '0.85rem' }} />
@@ -105,21 +105,21 @@ export default function SeguimientoPanel() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text2)' }}>{c.nombre || 'Sin nombre'}</span>
                     {c.celular && <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>📱 {c.celular}</span>}
-                    {c.producto && <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.1rem 0.5rem', borderRadius: '50px', background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.2)', color: 'var(--accent)' }}>{c.producto}</span>}
-                    {c.monto > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00e696' }}>S/{c.monto}</span>}
+                    {c.producto && <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.1rem 0.5rem', borderRadius: '50px', background: 'rgba(69,131,77,0.1)', border: '1px solid rgba(104,168,119,0.3)', color: 'var(--accent)' }}>{c.producto}</span>}
+                    {c.monto > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#45834D' }}>S/{c.monto}</span>}
                   </div>
                   {c.nota && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.2rem', fontStyle: 'italic' }}>📝 {c.nota}</div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: urgente ? '#ef4444' : '#facc15', marginRight: '0.3rem' }}>⏱ {tiempoStr(c.timestamp)}</span>
                   {c.celular && (
-                    <a href={`https://wa.me/51${c.celular}`} target="_blank" rel="noopener noreferrer" style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(0,230,150,0.15)', border: '1px solid rgba(0,230,150,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00e696', textDecoration: 'none' }} title="WhatsApp">
+                    <a href={`https://wa.me/51${c.celular}`} target="_blank" rel="noopener noreferrer" style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(104,168,119,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#45834D', textDecoration: 'none' }} title="WhatsApp">
                       <MessageCircle size={12} />
                     </a>
                   )}
-                  <button onClick={() => updateEstado(c.id, 'confirmado')} style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(0,230,150,0.1)', border: '1px solid rgba(0,230,150,0.2)', color: '#00e696', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Confirmar"><CheckCircle size={12} /></button>
+                  <button onClick={() => updateEstado(c.id, 'confirmado')} style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(69,131,77,0.1)', border: '1px solid rgba(104,168,119,0.3)', color: '#45834D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Confirmar"><CheckCircle size={12} /></button>
                   <button onClick={() => updateEstado(c.id, 'perdido')} style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Perdido"><XCircle size={12} /></button>
-                  <button onClick={() => removeCliente(c.id)} style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(26,39,51,0.5)', border: '1px solid rgba(26,39,51,0.8)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Eliminar"><Trash2 size={11} /></button>
+                  <button onClick={() => removeCliente(c.id)} style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(104,168,119,0.1)', border: '1px solid rgba(104,168,119,0.25)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Eliminar"><Trash2 size={11} /></button>
                 </div>
               </div>
             );
@@ -133,13 +133,13 @@ export default function SeguimientoPanel() {
           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Historial</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {otros.map(c => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.75rem', background: 'rgba(10,16,23,0.3)', border: '1px solid rgba(26,39,51,0.4)', borderRadius: '8px', opacity: 0.7 }}>
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.75rem', background: 'rgba(242,251,245,0.6)', border: '1px solid rgba(104,168,119,0.2)', borderRadius: '8px', opacity: 0.7 }}>
                 <span>{estadoEmoji[c.estado]}</span>
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text2)', flex: 1 }}>{c.nombre || 'Sin nombre'}</span>
                 {c.producto && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{c.producto}</span>}
                 {c.monto > 0 && <span style={{ fontSize: '0.72rem', fontWeight: 700, color: `rgb(${estadoColors[c.estado]})` }}>S/{c.monto}</span>}
                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: `rgb(${estadoColors[c.estado]})` }}>{c.estado === 'confirmado' ? '✓ Confirmado' : '✗ Perdido'}</span>
-                <button onClick={() => removeCliente(c.id)} style={{ width: '1.5rem', height: '1.5rem', borderRadius: '5px', background: 'transparent', border: '1px solid rgba(26,39,51,0.5)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={10} /></button>
+                <button onClick={() => removeCliente(c.id)} style={{ width: '1.5rem', height: '1.5rem', borderRadius: '5px', background: 'transparent', border: '1px solid rgba(104,168,119,0.3)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={10} /></button>
               </div>
             ))}
           </div>

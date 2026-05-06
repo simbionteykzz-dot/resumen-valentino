@@ -23,12 +23,13 @@ export default function AppHeader({
   const reached = salesCount >= metaDiaria;
 
   const isBravos = brand === 'bravos';
-  const accent = isBravos ? '#7c3aed' : '#ff6b00';
-  const accentLight = isBravos ? '#9f6ef5' : '#ffaa44';
-  const headerBg = isBravos ? 'linear-gradient(135deg, #0d0a14, #130d1e)' : 'linear-gradient(135deg, #100c08, #1a1208)';
-  const headerBorder = isBravos ? '#1e1430' : '#2a1f14';
-  const headerShadow = isBravos ? '0 4px 24px rgba(124,58,237,0.1)' : '0 4px 24px rgba(255,107,0,0.08)';
-  const mutedColor = isBravos ? '#8070a0' : '#a08060';
+  const accent = isBravos ? '#7c3aed' : '#45834D';
+  const accentLight = isBravos ? '#9f6ef5' : '#8FCA97';
+  const headerBg = isBravos ? 'linear-gradient(135deg, #0d0a14, #130d1e)' : 'linear-gradient(135deg, #ffffff, #F2FBF5)';
+  const headerBorder = isBravos ? '#1e1430' : 'rgba(104,168,119,.38)';
+  const headerShadow = isBravos ? '0 4px 24px rgba(124,58,237,0.1)' : '0 4px 24px rgba(69,131,77,.1)';
+  const mutedColor = isBravos ? '#8070a0' : '#517861';
+  const titleColor = isBravos ? '#fff' : '#162e20';
   const brandName = isBravos ? 'BRAVOS' : 'OVERSHARK';
   const brandIcon = isBravos ? '/brav-icon.png' : '/over-icon.png';
 
@@ -52,7 +53,7 @@ export default function AppHeader({
             padding: '4px',
           }} />
           <div>
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: titleColor, margin: 0, letterSpacing: '-0.02em' }}>
               {brandName} <span style={{ color: accent }}>Ventas</span>
             </h1>
             <p style={{ color: mutedColor, fontSize: '0.82rem', margin: 0 }}>
@@ -70,7 +71,7 @@ export default function AppHeader({
           <div style={{ width: '1px', height: '2.5rem', background: headerBorder }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 800, color: mutedColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total S/</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{totalSoles.toFixed(0)}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: titleColor, lineHeight: 1 }}>{totalSoles.toFixed(0)}</div>
           </div>
           {userName && (
             <>
@@ -113,12 +114,12 @@ export default function AppHeader({
               className="meta-bar-fill"
               style={{
                 width: `${pct}%`,
-                background: reached ? '#00e696' : `linear-gradient(90deg, ${accent}, ${accentLight})`,
+                background: reached ? '#45834D' : `linear-gradient(90deg, ${accent}, ${accentLight})`,
               }}
             />
           </div>
         </div>
-        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: reached ? '#00e696' : mutedColor, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: reached ? '#45834D' : mutedColor, whiteSpace: 'nowrap' }}>
           {salesCount} / {metaDiaria}
         </span>
         <input
@@ -130,7 +131,7 @@ export default function AppHeader({
           title="Meta diaria de ventas"
           style={{
             width: '52px',
-            background: 'rgba(255,255,255,0.05)',
+            background: isBravos ? 'rgba(255,255,255,0.05)' : 'rgba(69,131,77,.06)',
             border: `1px solid ${headerBorder}`,
             borderRadius: '6px',
             color: mutedColor,

@@ -65,8 +65,8 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           padding: '1rem 1.15rem',
           background: boosters.urgencia
             ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.04))'
-            : 'linear-gradient(135deg, rgba(17, 25, 33, 0.6), rgba(10, 16, 23, 0.6))',
-          border: `1.5px solid ${boosters.urgencia ? 'rgba(239, 68, 68, 0.3)' : 'rgba(26, 39, 51, 0.8)'}`,
+            : 'linear-gradient(135deg, rgba(242, 251, 245, 0.8), rgba(229, 244, 234, 0.6))',
+          border: `1.5px solid ${boosters.urgencia ? 'rgba(239, 68, 68, 0.3)' : 'rgba(104, 168, 119, 0.2)'}`,
           borderRadius: '12px',
           cursor: 'pointer',
           transition: 'all 0.25s ease',
@@ -88,7 +88,7 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           />
           <div style={{
             width: '2rem', height: '2rem', borderRadius: '8px', flexShrink: 0,
-            background: boosters.urgencia ? 'rgba(239, 68, 68, 0.2)' : 'rgba(26, 39, 51, 0.5)',
+            background: boosters.urgencia ? 'rgba(239, 68, 68, 0.2)' : 'rgba(104, 168, 119, 0.06)',
             border: `1.5px solid ${boosters.urgencia ? 'rgba(239, 68, 68, 0.4)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s ease',
@@ -108,8 +108,8 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           padding: '1rem 1.15rem',
           background: boosters.socialProof
             ? 'linear-gradient(135deg, rgba(56, 200, 245, 0.1), rgba(56, 200, 245, 0.04))'
-            : 'linear-gradient(135deg, rgba(17, 25, 33, 0.6), rgba(10, 16, 23, 0.6))',
-          border: `1.5px solid ${boosters.socialProof ? 'rgba(56, 200, 245, 0.3)' : 'rgba(26, 39, 51, 0.8)'}`,
+            : 'linear-gradient(135deg, rgba(242, 251, 245, 0.8), rgba(229, 244, 234, 0.6))',
+          border: `1.5px solid ${boosters.socialProof ? 'rgba(56, 200, 245, 0.3)' : 'rgba(104, 168, 119, 0.2)'}`,
           borderRadius: '12px',
           cursor: 'pointer',
           transition: 'all 0.25s ease',
@@ -131,7 +131,7 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           />
           <div style={{
             width: '2rem', height: '2rem', borderRadius: '8px', flexShrink: 0,
-            background: boosters.socialProof ? 'rgba(56, 200, 245, 0.2)' : 'rgba(26, 39, 51, 0.5)',
+            background: boosters.socialProof ? 'rgba(56, 200, 245, 0.2)' : 'rgba(104, 168, 119, 0.06)',
             border: `1.5px solid ${boosters.socialProof ? 'rgba(56, 200, 245, 0.4)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s ease',
@@ -150,9 +150,9 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
         <label className="booster-card" style={{
           padding: '1rem 1.15rem',
           background: boosters.recomendacion
-            ? 'linear-gradient(135deg, rgba(0, 230, 150, 0.1), rgba(0, 230, 150, 0.04))'
-            : 'linear-gradient(135deg, rgba(17, 25, 33, 0.6), rgba(10, 16, 23, 0.6))',
-          border: `1.5px solid ${boosters.recomendacion ? 'rgba(0, 230, 150, 0.3)' : 'rgba(26, 39, 51, 0.8)'}`,
+            ? 'linear-gradient(135deg, rgba(69, 131, 77, 0.1), rgba(104, 168, 119, 0.04))'
+            : 'linear-gradient(135deg, rgba(242, 251, 245, 0.8), rgba(229, 244, 234, 0.6))',
+          border: `1.5px solid ${boosters.recomendacion ? 'rgba(104, 168, 119, 0.4)' : 'rgba(104, 168, 119, 0.2)'}`,
           borderRadius: '12px',
           cursor: 'pointer',
           transition: 'all 0.25s ease',
@@ -174,12 +174,12 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           />
           <div style={{
             width: '2rem', height: '2rem', borderRadius: '8px', flexShrink: 0,
-            background: boosters.recomendacion ? 'rgba(0, 230, 150, 0.2)' : 'rgba(26, 39, 51, 0.5)',
-            border: `1.5px solid ${boosters.recomendacion ? 'rgba(0, 230, 150, 0.4)' : 'var(--border)'}`,
+            background: boosters.recomendacion ? 'rgba(69, 131, 77, 0.15)' : 'rgba(104, 168, 119, 0.06)',
+            border: `1.5px solid ${boosters.recomendacion ? 'rgba(104, 168, 119, 0.45)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s ease',
           }}>
-            <Tag size={14} style={{ color: boosters.recomendacion ? '#00e696' : 'var(--muted)' }} />
+            <Tag size={14} style={{ color: boosters.recomendacion ? '#45834D' : 'var(--muted)' }} />
           </div>
           <div>
             <div style={{ fontWeight: 700, color: 'var(--text2)' }}>Cross-sell</div>
@@ -193,9 +193,9 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
         <label className="booster-card" style={{
           padding: '1rem 1.15rem',
           background: boosters.descuento
-            ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.04))'
-            : 'linear-gradient(135deg, rgba(17, 25, 33, 0.6), rgba(10, 16, 23, 0.6))',
-          border: `1.5px solid ${boosters.descuento ? 'rgba(255, 107, 0, 0.3)' : 'rgba(26, 39, 51, 0.8)'}`,
+            ? 'linear-gradient(135deg, rgba(69, 131, 77, 0.1), rgba(104, 168, 119, 0.04))'
+            : 'linear-gradient(135deg, rgba(242, 251, 245, 0.8), rgba(229, 244, 234, 0.6))',
+          border: `1.5px solid ${boosters.descuento ? 'rgba(104, 168, 119, 0.4)' : 'rgba(104, 168, 119, 0.2)'}`,
           borderRadius: '12px',
           cursor: 'pointer',
           transition: 'all 0.25s ease',
@@ -217,12 +217,12 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           />
           <div style={{
             width: '2rem', height: '2rem', borderRadius: '8px', flexShrink: 0,
-            background: boosters.descuento ? 'rgba(255, 107, 0, 0.2)' : 'rgba(26, 39, 51, 0.5)',
-            border: `1.5px solid ${boosters.descuento ? 'rgba(255, 107, 0, 0.4)' : 'var(--border)'}`,
+            background: boosters.descuento ? 'rgba(69, 131, 77, 0.15)' : 'rgba(104, 168, 119, 0.06)',
+            border: `1.5px solid ${boosters.descuento ? 'rgba(104, 168, 119, 0.45)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s ease',
           }}>
-            <Tag size={14} style={{ color: boosters.descuento ? '#ff6b00' : 'var(--muted)', transform: 'rotate(-15deg)' }} />
+            <Tag size={14} style={{ color: boosters.descuento ? '#45834D' : 'var(--muted)', transform: 'rotate(-15deg)' }} />
           </div>
           <div>
             <div style={{ fontWeight: 700, color: 'var(--text2)' }}>Próxima compra</div>
@@ -237,8 +237,8 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           padding: '1rem 1.15rem',
           background: boosters.fraseVenta
             ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(250, 204, 21, 0.04))'
-            : 'linear-gradient(135deg, rgba(17, 25, 33, 0.6), rgba(10, 16, 23, 0.6))',
-          border: `1.5px solid ${boosters.fraseVenta ? 'rgba(250, 204, 21, 0.3)' : 'rgba(26, 39, 51, 0.8)'}`,
+            : 'linear-gradient(135deg, rgba(242, 251, 245, 0.8), rgba(229, 244, 234, 0.6))',
+          border: `1.5px solid ${boosters.fraseVenta ? 'rgba(250, 204, 21, 0.3)' : 'rgba(104, 168, 119, 0.2)'}`,
           borderRadius: '12px',
           cursor: 'pointer',
           transition: 'all 0.25s ease',
@@ -260,7 +260,7 @@ export default function BoostersPanel({ boosters, onChange, productCount }: Boos
           />
           <div style={{
             width: '2rem', height: '2rem', borderRadius: '8px', flexShrink: 0,
-            background: boosters.fraseVenta ? 'rgba(250, 204, 21, 0.2)' : 'rgba(26, 39, 51, 0.5)',
+            background: boosters.fraseVenta ? 'rgba(250, 204, 21, 0.2)' : 'rgba(104, 168, 119, 0.06)',
             border: `1.5px solid ${boosters.fraseVenta ? 'rgba(250, 204, 21, 0.4)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s ease',

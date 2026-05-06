@@ -47,24 +47,29 @@ export default function App() {
       r.setProperty('--surface3',     '#1c1430');
       r.setProperty('--border',       '#2a1a40');
       r.setProperty('--border2',      '#2a1a40');
+      r.setProperty('--text',         '#e0d8f8');
+      r.setProperty('--text2',        '#ffffff');
       r.setProperty('--muted',        '#9070b0');
       r.setProperty('--muted2',       '#7050a0');
     } else {
-      r.setProperty('--accent',       '#ff6b00');
-      r.setProperty('--accent2',      '#e05500');
-      r.setProperty('--accent-glow',  'rgba(255,107,0,.15)');
-      r.setProperty('--accent-soft',  'rgba(255,107,0,.08)');
-      r.setProperty('--ok',           '#ff6b00');
-      r.setProperty('--ok-soft',      'rgba(255,107,0,.1)');
-      r.setProperty('--bg',           '#080604');
-      r.setProperty('--bg2',          '#0f0c09');
-      r.setProperty('--surface',      '#0f0c09');
-      r.setProperty('--surface2',     '#16110d');
-      r.setProperty('--surface3',     '#1f1710');
-      r.setProperty('--border',       '#2a1f14');
-      r.setProperty('--border2',      '#2a1f14');
-      r.setProperty('--muted',        '#a08060');
-      r.setProperty('--muted2',       '#8a6040');
+      /* Sage Green palette — Overshark (Sea Glass + Desired Collection) */
+      r.setProperty('--accent',       '#45834D');
+      r.setProperty('--accent2',      '#3a6d42');
+      r.setProperty('--accent-glow',  'rgba(69,131,77,.18)');
+      r.setProperty('--accent-soft',  'rgba(69,131,77,.09)');
+      r.setProperty('--ok',           '#45834D');
+      r.setProperty('--ok-soft',      'rgba(69,131,77,.12)');
+      r.setProperty('--bg',           '#EAF5EE');
+      r.setProperty('--bg2',          '#DDEEE3');
+      r.setProperty('--surface',      '#FFFFFF');
+      r.setProperty('--surface2',     '#F2FBF5');
+      r.setProperty('--surface3',     '#E5F4EA');
+      r.setProperty('--border',       'rgba(104,168,119,.4)');
+      r.setProperty('--border2',      'rgba(81,120,97,.35)');
+      r.setProperty('--text',         '#2a4433');
+      r.setProperty('--text2',        '#162e20');
+      r.setProperty('--muted',        '#517861');
+      r.setProperty('--muted2',       '#68A877');
     }
   }, [isBravos]);
 
@@ -379,7 +384,7 @@ export default function App() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: 'var(--muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Truck size={18} style={{ color: '#ff6b00' }} /> Cargando...
+          <Truck size={18} style={{ color: '#45834D' }} /> Cargando...
         </div>
       </div>
     );
@@ -412,7 +417,7 @@ export default function App() {
       <div className="wrap" style={{ maxWidth: '1140px', margin: '0 auto' }}>
         {profile?.role === 'admin' && (
           <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <button onClick={() => setAdminMode('admin')} style={{ background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.3)', borderRadius: '8px', color: '#ff6b00', cursor: 'pointer', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <button onClick={() => setAdminMode('admin')} style={{ background: 'rgba(69,131,77,0.1)', border: '1px solid rgba(104,168,119,0.35)', borderRadius: '8px', color: '#45834D', cursor: 'pointer', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               ← Volver al Panel Admin
             </button>
           </div>
@@ -432,10 +437,10 @@ export default function App() {
           {([
             {
               id: 'overshark', label: 'OVERSHARK', sub: 'Polos & Camiseros', tag: 'Colección activa',
-              icon: '/over-icon.png', color: '#ff6b00', colorDim: '#c44e00',
-              grad: 'linear-gradient(135deg, #1a0e04, #241408)',
-              gradActive: 'linear-gradient(135deg, #1f0f04, #2e1a08)',
-              glow: 'rgba(255,107,0,0.18)', border: '#3a2010',
+              icon: '/over-icon.png', color: '#45834D', colorDim: '#3a6d42',
+              grad: 'linear-gradient(135deg, #f2fbf5, #e5f4ea)',
+              gradActive: 'linear-gradient(135deg, #ddeee3, #cfe8d6)',
+              glow: 'rgba(69,131,77,0.18)', border: 'rgba(104,168,119,.55)',
             },
             {
               id: 'bravos', label: 'BRAVOS', sub: 'Poleras & Pantalones', tag: 'Colección activa',
@@ -490,7 +495,7 @@ export default function App() {
                   <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? b.color : '#6b7280', letterSpacing: '0.06em', lineHeight: 1 }}>
                     {b.label}
                   </div>
-                  <div style={{ fontSize: '0.74rem', color: active ? '#c0a080' : '#4a4a5a', marginTop: '3px', fontWeight: 500 }}>
+                  <div style={{ fontSize: '0.74rem', color: active ? (b.id === 'bravos' ? '#c0a0f0' : '#68A877') : '#6a7a68', marginTop: '3px', fontWeight: 500 }}>
                     {b.sub}
                   </div>
                   {active && (

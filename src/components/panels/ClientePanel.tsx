@@ -308,7 +308,7 @@ export default function ClientePanel({ tab, data, onChange }: any) {
               {cobResult && (
                 <div className={`cob-badge visible ${cobResult.dentro ? 'dentro' : 'fuera'}`} style={{ marginTop: '0.5rem' }}>
                   <div className="cob-badge-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {cobResult.dentro ? <CheckCircle2 size={24} color="#00e696" /> : <XCircle size={24} color="#ef4444" />}
+                    {cobResult.dentro ? <CheckCircle2 size={24} color="#45834D" /> : <XCircle size={24} color="#ef4444" />}
                   </div>
                   <div className="cob-badge-text">
                     <div className="cob-badge-msg">{cobResult.mensaje}</div>
@@ -316,19 +316,19 @@ export default function ClientePanel({ tab, data, onChange }: any) {
                 </div>
               )}
               {!cobResult?.dentro && nearestShalom.length > 0 && (
-                <div style={{ marginTop: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(255,107,0,0.08), rgba(255,107,0,0.03))', border: '1.5px solid rgba(255,107,0,0.2)', borderRadius: '12px' }}>
+                <div style={{ marginTop: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(69,131,77,0.06), rgba(104,168,119,0.03))', border: '1.5px solid rgba(104,168,119,0.3)', borderRadius: '12px' }}>
                   <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <MapPin size={13} /> Agencias Shalom más cercanas
                   </div>
                   {nearestShalom.map((ns, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderTop: i > 0 ? '1px solid rgba(26,39,51,0.4)' : 'none' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderTop: i > 0 ? '1px solid rgba(104,168,119,0.2)' : 'none' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 800, color: i === 0 ? 'var(--accent)' : 'var(--muted)', width: '1.5rem', textAlign: 'center' }}>#{i+1}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text2)' }}>{ns.sede.n}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{ns.sede.prov}, {ns.sede.dep} — {ns.sede.addr}</div>
                       </div>
                       <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#facc15', flexShrink: 0 }}>{ns.distKm.toFixed(1)} km</span>
-                      <button onClick={() => { const label = 'Shalom ' + ns.sede.n; setSedeQuery(label); onChange('sede', label); onChange('provincia', ns.sede.prov || ''); onChange('depto', ns.sede.dep || ''); }} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: 'rgba(255,107,0,0.15)', border: '1px solid rgba(255,107,0,0.3)', color: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}>Usar esta</button>
+                      <button onClick={() => { const label = 'Shalom ' + ns.sede.n; setSedeQuery(label); onChange('sede', label); onChange('provincia', ns.sede.prov || ''); onChange('depto', ns.sede.dep || ''); }} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(104,168,119,0.35)', color: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}>Usar esta</button>
                     </div>
                   ))}
                 </div>

@@ -548,60 +548,60 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   };
 
   const S = {
-    surface: 'rgba(15,12,9,0.8)',
-    surface2: 'rgba(22,17,13,0.9)',
-    border: '1px solid #2a1f14',
-    accent: '#ff6b00',
-    muted: '#a08060',
-    text: '#f0e6d8',
-    text2: '#ffffff',
+    surface: 'rgba(255,255,255,0.97)',
+    surface2: 'rgba(242,251,245,0.97)',
+    border: '1px solid rgba(104,168,119,.35)',
+    accent: '#45834D',
+    muted: '#517861',
+    text: '#2a4433',
+    text2: '#162e20',
   };
 
   const btn = (variant: 'accent' | 'ghost' | 'danger' | 'info' | 'active'): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: '0.4rem',
     padding: '0.45rem 0.9rem', borderRadius: '8px',
     fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
-    border: variant === 'ghost' ? '1px solid #2a1f14' : variant === 'active' ? '1px solid rgba(255,107,0,0.6)' : 'none',
-    background: variant === 'accent' ? 'linear-gradient(135deg,#ff6b00,#e05500)'
-      : variant === 'danger' ? 'rgba(239,68,68,0.12)'
-      : variant === 'info' ? 'rgba(56,200,245,0.1)'
-      : variant === 'active' ? 'rgba(255,107,0,0.15)'
-      : 'rgba(22,17,13,0.9)',
-    color: variant === 'accent' ? '#000'
+    border: variant === 'ghost' ? '1px solid rgba(104,168,119,.35)' : variant === 'active' ? '1px solid rgba(69,131,77,0.5)' : 'none',
+    background: variant === 'accent' ? 'linear-gradient(135deg,#45834D,#3a6d42)'
+      : variant === 'danger' ? 'rgba(239,68,68,0.1)'
+      : variant === 'info' ? 'rgba(30,111,160,0.1)'
+      : variant === 'active' ? 'rgba(69,131,77,0.12)'
+      : 'rgba(255,255,255,0.9)',
+    color: variant === 'accent' ? '#fff'
       : variant === 'danger' ? '#ef4444'
-      : variant === 'info' ? '#38c8f5'
-      : variant === 'active' ? '#ff6b00'
+      : variant === 'info' ? '#1e6fa0'
+      : variant === 'active' ? '#45834D'
       : S.muted,
   });
 
   const getBrandColor = (label: string) => {
     const l = (label || '').toUpperCase();
-    if (l.includes('BRV') || l.includes('BRAVOS')) return { bg: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: 'rgba(124,58,237,0.3)' };
-    return { bg: 'rgba(255,107,0,0.12)', color: '#ff6b00', border: 'rgba(255,107,0,0.3)' };
+    if (l.includes('BRV') || l.includes('BRAVOS')) return { bg: 'rgba(124,58,237,0.12)', color: '#7c3aed', border: 'rgba(124,58,237,0.3)' };
+    return { bg: 'rgba(69,131,77,0.1)', color: '#45834D', border: 'rgba(69,131,77,0.3)' };
   };
 
   const maxVendorRevenue = vendorStats.length > 0 ? vendorStats[0].totalRevenue : 1;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#080604 0%,#130d08 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#EAF5EE 0%,#DDEEE3 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,rgba(10,16,23,0.95),rgba(17,25,33,0.95))', borderBottom: '1px solid rgba(255,107,0,0.15)', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+      <div style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.98),rgba(242,251,245,0.95))', borderBottom: '1px solid rgba(104,168,119,.3)', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 2px 12px rgba(69,131,77,.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg,#ff6b00,#e05500)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(255,107,0,0.3)' }}>
-            <BarChart3 size={18} color="#000" />
+          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg,#45834D,#3a6d42)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(69,131,77,.3)' }}>
+            <BarChart3 size={18} color="#fff" />
           </div>
           <div>
             <div style={{ fontWeight: 900, fontSize: '1rem', color: S.text2, letterSpacing: '-0.02em' }}>
-              OVERSHARK <span style={{ color: S.accent }}>Admin</span>
+              LIVEX <span style={{ color: S.accent }}>Admin</span>
             </div>
             <div style={{ fontSize: '0.75rem', color: S.muted }}>{adminName}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', borderRadius: '20px', background: liveCount > 0 ? 'rgba(0,230,150,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${liveCount > 0 ? 'rgba(0,230,150,0.4)' : 'rgba(255,255,255,0.08)'}`, transition: 'all 0.4s' }}>
-            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: liveCount > 0 ? '#00e696' : '#3a4a3a', boxShadow: liveCount > 0 ? '0 0 6px #00e696' : 'none', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: liveCount > 0 ? '#00e696' : '#4a5a4a', letterSpacing: '0.06em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', borderRadius: '20px', background: liveCount > 0 ? 'rgba(69,131,77,0.12)' : 'rgba(104,168,119,0.08)', border: `1px solid ${liveCount > 0 ? 'rgba(69,131,77,0.4)' : 'rgba(104,168,119,0.25)'}`, transition: 'all 0.4s' }}>
+            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: liveCount > 0 ? '#45834D' : 'rgba(81,120,97,.5)', boxShadow: liveCount > 0 ? '0 0 6px rgba(69,131,77,.5)' : 'none', animation: 'pulse 1.5s infinite' }} />
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: liveCount > 0 ? '#45834D' : '#517861', letterSpacing: '0.06em' }}>
               {liveCount > 0 ? `+${liveCount} nueva${liveCount > 1 ? 's' : ''}` : 'EN VIVO'}
             </span>
           </div>
@@ -620,17 +620,17 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', marginBottom: '1rem' }}>
           {[
             { label: 'Ventas', value: globalStats.salesCount, color: S.accent, icon: <ShoppingBag size={18} /> },
-            { label: 'Total S/', value: `S/${globalStats.totalRevenue.toLocaleString()}`, color: '#38c8f5', icon: <DollarSign size={18} /> },
-            { label: 'Prendas', value: globalStats.totalItems, color: '#a78bfa', icon: <Package size={18} /> },
-            { label: 'Promedio/venta', value: `S/${globalStats.avgPerSale}`, color: '#00e696', icon: <BarChart3 size={18} /> },
-            { label: 'Deuda total S/', value: globalStats.deudaTotal > 0 ? `S/${globalStats.deudaTotal.toFixed(0)}` : 'S/0', color: globalStats.deudaTotal > 0 ? '#ef4444' : '#a08060', icon: <AlertTriangle size={18} /> },
+            { label: 'Total S/', value: `S/${globalStats.totalRevenue.toLocaleString()}`, color: '#1e6fa0', icon: <DollarSign size={18} /> },
+            { label: 'Prendas', value: globalStats.totalItems, color: '#7c3aed', icon: <Package size={18} /> },
+            { label: 'Promedio/venta', value: `S/${globalStats.avgPerSale}`, color: '#45834D', icon: <BarChart3 size={18} /> },
+            { label: 'Deuda total S/', value: globalStats.deudaTotal > 0 ? `S/${globalStats.deudaTotal.toFixed(0)}` : 'S/0', color: globalStats.deudaTotal > 0 ? '#ef4444' : '#517861', icon: <AlertTriangle size={18} /> },
           ].map(k => (
             <div key={k.label} style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem', borderLeft: `3px solid ${k.color}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: k.color, marginBottom: '0.4rem' }}>
                 {k.icon}
                 <span style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</span>
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: k.color }}>{k.value}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
             </div>
           ))}
         </div>
@@ -680,18 +680,18 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 const barPct = maxRev > 0 ? Math.round((p.revenue / maxRev) * 100) : 0;
                 const totalRev = pubStats.reduce((a, x) => a + x.revenue, 0);
                 const pct = totalRev > 0 ? Math.round((p.revenue / totalRev) * 100) : 0;
-                const hue = [S.accent, '#38c8f5', '#a78bfa', '#00e696', '#f59e0b', '#ec4899'][i % 6];
+                const hue = [S.accent, '#1e6fa0', '#7c3aed', '#68A877', '#f59e0b', '#ec4899'][i % 6];
                 return (
-                  <div key={p.code} style={{ background: 'rgba(22,17,13,0.5)', border: '1px solid #2a1f14', borderRadius: '8px', padding: '0.5rem 0.85rem' }}>
+                  <div key={p.code} style={{ background: 'rgba(242,251,245,.5)', border: '1px solid rgba(104,168,119,.25)', borderRadius: '8px', padding: '0.5rem 0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 800, color: S.text }}>{p.code}</span>
                       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.68rem', color: S.muted }}>{p.count} ventas · {p.items} prendas</span>
                         <span style={{ fontSize: '0.82rem', fontWeight: 900, color: hue }}>S/{p.revenue.toLocaleString()}</span>
-                        <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.1rem 0.45rem', color: hue }}>{pct}%</span>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(69,131,77,.06)', borderRadius: '4px', padding: '0.1rem 0.45rem', color: hue }}>{pct}%</span>
                       </div>
                     </div>
-                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${barPct}%`, background: `linear-gradient(90deg,${hue},${hue}88)`, borderRadius: '2px', transition: 'width 0.5s ease' }} />
                     </div>
                   </div>
@@ -714,7 +714,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   const barPct = maxVendorRevenue > 0 ? Math.round((v.totalRevenue / maxVendorRevenue) * 100) : 0;
                   const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
                   return (
-                    <div key={v.id} style={{ background: i === 0 ? 'rgba(255,107,0,0.07)' : 'rgba(22,17,13,0.6)', border: `1px solid ${i === 0 ? 'rgba(255,107,0,0.25)' : '#2a1f14'}`, borderRadius: '8px', padding: '0.55rem 0.85rem' }}>
+                    <div key={v.id} style={{ background: i === 0 ? 'rgba(69,131,77,0.08)' : 'rgba(242,251,245,.6)', border: `1px solid ${i === 0 ? 'rgba(69,131,77,0.25)' : 'rgba(104,168,119,.25)'}`, borderRadius: '8px', padding: '0.55rem 0.85rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
                         <span style={{ fontSize: '0.78rem', fontWeight: 700, color: S.text }}>
                           {medal} {v.name}
@@ -722,11 +722,11 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                           <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount}v · {v.totalItems}p</span>
                           <span style={{ fontSize: '0.8rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a78bfa', background: 'rgba(167,139,250,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7c3aed', background: 'rgba(124,58,237,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
                         </div>
                       </div>
-                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${barPct}%`, background: i === 0 ? 'linear-gradient(90deg,#ff6b00,#ffaa44)' : 'linear-gradient(90deg,#3a2a18,#5a3a22)', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+                      <div style={{ height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${barPct}%`, background: i === 0 ? 'linear-gradient(90deg,#45834D,#8FCA97)' : 'linear-gradient(90deg,rgba(174,219,184,.7),rgba(143,202,151,.5))', borderRadius: '2px', transition: 'width 0.4s ease' }} />
                       </div>
                     </div>
                   );
@@ -754,7 +754,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: S.muted }} />
             <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Buscar por cliente, vendedor, celular o DNI..."
-              style={{ width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem', border: '1px solid #2a1f14', borderRadius: '8px', fontSize: '0.82rem', background: 'rgba(10,16,23,0.6)', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem', border: '1px solid rgba(104,168,119,.35)', borderRadius: '8px', fontSize: '0.82rem', background: 'rgba(255,255,255,.95)', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Filtro rápido por marca */}
@@ -784,7 +784,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
         {/* ── Filtros ── */}
         {showFilters && (
-          <div style={{ background: S.surface2, border: S.border, borderRadius: '12px', padding: '1.25rem', marginBottom: '0.75rem' }}>
+          <div style={{ background: 'rgba(242,251,245,.97)', border: S.border, borderRadius: '12px', padding: '1.25rem', marginBottom: '0.75rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.75rem 1rem', marginBottom: '1rem' }}>
               {[
                 { label: 'Ubicación', el: <select value={regionFilter} onChange={e => { setRegionFilter(e.target.value); setPage(1); }} style={iStyle}><option value="todas">Todas</option><option value="Lima">Lima</option><option value="Provincia">Provincia</option><option value="Almacén">Almacén</option></select> },
@@ -841,13 +841,13 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
 
         {/* ── Tabla ── */}
-        <div ref={tableRef} style={{ background: 'rgba(10,16,23,0.7)', border: '1px solid #2a1f14', borderRadius: '12px', overflow: 'hidden' }}>
+        <div ref={tableRef} style={{ background: 'rgba(255,255,255,.97)', border: S.border, borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
               <thead>
-                <tr style={{ background: 'linear-gradient(135deg,rgba(255,107,0,0.15),rgba(224,85,0,0.1))', borderBottom: '2px solid rgba(255,107,0,0.3)' }}>
+                <tr style={{ background: 'linear-gradient(135deg,rgba(69,131,77,.12),rgba(58,109,66,.08))', borderBottom: '2px solid rgba(69,131,77,.25)' }}>
                   {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO', ''].map(h => (
-                    <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#ff6b00', textTransform: 'uppercase' }}>{h}</th>
+                    <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -855,23 +855,23 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 {paginatedSales.map((s, i) => {
                   const region = getRegion(s);
                   const estado = getEstado(s);
-                  const regionColor = region === 'Lima' ? { bg: 'rgba(56,200,245,0.1)', color: '#38c8f5' } : region === 'Provincia' ? { bg: 'rgba(255,107,0,0.1)', color: '#ff6b00' } : { bg: 'rgba(167,139,250,0.1)', color: '#a78bfa' };
-                  const estadoColor = estado === 'PAGO COMPLETO' ? { bg: 'rgba(0,230,150,0.1)', color: '#00e696' } : estado === 'CONTRA ENTREGA' ? { bg: 'rgba(255,107,0,0.1)', color: '#ff6b00' } : estado === 'ANULADO' ? { bg: 'rgba(239,68,68,0.08)', color: '#ef4444' } : { bg: 'rgba(239,68,68,0.1)', color: '#ef4444' };
+                  const regionColor = region === 'Lima' ? { bg: 'rgba(30,111,160,.1)', color: '#1e6fa0' } : region === 'Provincia' ? { bg: 'rgba(160,120,10,.1)', color: '#a0780a' } : { bg: 'rgba(81,120,97,.1)', color: '#517861' };
+                  const estadoColor = estado === 'PAGO COMPLETO' ? { bg: 'rgba(69,131,77,.1)', color: '#45834D' } : estado === 'CONTRA ENTREGA' ? { bg: 'rgba(160,120,10,.1)', color: '#a0780a' } : estado === 'ANULADO' ? { bg: 'rgba(239,68,68,.08)', color: '#ef4444' } : { bg: 'rgba(239,68,68,.1)', color: '#ef4444' };
                   const bc = getBrandColor(s.marcaLabel || 'OVER');
                   const isAnulado = estado === 'ANULADO';
                   return (
                     <tr key={s._dbId ?? i}
-                      style={{ borderBottom: '1px solid rgba(42,31,20,0.5)', background: isAnulado ? 'rgba(239,68,68,0.03)' : i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)', transition: 'background 0.15s', opacity: isAnulado ? 0.6 : 1 }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,107,0,0.04)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = isAnulado ? 'rgba(239,68,68,0.03)' : i % 2 === 0 ? 'transparent' : 'rgba(22,17,13,0.3)')}>
+                      style={{ borderBottom: '1px solid rgba(104,168,119,.2)', background: isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)', transition: 'background 0.15s', opacity: isAnulado ? 0.6 : 1 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(69,131,77,.04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)')}>
                       <td style={td}>{s.fecha ?? '—'}</td>
                       <td style={td}>
                         <span style={{ background: bc.bg, color: bc.color, border: `1px solid ${bc.border}`, borderRadius: '5px', padding: '0.15rem 0.55rem', fontWeight: 800, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
                           {s.marcaLabel || 'OVER'}
                         </span>
                       </td>
-                      <td style={{ ...td, color: '#ff6b00', fontWeight: 700 }}>{s.vendorName}</td>
-                      <td style={{ ...td, color: '#a08060' }}>{s.hora ?? '—'}</td>
+                      <td style={{ ...td, color: S.accent, fontWeight: 700 }}>{s.vendorName}</td>
+                      <td style={{ ...td, color: S.muted }}>{s.hora ?? '—'}</td>
                       <td style={td}>
                         <span style={{ background: regionColor.bg, color: regionColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.68rem' }}>{region}</span>
                       </td>
@@ -885,15 +885,15 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       </td>
                       <td style={td}>{s.cel || '—'}</td>
                       <td style={td}>{s.dni || '—'}</td>
-                      <td style={{ ...td, fontWeight: 900, color: '#00e696' }}>S/{s.totalTotal ?? 0}</td>
-                      <td style={{ ...td, color: s.resta ? '#ef4444' : '#a08060' }}>{s.resta || '—'}</td>
+                      <td style={{ ...td, fontWeight: 900, color: S.accent }}>S/{s.totalTotal ?? 0}</td>
+                      <td style={{ ...td, color: s.resta ? '#ef4444' : S.muted }}>{s.resta || '—'}</td>
                       <td style={td}>{s.separo || '—'}</td>
                       <td style={td}>
                         <span style={{ background: estadoColor.bg, color: estadoColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{estado}</span>
                       </td>
                       <td style={td}>{s.codigoPublicidad || '—'}</td>
                       <td style={td}>{s.metodoPago || '—'}</td>
-                      <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#a08060' }}>{s.combo || '—'}</td>
+                      <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: S.muted }}>{s.combo || '—'}</td>
                       <td style={{ ...td, padding: '0.3rem 0.5rem' }}>
                         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
                           {s._dbId && (
@@ -919,7 +919,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 })}
                 {paginatedSales.length === 0 && (
                   <tr>
-                    <td colSpan={16} style={{ padding: '3rem', textAlign: 'center', color: '#a08060', fontSize: '0.85rem' }}>
+                    <td colSpan={16} style={{ padding: '3rem', textAlign: 'center', color: S.muted, fontSize: '0.85rem' }}>
                       {loading ? 'Cargando ventas...' : 'Sin registros para los filtros seleccionados'}
                     </td>
                   </tr>
@@ -939,22 +939,22 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         <div style={{ position: 'fixed', inset: 0, zIndex: 900, display: 'flex' }}
           onClick={e => { if (e.target === e.currentTarget) setHistoryClient(null); }}>
           <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)' }} onClick={() => setHistoryClient(null)} />
-          <div style={{ width: '420px', height: '100%', background: '#0a0e14', borderLeft: '1px solid rgba(56,200,245,0.2)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          <div style={{ width: '420px', height: '100%', background: '#ffffff', borderLeft: '1px solid rgba(104,168,119,.3)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
             {/* Header del drawer */}
-            <div style={{ padding: '1.25rem 1.25rem 0.75rem', borderBottom: '1px solid rgba(56,200,245,0.12)', background: 'linear-gradient(180deg,rgba(56,200,245,0.06),transparent)' }}>
+            <div style={{ padding: '1.25rem 1.25rem 0.75rem', borderBottom: '1px solid rgba(104,168,119,.18)', background: 'linear-gradient(180deg,rgba(69,131,77,.06),transparent)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontSize: '1rem', fontWeight: 900, color: '#fff', marginBottom: '0.2rem' }}>{historyClient.nom}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#38c8f5', fontWeight: 700 }}>{historyClient.cel}</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 900, color: S.text2, marginBottom: '0.2rem' }}>{historyClient.nom}</div>
+                  <div style={{ fontSize: '0.78rem', color: S.accent, fontWeight: 700 }}>{historyClient.cel}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                   <button
                     onClick={exportClientPDF}
                     title="Descargar resumen en PDF"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.75rem', borderRadius: '7px', border: '1px solid rgba(56,200,245,0.3)', background: 'rgba(56,200,245,0.08)', color: '#38c8f5', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 800 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.75rem', borderRadius: '7px', border: '1px solid rgba(69,131,77,.35)', background: 'rgba(69,131,77,.08)', color: S.accent, cursor: 'pointer', fontSize: '0.72rem', fontWeight: 800 }}>
                     <FileDown size={13} /> PDF
                   </button>
-                  <button onClick={() => setHistoryClient(null)} style={{ background: 'transparent', border: 'none', color: '#a08060', cursor: 'pointer' }}>
+                  <button onClick={() => setHistoryClient(null)} style={{ background: 'transparent', border: 'none', color: S.muted, cursor: 'pointer' }}>
                     <X size={18} />
                   </button>
                 </div>
@@ -962,12 +962,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               {/* Resumen del cliente */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginTop: '0.85rem' }}>
                 {[
-                  { label: 'Compras', value: clientHistory.length, color: '#38c8f5' },
-                  { label: 'Total S/', value: `S/${clientHistory.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0).toLocaleString()}`, color: '#00e696' },
-                  { label: 'Deuda S/', value: `S/${clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0).toFixed(0)}`, color: clientHistory.some(s => parseFloat(s.resta || '0') > 0) ? '#ef4444' : '#a08060' },
+                  { label: 'Compras', value: clientHistory.length, color: '#1e6fa0' },
+                  { label: 'Total S/', value: `S/${clientHistory.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0).toLocaleString()}`, color: S.accent },
+                  { label: 'Deuda S/', value: `S/${clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0).toFixed(0)}`, color: clientHistory.some(s => parseFloat(s.resta || '0') > 0) ? '#ef4444' : S.muted },
                 ].map(k => (
-                  <div key={k.label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '0.5rem 0.6rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#a08060', textTransform: 'uppercase', fontWeight: 800, marginBottom: '0.2rem' }}>{k.label}</div>
+                  <div key={k.label} style={{ background: 'rgba(242,251,245,.7)', borderRadius: '8px', padding: '0.5rem 0.6rem', textAlign: 'center', border: '1px solid rgba(104,168,119,.2)' }}>
+                    <div style={{ fontSize: '0.6rem', color: S.muted, textTransform: 'uppercase', fontWeight: 800, marginBottom: '0.2rem' }}>{k.label}</div>
                     <div style={{ fontSize: '1rem', fontWeight: 900, color: k.color }}>{k.value}</div>
                   </div>
                 ))}
@@ -975,40 +975,40 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             </div>
             {/* Lista de compras */}
             <div style={{ flex: 1, padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>
                 Historial de Compras
               </div>
               {clientHistory.length === 0 ? (
-                <div style={{ color: '#a08060', fontSize: '0.82rem', textAlign: 'center', marginTop: '2rem' }}>Sin compras en el período cargado</div>
+                <div style={{ color: S.muted, fontSize: '0.82rem', textAlign: 'center', marginTop: '2rem' }}>Sin compras en el período cargado</div>
               ) : clientHistory.map((s, i) => {
                 const estado = getEstado(s);
-                const estadoColor = estado === 'PAGO COMPLETO' ? '#00e696' : estado === 'CONTRA ENTREGA' ? '#ff6b00' : estado === 'ANULADO' ? '#ef4444' : '#a08060';
+                const estadoColor = estado === 'PAGO COMPLETO' ? '#45834D' : estado === 'CONTRA ENTREGA' ? '#a0780a' : estado === 'ANULADO' ? '#ef4444' : S.muted;
                 const region = getRegion(s);
                 return (
-                  <div key={s._dbId ?? i} style={{ background: 'rgba(22,17,13,0.7)', border: '1px solid #2a1f14', borderRadius: '8px', padding: '0.65rem 0.85rem' }}>
+                  <div key={s._dbId ?? i} style={{ background: 'rgba(255,255,255,.95)', border: '1px solid rgba(104,168,119,.25)', borderRadius: '8px', padding: '0.65rem 0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#a08060' }}>{s.fecha ?? '—'} {s.hora ? `· ${s.hora}` : ''}</span>
+                      <span style={{ fontSize: '0.72rem', color: S.muted }}>{s.fecha ?? '—'} {s.hora ? `· ${s.hora}` : ''}</span>
                       <span style={{ fontSize: '0.65rem', fontWeight: 800, color: estadoColor, background: `${estadoColor}18`, borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{estado}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                       <div>
-                        <div style={{ fontSize: '0.75rem', color: '#f0e6d8', fontWeight: 600, marginBottom: '0.15rem' }}>{s.combo || 'Sin detalle'}</div>
-                        <div style={{ fontSize: '0.68rem', color: '#a08060' }}>{s.marcaLabel || 'OVER'} · {s.vendorName} · {region}</div>
-                        {s.codigoPublicidad && <div style={{ fontSize: '0.65rem', color: '#a78bfa', marginTop: '0.1rem' }}>Pub: {s.codigoPublicidad}</div>}
+                        <div style={{ fontSize: '0.75rem', color: S.text, fontWeight: 600, marginBottom: '0.15rem' }}>{s.combo || 'Sin detalle'}</div>
+                        <div style={{ fontSize: '0.68rem', color: S.muted }}>{s.marcaLabel || 'OVER'} · {s.vendorName} · {region}</div>
+                        {s.codigoPublicidad && <div style={{ fontSize: '0.65rem', color: '#7c3aed', marginTop: '0.1rem' }}>Pub: {s.codigoPublicidad}</div>}
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#00e696' }}>S/{s.totalTotal ?? 0}</div>
-                        {s.separo && <div style={{ fontSize: '0.65rem', color: '#a08060' }}>Separo: S/{s.separo}</div>}
+                        <div style={{ fontSize: '0.88rem', fontWeight: 900, color: S.accent }}>S/{s.totalTotal ?? 0}</div>
+                        {s.separo && <div style={{ fontSize: '0.65rem', color: S.muted }}>Separo: S/{s.separo}</div>}
                         {s.resta && parseFloat(s.resta) > 0 && (
                           <div style={{ fontSize: '0.68rem', color: '#ef4444', fontWeight: 700 }}>Debe S/{s.resta}</div>
                         )}
                       </div>
                     </div>
-                    <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.45rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(104,168,119,.15)', paddingTop: '0.45rem', display: 'flex', justifyContent: 'flex-end' }}>
                       <button
                         onClick={() => exportSalePDF(s)}
                         title="Descargar comprobante de esta compra"
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.6rem', borderRadius: '5px', border: '1px solid rgba(255,107,0,0.25)', background: 'rgba(255,107,0,0.07)', color: '#ff6b00', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 800 }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.6rem', borderRadius: '5px', border: '1px solid rgba(69,131,77,.3)', background: 'rgba(69,131,77,.07)', color: S.accent, cursor: 'pointer', fontSize: '0.65rem', fontWeight: 800 }}>
                         <FileDown size={11} /> Comprobante
                       </button>
                     </div>
@@ -1024,20 +1024,19 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       {editingId && editForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
           onClick={e => { if (e.target === e.currentTarget) closeEdit(); }}>
-          <div style={{ background: '#0d1117', border: '1px solid rgba(56,200,245,0.25)', borderRadius: '16px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '1.75rem' }}>
+          <div style={{ background: '#ffffff', border: '1px solid rgba(104,168,119,.35)', borderRadius: '16px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', padding: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div>
-                <div style={{ fontWeight: 900, fontSize: '1rem', color: '#fff' }}>Editar Registro</div>
-                <div style={{ fontSize: '0.72rem', color: '#a08060', marginTop: '0.15rem' }}>ID: {editingId}</div>
+                <div style={{ fontWeight: 900, fontSize: '1rem', color: S.text2 }}>Editar Registro</div>
+                <div style={{ fontSize: '0.72rem', color: S.muted, marginTop: '0.15rem' }}>ID: {editingId}</div>
               </div>
-              <button onClick={closeEdit} style={{ background: 'transparent', border: 'none', color: '#a08060', cursor: 'pointer', padding: '0.25rem' }}>
+              <button onClick={closeEdit} style={{ background: 'transparent', border: 'none', color: S.muted, cursor: 'pointer', padding: '0.25rem' }}>
                 <X size={18} />
               </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem 1rem' }}>
-              {([
-                { key: 'nom', label: 'Cliente' },
+              {([{ key: 'nom', label: 'Cliente' },
                 { key: 'cel', label: 'Celular' },
                 { key: 'dni', label: 'DNI' },
                 { key: 'hora', label: 'Hora' },
@@ -1049,7 +1048,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 { key: 'combo', label: 'Combo' },
               ] as { key: keyof EditForm; label: string; type?: string }[]).map(({ key, label, type }) => (
                 <div key={key}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>{label}</div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>{label}</div>
                   <input
                     type={type ?? 'text'}
                     value={editForm[key]}
@@ -1059,7 +1058,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 </div>
               ))}
               <div>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Método de Pago</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Método de Pago</div>
                 <select value={editForm.metodo_pago} onChange={e => setEditForm(f => f ? { ...f, metodo_pago: e.target.value } : f)} style={{ ...iStyle, width: '100%' }}>
                   <option value="Contra entrega">Contra entrega</option>
                   <option value="Pago completo">Pago completo</option>
@@ -1068,7 +1067,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 </select>
               </div>
               <div>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Marca</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Marca</div>
                 <select value={editForm.marca_label} onChange={e => setEditForm(f => f ? { ...f, marca_label: e.target.value } : f)} style={{ ...iStyle, width: '100%' }}>
                   <option value="OVER">OVER</option>
                   <option value="BRV">BRV</option>
@@ -1083,10 +1082,10 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             )}
 
             <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-              <button onClick={closeEdit} style={{ padding: '0.55rem 1.1rem', borderRadius: '8px', border: '1px solid #2a1f14', background: 'transparent', color: '#a08060', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
+              <button onClick={closeEdit} style={{ padding: '0.55rem 1.1rem', borderRadius: '8px', border: '1px solid rgba(104,168,119,.35)', background: 'transparent', color: S.muted, cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
                 Cancelar
               </button>
-              <button onClick={handleEditSave} disabled={editSaving} style={{ padding: '0.55rem 1.4rem', borderRadius: '8px', border: 'none', background: editSaving ? 'rgba(56,200,245,0.3)' : 'linear-gradient(135deg,#38c8f5,#1a9bb8)', color: '#000', cursor: editSaving ? 'default' : 'pointer', fontWeight: 800, fontSize: '0.82rem' }}>
+              <button onClick={handleEditSave} disabled={editSaving} style={{ padding: '0.55rem 1.4rem', borderRadius: '8px', border: 'none', background: editSaving ? 'rgba(69,131,77,.3)' : 'linear-gradient(135deg,#45834D,#3a6d42)', color: '#fff', cursor: editSaving ? 'default' : 'pointer', fontWeight: 800, fontSize: '0.82rem' }}>
                 {editSaving ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
@@ -1109,7 +1108,7 @@ function SalesByDayChart({ data, accent }: { data: [string, number][]; accent: s
             style={{
               width: '100%', minWidth: '4px',
               height: `${Math.max(8, (count / max) * 68)}px`,
-              background: count === max ? `linear-gradient(180deg,${accent},#e05500)` : 'rgba(255,107,0,0.35)',
+              background: count === max ? `linear-gradient(180deg,${accent},rgba(69,131,77,.5))` : 'rgba(69,131,77,.3)',
               borderRadius: '2px 2px 0 0',
             }}
           />
@@ -1122,8 +1121,8 @@ function SalesByDayChart({ data, accent }: { data: [string, number][]; accent: s
 function Pagination({ page, totalPages, onPage }: { page: number; totalPages: number; onPage: (p: number) => void }) {
   const b = (disabled: boolean): React.CSSProperties => ({
     padding: '0.3rem 0.65rem', fontSize: '0.72rem', fontWeight: 700,
-    border: '1px solid #2a1f14', background: 'rgba(22,17,13,0.8)',
-    color: disabled ? '#3a2a18' : '#a08060', borderRadius: '6px',
+    border: '1px solid rgba(104,168,119,.35)', background: 'rgba(255,255,255,.9)',
+    color: disabled ? 'rgba(81,120,97,.3)' : '#517861', borderRadius: '6px',
     cursor: disabled ? 'default' : 'pointer',
     pointerEvents: disabled ? 'none' : 'auto',
   });
@@ -1131,7 +1130,7 @@ function Pagination({ page, totalPages, onPage }: { page: number; totalPages: nu
     <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
       <button style={b(page === 1)} onClick={() => onPage(1)}>Primero</button>
       <button style={b(page === 1)} onClick={() => onPage(page - 1)}>Anterior</button>
-      <span style={{ padding: '0.3rem 0.65rem', fontSize: '0.72rem', color: '#a08060', fontWeight: 600 }}>
+      <span style={{ padding: '0.3rem 0.65rem', fontSize: '0.72rem', color: '#517861', fontWeight: 600 }}>
         Página {page} de {totalPages}
       </span>
       <button style={b(page === totalPages)} onClick={() => onPage(page + 1)}>Siguiente</button>
@@ -1141,12 +1140,12 @@ function Pagination({ page, totalPages, onPage }: { page: number; totalPages: nu
 }
 
 const iStyle: React.CSSProperties = {
-  padding: '0.45rem 0.65rem', border: '1px solid #2a1f14',
+  padding: '0.45rem 0.65rem', border: '1px solid rgba(104,168,119,.35)',
   borderRadius: '8px', fontSize: '0.82rem',
-  background: 'rgba(10,16,23,0.6)', color: '#f0e6d8',
+  background: 'rgba(255,255,255,.97)', color: '#162e20',
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 
 const td: React.CSSProperties = {
-  padding: '0.55rem 0.75rem', color: '#a08060', whiteSpace: 'nowrap',
+  padding: '0.55rem 0.75rem', color: '#517861', whiteSpace: 'nowrap',
 };

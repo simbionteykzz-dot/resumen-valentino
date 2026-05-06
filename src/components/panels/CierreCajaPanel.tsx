@@ -40,51 +40,51 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
 
         <div style={{
-          background: 'linear-gradient(135deg, rgba(13, 21, 28, 0.8), rgba(10, 16, 23, 0.8))',
-          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+          background: 'linear-gradient(135deg, rgba(69,131,77,.08), rgba(104,168,119,.05))',
+          border: '1.5px solid rgba(104,168,119,.4)',
           borderRadius: '14px',
           padding: '1.5rem',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 4px 16px rgba(69,131,77,.08)',
           transition: 'all 0.3s ease'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          e.currentTarget.style.borderColor = 'rgba(69,131,77,.5)';
           e.currentTarget.style.transform = 'translateY(-2px)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+          e.currentTarget.style.borderColor = 'rgba(104,168,119,.4)';
           e.currentTarget.style.transform = 'translateY(0)';
         }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <BarChart3 size={14} /> Ventas Registradas
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#fff', lineHeight: '1', textShadow: '0 2px 8px rgba(255, 255, 255, 0.1)' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent)', lineHeight: '1' }}>
             {totalVentas}
           </div>
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, rgba(0, 230, 150, 0.12), rgba(0, 163, 107, 0.08))',
-          border: '1.5px solid rgba(0, 230, 150, 0.3)',
+          background: 'linear-gradient(135deg, rgba(69,131,77,.12), rgba(58,109,66,.08))',
+          border: '1.5px solid rgba(69,131,77,.35)',
           borderRadius: '14px',
           padding: '1.5rem',
-          boxShadow: '0 4px 16px rgba(0, 230, 150, 0.15)',
+          boxShadow: '0 4px 16px rgba(69,131,77,.15)',
           transition: 'all 0.3s ease'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(0, 230, 150, 0.5)';
+          e.currentTarget.style.borderColor = 'rgba(69,131,77,.55)';
           e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 230, 150, 0.25)';
+          e.currentTarget.style.boxShadow = '0 6px 24px rgba(69,131,77,.25)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(0, 230, 150, 0.3)';
+          e.currentTarget.style.borderColor = 'rgba(69,131,77,.35)';
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 230, 150, 0.15)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(69,131,77,.15)';
         }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <DollarSign size={14} /> Total Recaudado
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent)', lineHeight: '1', textShadow: '0 2px 8px rgba(0, 230, 150, 0.2)' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent)', lineHeight: '1' }}>
             S/ {totalSoles.toFixed(2)}
           </div>
         </div>
@@ -116,19 +116,19 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
         </div>
 
         <div style={{
-          background: 'linear-gradient(135deg, rgba(13, 21, 28, 0.8), rgba(10, 16, 23, 0.8))',
-          border: '1.5px solid rgba(245, 166, 35, 0.3)',
+          background: 'linear-gradient(135deg, rgba(104,168,119,.08), rgba(81,120,97,.05))',
+          border: '1.5px solid rgba(104,168,119,.35)',
           borderRadius: '14px',
           padding: '1.5rem',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 4px 16px rgba(69,131,77,.08)',
           transition: 'all 0.3s ease'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(245, 166, 35, 0.5)';
+          e.currentTarget.style.borderColor = 'rgba(104,168,119,.5)';
           e.currentTarget.style.transform = 'translateY(-2px)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(245, 166, 35, 0.3)';
+          e.currentTarget.style.borderColor = 'rgba(104,168,119,.35)';
           e.currentTarget.style.transform = 'translateY(0)';
         }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -139,18 +139,18 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: 'rgba(0, 230, 150, 0.08)',
+              background: 'rgba(30, 111, 160, 0.08)',
               padding: '0.6rem 1rem',
               borderRadius: '8px',
-              border: '1px solid rgba(0, 230, 150, 0.2)',
+              border: '1px solid rgba(30, 111, 160, 0.2)',
               transition: 'all 0.2s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 230, 150, 0.12)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0, 230, 150, 0.08)'}>
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(30, 111, 160, 0.12)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(30, 111, 160, 0.08)'}>
               <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Bike size={16} /> Lima
               </span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--accent)' }}>{enviosLima}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--info)' }}>{enviosLima}</span>
             </div>
             <div style={{
               display: 'flex',
@@ -215,11 +215,11 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
           </div>
 
           {/* Contra Entrega */}
-          <div style={{ background: 'linear-gradient(135deg, rgba(13, 21, 28, 0.8), rgba(10, 16, 23, 0.8))', border: '1.5px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', padding: '1.25rem' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(242,251,245,.8), rgba(255,255,255,.9))', border: '1.5px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '1.25rem' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
               Contra Entrega
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', lineHeight: '1' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text2)', lineHeight: '1' }}>
               {contraEntrega}
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
@@ -237,7 +237,7 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
 
-          <div style={{ background: 'rgba(17, 25, 33, 0.8)', border: '1px solid rgba(26, 39, 51, 0.8)', borderRadius: '12px', padding: '1.25rem' }}>
+          <div style={{ background: 'rgba(242,251,245,.7)', border: '1px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '1.25rem' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
               Promedio por Venta
             </div>
@@ -246,7 +246,7 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(17, 25, 33, 0.8)', border: '1px solid rgba(26, 39, 51, 0.8)', borderRadius: '12px', padding: '1.25rem' }}>
+          <div style={{ background: 'rgba(242,251,245,.7)', border: '1px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '1.25rem' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
               Prendas por Venta
             </div>
