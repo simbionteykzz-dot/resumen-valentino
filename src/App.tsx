@@ -325,6 +325,15 @@ export default function App() {
 
   const handlePushSale = () => {
     if (!clientData.celular && !clientData.nombre) return;
+    if (clientData.celular) {
+      const dup = sales.find(s => s.cel === clientData.celular);
+      if (dup) {
+        const ok = window.confirm(
+          `⚠️ Ya hay una venta registrada hoy para el celular ${clientData.celular}${dup.nom ? ` (${dup.nom})` : ''}.\n\n¿Registrar de todas formas?`
+        );
+        if (!ok) return;
+      }
+    }
     const now = new Date();
     const hora = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     let totalQty = 0;
@@ -514,7 +523,7 @@ export default function App() {
           </div>
           <div>
             <ProductosPanel products={products} setProducts={setProducts} customComboName={customComboName} setCustomComboName={setCustomComboName} promoPrice={promoPrice} setPromoPrice={setPromoPrice} brand={brand} />
-            <OutputPanel outputText={outputStr} onAddSale={handlePushSale} clientCelular={clientData.celular} />
+            <OutputPanel outputText={outputStr} onAddSale={handlePushSale} clientCelular={clientData.celular} clientNombre={clientData.nombre} />
           </div>
         </div>
 
