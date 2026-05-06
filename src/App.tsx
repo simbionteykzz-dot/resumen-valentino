@@ -25,6 +25,7 @@ import type { ClientData, CuentaData, BoosterState, ToastState, Sale, Profile } 
 export default function App() {
   const { user, loading, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [adminMode, setAdminMode] = useState<'admin' | 'vendedor'>('admin');
 
   useEffect(() => {
     if (user?.id) getProfile(user.id).then(setProfile);
@@ -321,8 +322,6 @@ export default function App() {
   }
 
   if (!user) return <LoginPage />;
-
-  const [adminMode, setAdminMode] = useState<'admin' | 'vendedor'>('admin');
 
   if (profile?.role === 'admin' && adminMode === 'admin') {
     return (
