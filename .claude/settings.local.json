@@ -3,7 +3,21 @@
     "allow": [
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(pkill -f \"vite\\\\|node.*dev\")",
+      "Bash(npm install *)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in {**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}.items\\(\\) if 'supa' in k.lower\\(\\)]\")",
+      "Bash(git merge *)",
+      "Bash(sed 's|from '\\\\''../lib/data'\\\\''|from '\\\\''../../lib/data'\\\\''|g; s|from '\\\\''../lib/geo'\\\\''|from '\\\\''../../lib/geo'\\\\''|g; s|from '\\\\''./DropdownPortal'\\\\''|from '\\\\''../ui/DropdownPortal'\\\\''|g' src/components/ClientePanel.tsx)",
+      "Bash(sed 's|from '\\\\''../lib/data'\\\\''|from '\\\\''../../lib/data'\\\\''|g' src/components/ProductosPanel.tsx)",
+      "Bash(ls *.html *.php)",
+      "Bash(find . -name \"*.html\" -not -path \"*/node_modules/*\")",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(node -e \"const { jsPDF } = require\\('jspdf'\\); const doc = new jsPDF\\(\\); console.log\\(typeof doc.autoTable\\);\")",
+      "Bash(node -e \"const { jsPDF } = require\\('jspdf'\\); require\\('jspdf-autotable'\\); const doc = new jsPDF\\(\\); console.log\\(typeof doc.autoTable\\);\")",
+      "Bash(node -e \"const at = require\\('jspdf-autotable'\\); console.log\\(Object.keys\\(at\\).slice\\(0,10\\)\\);\")"
     ]
   }
 }

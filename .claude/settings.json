@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(curl -s \"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_flbxb5lrLJ67TkgyLJOveZoqi5PTK0kBog_3vdbvfikqhAiGjPdeJ5EAHh1_3pTXd9GsyO2jTR93/pubhtml\")",
+      "Bash(curl -s \"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_flbxb5lrLJ67TkgyLJOveZoqi5PTK0kBog_3vdbvfikqhAiGjPdeJ5EAHh1_3pTXd9GsyO2jTR93/pub?output=csv\")",
+      "Bash(curl -sL \"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_flbxb5lrLJ67TkgyLJOveZoqi5PTK0kBog_3vdbvfikqhAiGjPdeJ5EAHh1_3pTXd9GsyO2jTR93/pub?output=csv\")",
+      "Read(//tmp/**)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 35404 /PID 30888)"
+    ]
+  }
+}

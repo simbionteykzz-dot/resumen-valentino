@@ -3,8 +3,8 @@ import { useAdmin } from '../../hooks/useAdmin';
 import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil } from 'lucide-react';
 import type { Profile } from '../../types';
 import type { AdminSale } from '../../types';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface AdminDashboardProps {
   adminName: string;
@@ -106,15 +106,165 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     URL.revokeObjectURL(url);
   };
 
-  const exportPDF = async () => {
-    if (!tableRef.current) return;
-    const canvas = await html2canvas(tableRef.current, { scale: 1.5, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
-    const w = pdf.internal.pageSize.getWidth();
-    const h = (canvas.height * w) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-    pdf.save(`ventas_${dateFrom}_${dateTo}.pdf`);
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth();   // 297
+    const H = doc.internal.pageSize.getHeight();  // 210
+    const mg = 14;
+    const headerH = 40;
+
+    // ── Fondo del encabezado ──
+    doc.setFillColor(10, 14, 20);
+    doc.rect(0, 0, W, headerH, 'F');
+
+    // Barra lateral naranja
+    doc.setFillColor(255, 107, 0);
+    doc.rect(0, 0, 5, headerH, 'F');
+
+    // Título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LIVEX AGENCY', mg + 4, 15);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(56, 200, 245);
+    doc.text('Reporte de Ventas', mg + 4, 22);
+
+    doc.setFontSize(7.5);
+    doc.setTextColor(130, 100, 70);
+    doc.text(`Período: ${dateFrom}  →  ${dateTo}`, mg + 4, 29);
+    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, mg + 4, 35);
+
+    // ── KPI boxes ──
+    const kpis = [
+      { label: 'VENTAS', value: String(globalStats.salesCount), rgb: [255, 107, 0] as [number, number, number] },
+      { label: 'INGRESOS', value: `S/${globalStats.totalRevenue.toLocaleString()}`, rgb: [56, 200, 245] as [number, number, number] },
+      { label: 'PRENDAS', value: String(globalStats.totalItems), rgb: [167, 139, 250] as [number, number, number] },
+      { label: 'DEUDA', value: `S/${globalStats.deudaTotal.toFixed(0)}`, rgb: [239, 68, 68] as [number, number, number] },
+    ];
+    const boxW = 46;
+    const boxGap = 4;
+    const boxH = 28;
+    const boxTop = 6;
+    const startX = W - mg - kpis.length * boxW - (kpis.length - 1) * boxGap;
+
+    kpis.forEach((kpi, i) => {
+      const x = startX + i * (boxW + boxGap);
+      // Box fill
+      doc.setFillColor(18, 24, 32);
+      doc.roundedRect(x, boxTop, boxW, boxH, 2, 2, 'F');
+      // Top accent
+      doc.setFillColor(...kpi.rgb);
+      doc.rect(x, boxTop, boxW, 2.5, 'F');
+      // Label
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...kpi.rgb);
+      doc.text(kpi.label, x + boxW / 2, boxTop + 9, { align: 'center' });
+      // Value
+      doc.setFontSize(12);
+      doc.setTextColor(255, 255, 255);
+      doc.text(kpi.value, x + boxW / 2, boxTop + 22, { align: 'center' });
+    });
+
+    // ── Tabla ──
+    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUB.', 'MET. PAGO', 'COMBO'];
+
+    const rows = filteredSales.map(s => [
+      s.fecha ?? '',
+      s.marcaLabel ?? 'OVER',
+      s.vendorName ?? '',
+      s.hora ?? '',
+      getRegion(s),
+      s.nom ?? '',
+      s.cel ?? '',
+      s.dni ?? '',
+      `S/${s.totalTotal ?? 0}`,
+      s.resta || '—',
+      s.separo || '—',
+      getEstado(s),
+      s.codigoPublicidad ?? '',
+      s.metodoPago ?? '',
+      (s.combo ?? '').substring(0, 35),
+    ]);
+
+    autoTable(doc, {
+      startY: headerH + 4,
+      head: [headers],
+      body: rows,
+      theme: 'grid',
+      styles: {
+        fontSize: 6.2,
+        cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 },
+        lineColor: [35, 28, 20],
+        lineWidth: 0.25,
+        textColor: [190, 165, 140],
+        font: 'helvetica',
+        overflow: 'ellipsize',
+      },
+      headStyles: {
+        fillColor: [20, 28, 38],
+        textColor: [255, 107, 0],
+        fontStyle: 'bold',
+        fontSize: 6.2,
+        lineColor: [50, 38, 25],
+        lineWidth: 0.4,
+      },
+      alternateRowStyles: {
+        fillColor: [16, 20, 28],
+      },
+      bodyStyles: {
+        fillColor: [12, 16, 22],
+      },
+      columnStyles: {
+        8:  { textColor: [0, 230, 150], fontStyle: 'bold' },
+        11: { fontStyle: 'bold' },
+      },
+      didParseCell: (data) => {
+        if (data.section !== 'body') return;
+        if (data.column.index === 11) {
+          const v = String(data.cell.raw);
+          if (v === 'PAGO COMPLETO') data.cell.styles.textColor = [0, 230, 150];
+          else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [255, 160, 50];
+          else if (v === 'ANULADO') data.cell.styles.textColor = [239, 68, 68];
+          else data.cell.styles.textColor = [190, 165, 140];
+        }
+        if (data.column.index === 1) {
+          const v = String(data.cell.raw).toUpperCase();
+          if (v.includes('BRV') || v.includes('BRAVOS')) data.cell.styles.textColor = [167, 139, 250];
+          else data.cell.styles.textColor = [255, 107, 0];
+        }
+        if (data.column.index === 2) {
+          data.cell.styles.textColor = [56, 200, 245];
+        }
+      },
+      didDrawPage: (data) => {
+        const totalPages = doc.getNumberOfPages();
+        const pg = data.pageNumber;
+        // Footer line
+        doc.setDrawColor(255, 107, 0);
+        doc.setLineWidth(0.4);
+        doc.line(mg, H - 8, W - mg, H - 8);
+        // Footer text
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 75, 50);
+        doc.text(
+          `Livex Agency · Panel de Ventas · ${new Date().toLocaleDateString('es-PE')}`,
+          mg, H - 4.5,
+        );
+        doc.text(
+          `Página ${pg} de ${totalPages}`,
+          W - mg, H - 4.5,
+          { align: 'right' },
+        );
+      },
+      margin: { top: headerH + 4, left: mg, right: mg, bottom: 12 },
+    });
+
+    doc.save(`livex_ventas_${dateFrom}_${dateTo}.pdf`);
   };
 
   const S = {
