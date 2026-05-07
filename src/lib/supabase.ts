@@ -95,6 +95,7 @@ export async function getAllSalesAdmin(dateFrom: string, dateTo: string, profile
     ...ventaFromDBRaw(row),
     vendorName: profilesMap?.[row.user_id] ?? row.user_id ?? 'Desconocido',
     fecha: row.fecha ?? '',
+    _anulado: row.anulado ?? false,
   })) as AdminSale[];
 }
 
@@ -173,6 +174,14 @@ export async function softDeleteVenta(id: string): Promise<boolean> {
   const { error } = await supabase
     .from('ventas')
     .update({ anulado: true })
+    .eq('id', id);
+  return !error;
+}
+
+export async function restoreVentaDB(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .update({ anulado: false })
     .eq('id', id);
   return !error;
 }

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
-import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown } from 'lucide-react';
+import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Profile } from '../../types';
 import type { AdminSale } from '../../types';
 import { jsPDF } from 'jspdf';
@@ -53,10 +53,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     globalStats, vendorStats, brandStats, salesByDay, pubStats,
     liveCount,
     refresh, clearFilters,
-    getRegion, getEstado, anularVenta, editSale,
+    getRegion, getEstado, anularVenta, eliminarVenta, restaurarVenta, editSale,
+    eliminatedSales,
   } = useAdmin();
 
   const [historyClient, setHistoryClient] = useState<{ nom: string; cel: string } | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const clientHistory = historyClient
     ? allSales.filter(s => s.cel === historyClient.cel).sort((a, b) => (b.fecha ?? '').localeCompare(a.fecha ?? ''))
     : [];
@@ -875,10 +877,10 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       <td style={td}>
                         <span style={{ background: regionColor.bg, color: regionColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.68rem' }}>{region}</span>
                       </td>
-                      <td style={{ ...td, fontWeight: 600, color: '#f0e6d8' }}>
+                      <td style={{ ...td, fontWeight: 600, color: '#111111' }}>
                         <span
                           onClick={() => s.cel && setHistoryClient({ nom: s.nom || '—', cel: s.cel })}
-                          style={{ cursor: s.cel ? 'pointer' : 'default', borderBottom: s.cel ? '1px dashed rgba(56,200,245,0.4)' : 'none' }}
+                          style={{ cursor: s.cel ? 'pointer' : 'default', borderBottom: s.cel ? '1px dashed rgba(69,131,77,0.5)' : 'none' }}
                           title={s.cel ? 'Ver historial del cliente' : undefined}>
                           {s.nom || '—'}
                         </span>
@@ -912,6 +914,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                               ✕ Anular
                             </button>
                           )}
+                          {s._dbId && (
+                            <button
+                              onClick={() => eliminarVenta(s._dbId!)}
+                              title="Eliminar registro"
+                              style={{ background: 'rgba(120,53,15,0.08)', border: '1px solid rgba(120,53,15,0.2)', borderRadius: '5px', color: '#92400e', cursor: 'pointer', padding: '0.2rem 0.4rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem', whiteSpace: 'nowrap' }}>
+                              <Trash2 size={10} /> Eliminar
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -933,6 +943,70 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
+
+      {/* ── Tabla de registros eliminados ── */}
+      {eliminatedSales.length > 0 && (
+        <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,.97)', border: '1px solid rgba(146,64,14,.25)', borderRadius: '12px', overflow: 'hidden' }}>
+          <button
+            onClick={() => setShowDeleted(v => !v)}
+            style={{ width: '100%', padding: '0.85rem 1.25rem', background: 'linear-gradient(135deg,rgba(120,53,15,.06),rgba(146,64,14,.04))', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: showDeleted ? '1px solid rgba(146,64,14,.2)' : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Trash2 size={16} style={{ color: '#92400e' }} />
+              <span style={{ fontWeight: 800, fontSize: '0.85rem', color: '#92400e' }}>Registros Eliminados</span>
+              <span style={{ background: 'rgba(146,64,14,.12)', color: '#92400e', borderRadius: '10px', padding: '0.1rem 0.55rem', fontSize: '0.7rem', fontWeight: 800 }}>{eliminatedSales.length}</span>
+            </div>
+            {showDeleted ? <ChevronUp size={16} style={{ color: '#92400e' }} /> : <ChevronDown size={16} style={{ color: '#92400e' }} />}
+          </button>
+          {showDeleted && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg,rgba(120,53,15,.08),rgba(146,64,14,.05))', borderBottom: '2px solid rgba(146,64,14,.2)' }}>
+                    {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'TOTAL S/', 'COMBO', ''].map(h => (
+                      <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#92400e', textTransform: 'uppercase' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {eliminatedSales.map((s, i) => {
+                    const region = getRegion(s);
+                    const bc = getBrandColor(s.marcaLabel || 'OVER');
+                    return (
+                      <tr key={s._dbId ?? i} style={{ borderBottom: '1px solid rgba(146,64,14,.12)', background: i % 2 === 0 ? 'transparent' : 'rgba(254,243,199,.3)', opacity: 0.8 }}>
+                        <td style={{ ...td, color: S.muted }}>{s.fecha ?? '—'}</td>
+                        <td style={td}>
+                          <span style={{ background: bc.bg, color: bc.color, border: `1px solid ${bc.border}`, borderRadius: '5px', padding: '0.15rem 0.55rem', fontWeight: 800, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
+                            {s.marcaLabel || 'OVER'}
+                          </span>
+                        </td>
+                        <td style={{ ...td, color: S.muted }}>{s.vendorName}</td>
+                        <td style={{ ...td, color: S.muted }}>{s.hora ?? '—'}</td>
+                        <td style={td}>
+                          <span style={{ background: 'rgba(81,120,97,.08)', color: '#517861', borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.68rem' }}>{region}</span>
+                        </td>
+                        <td style={{ ...td, fontWeight: 700, color: '#111111' }}>{s.nom || '—'}</td>
+                        <td style={{ ...td, color: S.muted }}>{s.cel || '—'}</td>
+                        <td style={{ ...td, fontWeight: 800, color: S.muted }}>S/{s.totalTotal ?? 0}</td>
+                        <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: S.muted }}>{s.combo || '—'}</td>
+                        <td style={{ ...td, padding: '0.3rem 0.5rem' }}>
+                          {s._dbId && (
+                            <button
+                              onClick={() => restaurarVenta(s._dbId!)}
+                              title="Restaurar registro"
+                              style={{ background: 'rgba(69,131,77,.1)', border: '1px solid rgba(69,131,77,.25)', borderRadius: '5px', color: '#45834D', cursor: 'pointer', padding: '0.2rem 0.5rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}>
+                              <RotateCcw size={10} /> Restaurar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Drawer historial de cliente ── */}
       {historyClient && (

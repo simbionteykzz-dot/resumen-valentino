@@ -81,6 +81,7 @@ export interface Profile {
 export interface AdminSale extends Sale {
   vendorName: string;
   fecha: string;
+  _anulado?: boolean;
 }
 
 export interface VendorStats {

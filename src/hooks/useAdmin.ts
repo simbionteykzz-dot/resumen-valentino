@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw } from '../lib/supabase';
+import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB } from '../lib/supabase';
 import type { AdminSale, Profile, VendorStats } from '../types';
 import type { VentaDB } from '../lib/supabase';
 
@@ -63,10 +63,10 @@ export function useAdmin() {
         setTimeout(() => setLiveCount(n => Math.max(0, n - 1)), 4000);
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ventas' }, (payload) => {
-        const row = payload.new as VentaDB;
+        const row = payload.new as VentaDB & { anulado?: boolean };
         setAllSales(prev => prev.map(s =>
           s._dbId === row.id
-            ? { ...s, ...ventaFromDBRaw(row), fecha: row.fecha ?? s.fecha }
+            ? { ...s, ...ventaFromDBRaw(row), fecha: row.fecha ?? s.fecha, _anulado: row.anulado ?? false }
             : s
         ));
       })
@@ -86,8 +86,10 @@ export function useAdmin() {
     return s.metodoPago?.toUpperCase() || '—';
   };
 
+  const eliminatedSales = useMemo(() => allSales.filter(s => s._anulado), [allSales]);
+
   const filteredSales = useMemo(() => {
-    let r = allSales;
+    let r = allSales.filter(s => !s._anulado);
 
     if (brandFilter !== 'todas') {
       const lbl = brandFilter.toUpperCase();
@@ -199,6 +201,22 @@ export function useAdmin() {
     }
   };
 
+  const eliminarVenta = async (id: string) => {
+    if (!id || !window.confirm('¿Eliminar este registro? Quedará en la tabla de eliminados y podrás restaurarlo.')) return;
+    const ok = await softDeleteVenta(id);
+    if (ok) {
+      setAllSales(prev => prev.map(s => s._dbId === id ? { ...s, _anulado: true } : s));
+    }
+  };
+
+  const restaurarVenta = async (id: string) => {
+    if (!id) return;
+    const ok = await restoreVentaDB(id);
+    if (ok) {
+      setAllSales(prev => prev.map(s => s._dbId === id ? { ...s, _anulado: false } : s));
+    }
+  };
+
   const editSale = async (id: string, fields: Partial<Omit<VentaDB, 'id' | 'created_at' | 'user_id'>>): Promise<boolean> => {
     const ok = await updateVentaDB(id, fields);
     if (ok) {
@@ -241,6 +259,7 @@ export function useAdmin() {
     globalStats, vendorStats, brandStats, salesByDay, pubStats,
     liveCount,
     refresh: loadData, clearFilters,
-    getRegion, getEstado, anularVenta, editSale,
+    getRegion, getEstado, anularVenta, eliminarVenta, restaurarVenta, editSale,
+    eliminatedSales,
   };
 }
