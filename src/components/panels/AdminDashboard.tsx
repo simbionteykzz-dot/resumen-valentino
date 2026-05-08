@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, Fragment } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import PlanillasPanel from './PlanillasPanel';
@@ -32,6 +32,7 @@ function saleToForm(s: AdminSale): EditForm {
 
 export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedor }: AdminDashboardProps) {
   const tableRef = useRef<HTMLDivElement>(null);
+  const planillasRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
   const [editSaving, setEditSaving] = useState(false);
@@ -773,6 +774,10 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           <button onClick={() => setShowFilters(p => !p)} style={{ ...btn('ghost') }}>
             <Filter size={13} /> Filtros {showFilters ? '∧' : '∨'}
           </button>
+          <button onClick={() => planillasRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            style={{ ...btn('ghost'), color: '#45834D', border: '1px solid rgba(69,131,77,0.3)' }}>
+            📊 Planillas
+          </button>
           <button onClick={exportPDF} style={btn('accent')}>
             <Download size={13} /> PDF
           </button>
@@ -875,9 +880,9 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   const bc = getBrandColor(s.marcaLabel || 'OVER');
                   const isAnulado = estado === 'ANULADO';
                   return (
-                    <>
+                    <Fragment key={s._dbId ?? `frag-${i}`}>
                     {isNewBrand && (
-                      <tr key={`brand-${brand}`}>
+                      <tr>
                         <td colSpan={16} style={{ padding: '0.4rem 0.75rem', background: bc.bg, borderBottom: `2px solid ${bc.border}`, borderTop: i > 0 ? `2px solid ${bc.border}` : undefined }}>
                           <span style={{ fontWeight: 900, fontSize: '0.72rem', color: bc.color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                             {brand === 'OVER' ? '▸ OVERSHARK' : brand === 'BRV' ? '▸ BRAVOS' : `▸ ${brand}`}
@@ -888,7 +893,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                         </td>
                       </tr>
                     )}
-                    <tr key={s._dbId ?? i}
+                    <tr
                       style={{ borderBottom: '1px solid rgba(104,168,119,.2)', background: isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)', transition: 'background 0.15s', opacity: isAnulado ? 0.6 : 1 }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(69,131,77,.04)')}
                       onMouseLeave={e => (e.currentTarget.style.background = isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)')}>
@@ -951,7 +956,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                         </div>
                       </td>
                     </tr>
-                    </>
+                    </Fragment>
                   );
                   });
                 })()}
@@ -1036,6 +1041,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       )}
 
         {/* ── Planillas ── */}
+        <div ref={planillasRef}>
         <PlanillasPanel
           filteredSales={filteredSales}
           dateFrom={dateFrom}
@@ -1044,6 +1050,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           getRegion={getRegion}
           getEstado={getEstado}
         />
+        </div>
 
       </div>{/* fin contenedor 1500px */}
 
