@@ -81,7 +81,14 @@ export function useSales(
         setDeletedSales(prev => [...prev, { ...sale, _anulado: true } as any]);
         onToast('Venta eliminada', 'ok');
       } else {
-        onToast('Eliminado localmente, fallo en servidor', 'err');
+        // Restore local state since Supabase failed
+        setSales(prev => {
+          const restored = [...prev];
+          restored.splice(index, 0, sale);
+          return restored;
+        });
+        localStorage.setItem('overshark_sales', JSON.stringify(sales));
+        onToast('Error al eliminar — revisa consola del navegador', 'err');
       }
     } else {
       onToast('Venta eliminada', 'ok');

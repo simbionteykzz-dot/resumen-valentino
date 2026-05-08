@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
 import type { Profile } from '../../types';
 
 const abrevMetodo = (m: string) => {
@@ -32,6 +32,8 @@ export default function PlanillaPanel({
   const [exporting, setExporting] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState('');
+  const [brandView, setBrandView] = useState<'todas' | 'OVER' | 'BRV'>('todas');
+  const [blankMode, setBlankMode] = useState(false);
 
   const vendorLabel = selectedVendor
     ? (profiles.find(p => p.id === selectedVendor)?.full_name ?? 'VENDEDOR').toUpperCase()
@@ -91,7 +93,13 @@ export default function PlanillaPanel({
     }
   };
 
-  const emptyRowsCount = Math.max(0, 40 - sales.length);
+  const visibleSales = blankMode
+    ? []
+    : brandView === 'todas'
+      ? sales
+      : sales.filter(s => (s.marcaLabel || 'OVER').toUpperCase().includes(brandView));
+
+  const emptyRowsCount = Math.max(0, 40 - visibleSales.length);
   const emptyRows = Array.from({ length: emptyRowsCount });
 
   return (
@@ -103,7 +111,7 @@ export default function PlanillaPanel({
           </h2>
           <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--muted)', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <BarChart3 size={14} /> <strong>{sales.length}</strong> ventas registradas
+              <BarChart3 size={14} /> <strong>{blankMode ? 0 : visibleSales.length}</strong> ventas{brandView !== 'todas' && !blankMode ? ` (${brandView})` : ''}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <FileText size={14} /> <strong>{emptyRowsCount}</strong> filas disponibles
@@ -118,6 +126,39 @@ export default function PlanillaPanel({
           </div>
         </div>
         <div className="cliente-panel-actions" style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Filtro por marca */}
+          <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--surface2)', borderRadius: '8px', padding: '0.2rem', border: '1px solid var(--border)' }}>
+            {(['todas', 'OVER', 'BRV'] as const).map(b => (
+              <button
+                key={b}
+                onClick={() => { setBrandView(b); setBlankMode(false); }}
+                style={{
+                  padding: '0.3rem 0.65rem', fontSize: '0.75rem', fontWeight: 800,
+                  border: 'none', borderRadius: '6px', cursor: 'pointer',
+                  background: !blankMode && brandView === b ? 'var(--accent)' : 'transparent',
+                  color: !blankMode && brandView === b ? '#fff' : 'var(--muted)',
+                  transition: 'all 0.15s',
+                }}>
+                {b === 'todas' ? 'Todas' : b}
+              </button>
+            ))}
+          </div>
+
+          {/* Planilla en blanco */}
+          <button
+            onClick={() => setBlankMode(v => !v)}
+            title="Planilla vacía para imprimir"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.4rem 0.85rem', fontSize: '0.78rem', fontWeight: 800,
+              border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer',
+              background: blankMode ? 'var(--accent)' : 'var(--surface2)',
+              color: blankMode ? '#fff' : 'var(--muted)',
+              transition: 'all 0.15s',
+            }}>
+            <FileDown size={14} /> {blankMode ? 'Ver con ventas' : 'Planilla vacía'}
+          </button>
+
           {/* Selector de vendedor */}
           {profiles.length > 0 && (
             <select
@@ -206,7 +247,7 @@ export default function PlanillaPanel({
               </tr>
             </thead>
             <tbody>
-              {sales.map((sale, i) => (
+              {visibleSales.map((sale, i) => (
                 <tr key={`sale-${i}`}>
                   <td className="col-n">{i + 1}</td>
                   <td contentEditable suppressContentEditableWarning>{sale.cel}</td>
@@ -226,8 +267,8 @@ export default function PlanillaPanel({
                   <td contentEditable suppressContentEditableWarning>{sale.pagoCompletoTxt}</td>
                   <td contentEditable suppressContentEditableWarning>{sale.combo}</td>
                   <td className="col-del">
-                    {onDeleteSale && (
-                      <button className="btn-del-row" onClick={() => onDeleteSale(i)} title="Eliminar venta">
+                    {onDeleteSale && !blankMode && (
+                      <button className="btn-del-row" onClick={() => onDeleteSale(sales.indexOf(sale))} title="Eliminar venta">
                         <Trash2 size={13} />
                       </button>
                     )}

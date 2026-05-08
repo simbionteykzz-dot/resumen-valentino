@@ -175,6 +175,7 @@ export async function softDeleteVenta(id: string): Promise<boolean> {
     .from('ventas')
     .update({ anulado: true })
     .eq('id', id);
+  if (error) console.error('[softDeleteVenta]', error.code, error.message);
   return !error;
 }
 
