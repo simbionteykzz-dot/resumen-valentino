@@ -82,6 +82,7 @@ export interface AdminSale extends Sale {
   vendorName: string;
   fecha: string;
   _anulado?: boolean;
+  _userId?: string;
 }
 
 export interface VendorStats {
@@ -91,4 +92,20 @@ export interface VendorStats {
   totalRevenue: number;
   totalItems: number;
   avgPerSale: number;
+}
+
+export interface EditForm {
+  nom: string;
+  cel: string;
+  dni: string;
+  hora: string;
+  fecha: string;
+  codigo_publicidad: string;
+  metodo_pago: string;
+  separo: string;
+  resta: string;
+  total_total: string;
+  combo: string;
+  marca_label: string;
+  user_id: string;
 }

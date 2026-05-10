@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB } from '../lib/supabase';
+import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB, archivarTodasVentas, desarchivarTodasVentas, getArchivedSalesAdmin } from '../lib/supabase';
 import type { AdminSale, Profile, VendorStats } from '../types';
 import type { VentaDB } from '../lib/supabase';
+import { getCodigoProducto } from '../lib/data';
 
 const today = new Date().toISOString().split('T')[0];
 const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -32,6 +33,10 @@ export function useAdmin() {
   const [showFilters, setShowFilters] = useState(true);
   const [page, setPage] = useState(1);
 
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedSales, setArchivedSales] = useState<AdminSale[]>([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+
   const effectiveDateFrom = exactDate || (monthFilter ? `${monthFilter}-01` : dateFrom);
   const effectiveDateTo = exactDate || (monthFilter ? `${monthFilter}-31` : dateTo);
 
@@ -57,7 +62,7 @@ export function useAdmin() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ventas' }, (payload) => {
         const row = payload.new as VentaDB;
         const vendorName = profilesMapRef.current[row.user_id ?? ''] ?? 'Desconocido';
-        const newSale: AdminSale = { ...ventaFromDBRaw(row), vendorName, fecha: row.fecha ?? '' };
+        const newSale: AdminSale = { ...ventaFromDBRaw(row), vendorName, fecha: row.fecha ?? '', _userId: row.user_id ?? '' };
         setAllSales(prev => [newSale, ...prev]);
         setLiveCount(n => n + 1);
         setTimeout(() => setLiveCount(n => Math.max(0, n - 1)), 4000);
@@ -194,6 +199,34 @@ export function useAdmin() {
       .sort((a, b) => b.revenue - a.revenue);
   }, [filteredSales]);
 
+  const cpStats = useMemo(() => {
+    const map: Record<string, { code: string; count: number; revenue: number; items: number }> = {};
+    let uniqueWithCode = 0;
+    let uniqueWithoutCode = 0;
+    filteredSales.forEach(s => {
+      const raw = getCodigoProducto(s.detalle || '', s.combo || '');
+      if (raw === '—') {
+        uniqueWithoutCode++;
+        if (!map['Sin código']) map['Sin código'] = { code: 'Sin código', count: 0, revenue: 0, items: 0 };
+        map['Sin código'].count++;
+        map['Sin código'].revenue += Number(s.totalTotal) || 0;
+        map['Sin código'].items += Number(s.qtyN) || 0;
+      } else {
+        uniqueWithCode++;
+        raw.split(', ').forEach(code => {
+          if (!map[code]) map[code] = { code, count: 0, revenue: 0, items: 0 };
+          map[code].count++;
+          map[code].revenue += Number(s.totalTotal) || 0;
+          map[code].items += Number(s.qtyN) || 0;
+        });
+      }
+    });
+    const stats = Object.values(map)
+      .map(b => ({ ...b, revenue: Math.round(b.revenue * 100) / 100 }))
+      .sort((a, b) => b.count - a.count);
+    return { stats, uniqueWithCode, uniqueWithoutCode };
+  }, [filteredSales]);
+
   const salesByDay = useMemo((): [string, number][] => {
     const map: Record<string, number> = {};
     filteredSales.forEach(s => { if (s.fecha) map[s.fecha] = (map[s.fecha] || 0) + 1; });
@@ -224,11 +257,41 @@ export function useAdmin() {
     }
   };
 
-  const editSale = async (id: string, fields: Partial<Omit<VentaDB, 'id' | 'created_at' | 'user_id'>>): Promise<boolean> => {
+  const loadArchivedSales = async () => {
+    setArchiveLoading(true);
+    const sales = await getArchivedSalesAdmin(profilesMapRef.current);
+    setArchivedSales(sales);
+    setArchiveLoading(false);
+  };
+
+  const archivarTodo = async (): Promise<boolean> => {
+    const ok = await archivarTodasVentas();
+    if (ok) {
+      setArchivedSales(prev => [...allSales, ...prev]);
+      setAllSales([]);
+    }
+    return ok;
+  };
+
+  const desarchivarTodo = async (): Promise<boolean> => {
+    const ok = await desarchivarTodasVentas();
+    if (ok) {
+      setArchivedSales([]);
+      setShowArchived(false);
+      await loadData();
+    }
+    return ok;
+  };
+
+  const editSale = async (id: string, fields: Partial<Omit<VentaDB, 'id' | 'created_at'>>): Promise<boolean> => {
     const ok = await updateVentaDB(id, fields);
     if (ok) {
       setAllSales(prev => prev.map(s => {
         if (s._dbId !== id) return s;
+        const newUserId = fields.user_id ?? s._userId ?? '';
+        const newVendorName = fields.user_id
+          ? (profilesMapRef.current[fields.user_id] ?? s.vendorName)
+          : s.vendorName;
         return {
           ...s,
           nom: fields.nom ?? s.nom,
@@ -243,6 +306,8 @@ export function useAdmin() {
           totalTotal: fields.total_total ?? s.totalTotal,
           combo: fields.combo ?? s.combo,
           marcaLabel: fields.marca_label ?? s.marcaLabel,
+          _userId: newUserId,
+          vendorName: newVendorName,
         };
       }));
     }
@@ -263,10 +328,13 @@ export function useAdmin() {
     metodoPagoFilter, setMetodoPagoFilter,
     showFilters, setShowFilters,
     page: safePage, setPage, totalPages,
-    globalStats, vendorStats, brandStats, salesByDay, pubStats,
+    globalStats, vendorStats, brandStats, salesByDay, pubStats, cpStats,
     liveCount,
     refresh: loadData, clearFilters,
     getRegion, getEstado, anularVenta, eliminarVenta, restaurarVenta, editSale,
     eliminatedSales,
+    showArchived, setShowArchived,
+    archivedSales, archiveLoading,
+    loadArchivedSales, archivarTodo, desarchivarTodo,
   };
 }

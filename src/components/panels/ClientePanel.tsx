@@ -1,21 +1,49 @@
-import { Search, MapPin, CheckCircle2, XCircle, ChevronDown, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle } from 'lucide-react';
+import { MapPin, CheckCircle2, XCircle, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { DISTRITOS } from '../../lib/data';
-import { searchSedes, checkCob, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazu, findNearestShalom, CoberturaResult } from '../../lib/geo';
+import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazu, findNearestShalom, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
 
 async function sha256Hmac(message: string, secret: string) {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
+    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", keyMaterial, enc.encode(message));
-  const hashArray = Array.from(new Uint8Array(signature));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function FieldLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <label style={{
+      display: 'block', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.06em',
+      color: 'var(--muted)', marginBottom: '0.3rem', textTransform: 'uppercase' as const, ...style,
+    }}>
+      {children}
+    </label>
+  );
+}
+
+function FieldError({ msg }: { msg: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}>
+      <AlertCircle size={13} /> {msg}
+    </div>
+  );
+}
+
+function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="panel always" style={{ marginTop: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(37,99,235,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
+          {icon}
+        </div>
+        <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)' }}>{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function ClientePanel({ tab, data, onChange }: any) {
@@ -35,7 +63,6 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [nearestShalom, setNearestShalom] = useState<{ sede: any; distKm: number }[]>([]);
   const [distritoDetectado, setDistritoDetectado] = useState(false);
 
-  // Estados para validaciones
   const [celularError, setCelularError] = useState("");
   const [dniError, setDniError] = useState("");
 
@@ -47,32 +74,23 @@ export default function ClientePanel({ tab, data, onChange }: any) {
       const raw = `${uuid}@${time}`;
       const hash = await sha256Hmac(raw, '.Ov3rsku112024l4r43l.');
       const authToken = `${raw}@${hash}`;
-
       const res = await fetch('https://serviceswebapi.shalomcontrol.com/api/v1/web/agencias/listar', {
-        method: 'POST',
-        body: new FormData(),
-        headers: { 'Authorization': 'Bearer ' + authToken }
+        method: 'POST', body: new FormData(), headers: { 'Authorization': 'Bearer ' + authToken },
       });
       const json = await res.json();
-      
       if (json.success && Array.isArray(json.data)) {
         const mapped = json.data.map((a: any) => ({
-          n: a.nombre,
-          dist: a.zona,
-          prov: a.provincia,
-          dep: a.departamento,
-          addr: a.direccion,
-          lat: parseFloat(a.latitud) || 0,
-          lon: parseFloat(a.longitud) || 0
+          n: a.nombre, dist: a.zona, prov: a.provincia, dep: a.departamento,
+          addr: a.direccion, lat: parseFloat(a.latitud) || 0, lon: parseFloat(a.longitud) || 0,
         }));
         updateSedes(mapped);
         setSedesCount(getSedesCount());
-        setSedeResults(searchSedes(sedeQuery, 14)); // Refresh results if any
+        setSedeResults(searchSedes(sedeQuery, 14));
       } else {
         alert("Error de Shalom: " + (json.message || "Desconocido"));
       }
     } catch (err: any) {
-      alert("Error al conectar con servidor: " + err.message);
+      alert("Error al conectar: " + err.message);
     } finally {
       setUpdatingSedes(false);
     }
@@ -85,14 +103,9 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   }, []);
 
   const handleSedeSearch = (val: string) => {
-    setSedeQuery(val);
-    onChange('sede', val);
-    if (!val || val.toLowerCase() === "shalom") {
-      setShowSedeDrop(false);
-      return;
-    }
-    const res = searchSedes(val, 14);
-    setSedeResults(res);
+    setSedeQuery(val); onChange('sede', val);
+    if (!val || val.toLowerCase() === "shalom") { setShowSedeDrop(false); return; }
+    setSedeResults(searchSedes(val, 14));
     setShowSedeDrop(true);
   };
 
@@ -101,23 +114,16 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     if (s.dist && s.dist !== s.prov) loc.push(s.dist);
     if (s.prov) loc.push(s.prov);
     const label = "Shalom " + s.n + (loc.length ? " - " + loc.join(", ") : "");
-    setSedeQuery(label);
-    onChange('sede', label);
-    onChange('provincia', s.prov || "");
-    onChange('depto', s.dep || "");
+    setSedeQuery(label); onChange('sede', label);
+    onChange('provincia', s.prov || ""); onChange('depto', s.dep || "");
     setShowSedeDrop(false);
   };
 
   const handleDistSearch = (val: string) => {
-    setDistQuery(val);
-    onChange('distrito', val);
-    if (!val) {
-      setShowDistDrop(false);
-      return;
-    }
-    const nq = val.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-    const res = DISTRITOS.filter(d => d.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").includes(nq));
-    setDistResults(res);
+    setDistQuery(val); onChange('distrito', val);
+    if (!val) { setShowDistDrop(false); return; }
+    const nq = val.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    setDistResults(DISTRITOS.filter(d => d.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(nq)));
     setShowDistDrop(true);
   };
 
@@ -127,124 +133,103 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     if (coords) {
       const result = checkCoberturaZazu(coords.lon, coords.lat);
       setCobResult(result);
-      if (!result.dentro) {
-        setNearestShalom(findNearestShalom(coords.lat, coords.lon, 3));
-      } else {
-        setNearestShalom([]);
-      }
-      // Detectar distrito automáticamente según coordenadas
+      if (!result.dentro) setNearestShalom(findNearestShalom(coords.lat, coords.lon, 3));
+      else setNearestShalom([]);
       const distrito = detectarDistritoLima(coords.lat, coords.lon);
       if (distrito) {
-        setDistQuery(distrito);
-        onChange('distrito', distrito);
+        setDistQuery(distrito); onChange('distrito', distrito);
         setDistritoDetectado(true);
         setTimeout(() => setDistritoDetectado(false), 3000);
-      } else {
-        setDistritoDetectado(false);
-      }
+      } else setDistritoDetectado(false);
     } else {
-      setCobResult(null);
-      setNearestShalom([]);
-      setDistritoDetectado(false);
+      setCobResult(null); setNearestShalom([]); setDistritoDetectado(false);
     }
   };
 
-  // Validación de celular
   const handleCelularChange = (val: string) => {
     onChange('celular', val);
-    const numeros = val.replace(/\D/g, '');
-    if (numeros.length > 0 && numeros.length < 9) {
-      setCelularError("El número de celular debe tener al menos 9 dígitos");
-    } else {
-      setCelularError("");
-    }
+    const n = val.replace(/\D/g, '');
+    setCelularError(n.length > 0 && n.length < 9 ? "El número debe tener 9 dígitos" : "");
   };
 
-  // Validación de DNI
   const handleDniChange = (val: string) => {
     onChange('dni', val);
-    const numeros = val.replace(/\D/g, '');
-    if (numeros.length > 0 && numeros.length < 8) {
-      setDniError("El DNI debe tener al menos 8 dígitos");
-    } else {
-      setDniError("");
-    }
+    const n = val.replace(/\D/g, '');
+    setDniError(n.length > 0 && n.length < 8 ? "El DNI debe tener 8 dígitos" : "");
   };
 
   const detectIp = () => {
     fetch('https://get.geojs.io/v1/ip/geo.json')
       .then(r => r.json())
-      .then(d => {
-        const city = d.city || d.region;
-        if(city) handleDistSearch(city);
-      })
+      .then(d => { const city = d.city || d.region; if (city) handleDistSearch(city); })
       .catch(() => {});
   };
+
+  // ── Shared fields ──────────────────────────────────────────────────────
+
+  const nombreField = (
+    <div style={{ gridColumn: '1 / -1' }}>
+      <FieldLabel>NOMBRE COMPLETO</FieldLabel>
+      <input value={data.nombre} onChange={e => onChange('nombre', e.target.value)} placeholder="Nombre y apellido" className="form-input" />
+    </div>
+  );
+
+  const celularField = (
+    <div>
+      <FieldLabel>CELULAR</FieldLabel>
+      <input value={data.celular} onChange={e => handleCelularChange(e.target.value)} placeholder="9xxxxxxxx" className={`form-input ${celularError ? 'error' : ''}`} />
+      {celularError && <FieldError msg={celularError} />}
+    </div>
+  );
+
+  const dniField = (labelText = 'DNI') => (
+    <div>
+      <FieldLabel>{labelText}</FieldLabel>
+      <input value={data.dni} onChange={e => handleDniChange(e.target.value)} placeholder="12345678" maxLength={8} className={`form-input ${dniError ? 'error' : ''}`} />
+      {dniError && <FieldError msg={dniError} />}
+    </div>
+  );
+
+  const codPubField = (
+    <div style={{ gridColumn: '1 / -1' }}>
+      <FieldLabel>CÓDIGO DE PUBLICIDAD</FieldLabel>
+      <input value={data.codigoPublicidad} onChange={e => onChange('codigoPublicidad', e.target.value)} placeholder="Live" className="form-input" />
+    </div>
+  );
+
+  // ──────────────────────────────────────────────────────────────────────
 
   return (
     <>
       {tab === 'prov' && (
-        <div className="panel always" style={{ marginTop: '1.25rem' }}>
-          <div className="cliente-panel-head">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Package size={18} /> Datos provincia — Shalom
-            </h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-
-            {/* Nombre — full width */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>NOMBRE COMPLETO</label>
-              <input value={data.nombre} onChange={e => onChange('nombre', e.target.value)} placeholder="Nombre y apellido" className="form-input" />
-            </div>
-
-            {/* Celular */}
+        <SectionCard icon={<Package size={16} />} title="Datos provincia — Shalom">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            {nombreField}
+            {celularField}
+            {dniField('NÚMERO DNI')}
             <div>
-              <label>CELULAR</label>
-              <input value={data.celular} onChange={e => handleCelularChange(e.target.value)} placeholder="9xxxxxxxx" className={`form-input ${celularError ? 'error' : ''}`} />
-              {celularError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {celularError}</div>}
-            </div>
-
-            {/* DNI */}
-            <div>
-              <label>NÚMERO DNI</label>
-              <input value={data.dni} onChange={e => handleDniChange(e.target.value)} placeholder="12345678" className={`form-input ${dniError ? 'error' : ''}`} />
-              {dniError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {dniError}</div>}
-            </div>
-
-            {/* Departamento */}
-            <div>
-              <label>DEPARTAMENTO</label>
+              <FieldLabel>DEPARTAMENTO</FieldLabel>
               <input value={data.provincia} onChange={e => onChange('provincia', e.target.value)} placeholder="Ej. La Libertad" className="form-input" />
             </div>
-
-            {/* Provincia */}
             <div>
-              <label>PROVINCIA</label>
+              <FieldLabel>PROVINCIA</FieldLabel>
               <input value={data.depto} onChange={e => onChange('depto', e.target.value)} placeholder="Ej. Trujillo" className="form-input" />
             </div>
-
-            {/* Código publicidad — full width */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>CÓDIGO DE PUBLICIDAD</label>
-              <input value={data.codigoPublicidad} onChange={e => onChange('codigoPublicidad', e.target.value)} placeholder="Live" className="form-input" />
-            </div>
-
-            {/* Sede Shalom — full width */}
+            {codPubField}
             <div style={{ gridColumn: '1 / -1' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                <label style={{ margin: 0 }}>SEDE SHALOM</label>
-                <button onClick={handleUpdateSedes} disabled={updatingSedes} className="btn btn-secondary" style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }} title="Sincronizar red de agencias de Shalom en tiempo real">
-                  <RefreshCw size={12} className={updatingSedes ? "fa-spin" : ""} /> {updatingSedes ? "Sincronizando..." : "Actualizar Sedes"}
+                <FieldLabel style={{ marginBottom: 0 }}>SEDE SHALOM</FieldLabel>
+                <button onClick={handleUpdateSedes} disabled={updatingSedes} className="btn btn-secondary"
+                  style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <RefreshCw size={12} className={updatingSedes ? "fa-spin" : ""} />
+                  {updatingSedes ? "Sincronizando..." : "Actualizar Sedes"}
                 </button>
               </div>
-              <div className="sede-wrap">
-                <div className="sede-row" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                  <input ref={sedeInputRef} value={sedeQuery} onChange={e => handleSedeSearch(e.target.value)} onFocus={() => setSedeQuery("")} placeholder="Busca por distrito, provincia o dirección…" className="form-input" style={{ flex: 1 }} />
-                  <button className="btn btn-secondary sede-clear" onClick={() => handleSedeSearch("Shalom")} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16}/></button>
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente.</div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <input ref={sedeInputRef} value={sedeQuery} onChange={e => handleSedeSearch(e.target.value)} onFocus={() => setSedeQuery("")} placeholder="Busca por distrito, provincia o dirección…" className="form-input" style={{ flex: 1 }} />
+                <button className="btn btn-secondary" onClick={() => handleSedeSearch("Shalom")} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
               </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente.</div>
               <DropdownPortal isOpen={showSedeDrop} anchorRef={sedeInputRef} onClose={() => setShowSedeDrop(false)} className="sede-dropdown-portal">
                 <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><MapPin size={14} /> <strong style={{ color: '#fff' }}>{sedesCount}</strong> sedes cargadas</span>
@@ -261,90 +246,59 @@ export default function ClientePanel({ tab, data, onChange }: any) {
                 }
               </DropdownPortal>
             </div>
-
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {tab === 'lima' && (
-        <div className="panel always" style={{ marginTop: '1.25rem' }}>
-          <div className="cliente-panel-head">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Bike size={18} /> Delivery Lima
-            </h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-
-            {/* Nombre — full */}
+        <SectionCard icon={<Bike size={16} />} title="Delivery Lima">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            {nombreField}
+            {celularField}
+            {dniField('DNI')}
+            {codPubField}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label>NOMBRE COMPLETO</label>
-              <input value={data.nombre} onChange={e => onChange('nombre', e.target.value)} placeholder="Nombre y apellido" className="form-input" />
-            </div>
-
-            {/* Celular */}
-            <div>
-              <label>CELULAR</label>
-              <input value={data.celular} onChange={e => handleCelularChange(e.target.value)} placeholder="9xxxxxxx" className={`form-input ${celularError ? 'error' : ''}`} />
-              {celularError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {celularError}</div>}
-            </div>
-
-            {/* DNI */}
-            <div>
-              <label>DNI</label>
-              <input value={data.dni} onChange={e => handleDniChange(e.target.value)} placeholder="12345678" className={`form-input ${dniError ? 'error' : ''}`} />
-              {dniError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {dniError}</div>}
-            </div>
-
-            {/* Código publicidad */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>CÓDIGO DE PUBLICIDAD</label>
-              <input value={data.codigoPublicidad} onChange={e => onChange('codigoPublicidad', e.target.value)} placeholder="Live" className="form-input" />
-            </div>
-
-            {/* Ubicación — full */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>UBICACIÓN EN TIEMPO REAL (MANDAR)</label>
+              <FieldLabel>UBICACIÓN EN TIEMPO REAL (MANDAR)</FieldLabel>
               <input value={data.ubicacion} onChange={e => handleUbicacion(e.target.value)} placeholder="Link o referencia de ubicación" className="form-input" />
               {cobResult && (
                 <div className={`cob-badge visible ${cobResult.dentro ? 'dentro' : 'fuera'}`} style={{ marginTop: '0.5rem' }}>
                   <div className="cob-badge-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {cobResult.dentro ? <CheckCircle2 size={24} color="#45834D" /> : <XCircle size={24} color="#ef4444" />}
                   </div>
-                  <div className="cob-badge-text">
-                    <div className="cob-badge-msg">{cobResult.mensaje}</div>
-                  </div>
+                  <div className="cob-badge-text"><div className="cob-badge-msg">{cobResult.mensaje}</div></div>
                 </div>
               )}
               {!cobResult?.dentro && nearestShalom.length > 0 && (
                 <div style={{ marginTop: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(69,131,77,0.06), rgba(104,168,119,0.03))', border: '1.5px solid rgba(104,168,119,0.3)', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <MapPin size={13} /> Agencias Shalom más cercanas
                   </div>
                   {nearestShalom.map((ns, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0', borderTop: i > 0 ? '1px solid rgba(104,168,119,0.2)' : 'none' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: i === 0 ? 'var(--accent)' : 'var(--muted)', width: '1.5rem', textAlign: 'center' }}>#{i+1}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: i === 0 ? 'var(--accent)' : 'var(--muted)', width: '1.5rem', textAlign: 'center' as const }}>#{i + 1}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text2)' }}>{ns.sede.n}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{ns.sede.prov}, {ns.sede.dep} — {ns.sede.addr}</div>
                       </div>
                       <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#facc15', flexShrink: 0 }}>{ns.distKm.toFixed(1)} km</span>
-                      <button onClick={() => { const label = 'Shalom ' + ns.sede.n; setSedeQuery(label); onChange('sede', label); onChange('provincia', ns.sede.prov || ''); onChange('depto', ns.sede.dep || ''); }} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(104,168,119,0.35)', color: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}>Usar esta</button>
+                      <button onClick={() => { const label = 'Shalom ' + ns.sede.n; setSedeQuery(label); onChange('sede', label); onChange('provincia', ns.sede.prov || ''); onChange('depto', ns.sede.dep || ''); }}
+                        style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.3rem 0.7rem', borderRadius: '50px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(104,168,119,0.35)', color: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}>
+                        Usar esta
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Distrito — full */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label>DISTRITO</label>
-              <div className="dist-wrap" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+              <FieldLabel>DISTRITO</FieldLabel>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                 <input ref={distInputRef} value={distQuery} onChange={e => handleDistSearch(e.target.value)} onFocus={() => distQuery && setShowDistDrop(true)} placeholder="Escribe para buscar distrito..." className="form-input" style={{ flex: 1 }} />
-                <button className="btn btn-secondary" onClick={detectIp} title="Detectar" style={{ height: '42px', padding: '0 1rem' }}><MapPin size={16}/></button>
+                <button className="btn btn-secondary" onClick={detectIp} title="Detectar" style={{ height: '42px', padding: '0 1rem' }}><MapPin size={16} /></button>
               </div>
               {distritoDetectado && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2ee8a0', fontSize: '0.85rem', marginTop: '0.5rem', animation: 'fadeUp 0.3s ease' }}>
-                  <CheckCircle2 size={16} /> Distrito detectado automáticamente según coordenadas
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2ee8a0', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  <CheckCircle2 size={16} /> Distrito detectado automáticamente
                 </div>
               )}
               <DropdownPortal isOpen={showDistDrop} anchorRef={distInputRef} onClose={() => setShowDistDrop(false)} className="dist-dropdown-portal">
@@ -353,48 +307,19 @@ export default function ClientePanel({ tab, data, onChange }: any) {
                 ))}
               </DropdownPortal>
             </div>
-
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {tab === 'almacen' && (
-        <div className="panel always" style={{ marginTop: '1.25rem' }}>
-          <div className="cliente-panel-head">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Store size={18} /> Recojo almacén
-            </h2>
+        <SectionCard icon={<Store size={16} />} title="Recojo almacén">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            {nombreField}
+            {celularField}
+            {dniField('NÚMERO DNI')}
+            {codPubField}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-
-            {/* Nombre — full */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>NOMBRE COMPLETO</label>
-              <input value={data.nombre} onChange={e => onChange('nombre', e.target.value)} placeholder="Nombre y apellido" className="form-input" />
-            </div>
-
-            {/* Celular */}
-            <div>
-              <label>CELULAR</label>
-              <input value={data.celular} onChange={e => handleCelularChange(e.target.value)} placeholder="9xxxxxxx" className={`form-input ${celularError ? 'error' : ''}`} />
-              {celularError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {celularError}</div>}
-            </div>
-
-            {/* DNI */}
-            <div>
-              <label>NÚMERO DNI</label>
-              <input value={data.dni} onChange={e => handleDniChange(e.target.value)} placeholder="12345678" className={`form-input ${dniError ? 'error' : ''}`} />
-              {dniError && <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ef4444', fontSize: '0.78rem', marginTop: '0.35rem' }}><AlertCircle size={13} /> {dniError}</div>}
-            </div>
-
-            {/* Código publicidad — full */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label>CÓDIGO DE PUBLICIDAD</label>
-              <input value={data.codigoPublicidad} onChange={e => onChange('codigoPublicidad', e.target.value)} placeholder="Live" className="form-input" />
-            </div>
-
-          </div>
-        </div>
+        </SectionCard>
       )}
     </>
   );

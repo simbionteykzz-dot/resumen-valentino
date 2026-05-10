@@ -32,6 +32,7 @@ export interface VentaDB {
   distrito?: string;
   ubicacion?: string;
   detalle?: string;
+  archived?: boolean;
 }
 
 export function ventaToDB(
@@ -89,6 +90,7 @@ export async function getAllSalesAdmin(dateFrom: string, dateTo: string, profile
     .select('*')
     .gte('fecha', dateFrom)
     .lte('fecha', dateTo)
+    .neq('archived', true)
     .order('created_at', { ascending: false });
   if (error || !data) return [];
   return data.map((row: any) => ({
@@ -96,7 +98,43 @@ export async function getAllSalesAdmin(dateFrom: string, dateTo: string, profile
     vendorName: profilesMap?.[row.user_id] ?? row.user_id ?? 'Desconocido',
     fecha: row.fecha ?? '',
     _anulado: row.anulado ?? false,
+    _userId: row.user_id ?? '',
   })) as AdminSale[];
+}
+
+export async function getArchivedSalesAdmin(profilesMap?: Record<string, string>): Promise<AdminSale[]> {
+  const { data, error } = await supabase
+    .from('ventas')
+    .select('*')
+    .eq('archived', true)
+    .order('fecha', { ascending: false });
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    ...ventaFromDBRaw(row),
+    vendorName: profilesMap?.[row.user_id] ?? row.user_id ?? 'Desconocido',
+    fecha: row.fecha ?? '',
+    _anulado: row.anulado ?? false,
+    _userId: row.user_id ?? '',
+    _archived: true,
+  })) as AdminSale[];
+}
+
+export async function archivarTodasVentas(): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .update({ archived: true })
+    .neq('archived', true);
+  if (error) console.error('[archivarTodasVentas]', error.message);
+  return !error;
+}
+
+export async function desarchivarTodasVentas(): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .update({ archived: false })
+    .eq('archived', true);
+  if (error) console.error('[desarchivarTodasVentas]', error.message);
+  return !error;
 }
 
 export function ventaFromDBRaw(row: VentaDB): Sale {
@@ -162,7 +200,7 @@ export async function anularVentaDB(id: string): Promise<boolean> {
   return !error;
 }
 
-export async function updateVentaDB(id: string, fields: Partial<Omit<VentaDB, 'id' | 'created_at' | 'user_id'>>): Promise<boolean> {
+export async function updateVentaDB(id: string, fields: Partial<Omit<VentaDB, 'id' | 'created_at'>>): Promise<boolean> {
   const { error } = await supabase
     .from('ventas')
     .update(fields)

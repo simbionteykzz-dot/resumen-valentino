@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Tag, Shuffle } from 'lucide-react';
 import {
-  POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, TALLAS_SMLXL,
-  POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA,
+  POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, MIX_PROMOS_DATA, PROMOS_GROUPS, TALLAS_SMLXL,
+  POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, PRODUCT_NAME_TO_CP,
 } from '../../lib/data';
 
 export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice, brand = 'overshark' }: any) {
@@ -17,6 +17,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [newPromoPrice, setNewPromoPrice] = useState("");
   const [newPromoQty, setNewPromoQty] = useState("1");
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
+  const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
 
   const addProduct = () =>
     setProducts([...products, { id: Date.now(), name: "", size: "", qty: 1, colorLines: [], promoName: "" }]);
@@ -30,7 +31,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
     setProducts(products.map((p: any) => p.id === id ? { ...p, [field]: value } : p));
 
   const handlePromoLoad = (key: string) => {
-    const pData = PROMOS[key];
+    const pData = PROMOS[key] ?? MIX_PROMOS_DATA[key];
     if (!pData) return;
     const ts = Date.now();
     const baseQty = pData.list.reduce((acc, item) => acc + item.q, 0);
@@ -86,8 +87,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const updateColorQty = (id: number, color: string, delta: number) =>
     setProducts(products.map((p: any) =>
       p.id === id ? {
-        ...p,
-        colorLines: p.colorLines.map((c: any) => c.color === color ? { ...c, qty: Math.max(1, c.qty + delta) } : c)
+        ...p, colorLines: p.colorLines.map((c: any) => c.color === color ? { ...c, qty: Math.max(1, c.qty + delta) } : c),
       } : p));
 
   const getColorInput = (id: number) => colorInputs[id] ?? '';
@@ -107,6 +107,14 @@ export default function ProductosPanel({ products, setProducts, customComboName,
     const total = list.reduce((a, i) => a + i.q, 0);
     return `${total} prendas mix`;
   };
+
+  const variantLabel = (v: { list: { n: string; q: number }[]; comboData: string }) => {
+    const qty = v.list.reduce((a, i) => a + i.q, 0);
+    if (v.comboData.includes('REGALO')) return `${qty - 1}+1`;
+    return `${qty}×`;
+  };
+
+  const activeGroup = PROMOS_GROUPS.find(g => g.label === activePromoGroup) ?? null;
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
@@ -131,65 +139,107 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         </button>
       </div>
 
-      {/* ── Promo cards ── */}
+      {/* ── Promo section ── */}
       <div style={{ marginBottom: '1.25rem' }}>
-        <div className="prod-section-lbl">Cargar Promoción</div>
-        <div className="promo-cards-scroll">
-          {Object.entries(PROMOS).map(([k, v]) => (
-            <button key={k} className="promo-card" onClick={() => handlePromoLoad(k)}>
-              <span className="promo-card-name">{v.name}</span>
-              <span className="promo-card-items">{promoItemsLabel(v.list)}</span>
-              <span className="promo-card-price">S/ {v.price}</span>
-            </button>
-          ))}
+
+        {/* Cargar Promoción — individual */}
+        <div className="promo-block">
+          <div className="promo-block-header">
+            <Tag size={13} />
+            <span>Cargar Promoción</span>
+          </div>
+
+          {!isBravos ? (
+            <>
+              {/* Chips de producto */}
+              <div className="promo-chips-row">
+                {PROMOS_GROUPS.map(g => {
+                  const isActive = activePromoGroup === g.label;
+                  const variantCount = g.keys.length;
+                  return (
+                    <button
+                      key={g.label}
+                      onClick={() => setActivePromoGroup(isActive ? null : g.label)}
+                      className={`promo-chip ${isActive ? 'promo-chip--active' : ''}`}
+                    >
+                      <span className="promo-chip-label">{g.label}</span>
+                      <span className="promo-chip-count">{variantCount}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Panel de variantes */}
+              {activeGroup && (
+                <div className="promo-variants-panel">
+                  <div className="promo-variants-title">
+                    {activeGroup.label} — elige cantidad
+                  </div>
+                  <div className="promo-variants-grid">
+                    {activeGroup.keys.map(k => {
+                      const v = PROMOS_DATA[k];
+                      if (!v) return null;
+                      const label = variantLabel(v);
+                      const isLive = v.comboData.includes('REGALO');
+                      return (
+                        <button
+                          key={k}
+                          onClick={() => handlePromoLoad(k)}
+                          className={`promo-variant-btn ${isLive ? 'promo-variant-btn--live' : ''}`}
+                        >
+                          <span className="promo-variant-qty">{label}</span>
+                          <span className="promo-variant-price">S/ {v.price}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="promo-cards-scroll">
+              {Object.entries(PROMOS).map(([k, v]) => (
+                <button key={k} className="promo-card" onClick={() => handlePromoLoad(k)}>
+                  <span className="promo-card-name">{v.name}</span>
+                  <span className="promo-card-items">{promoItemsLabel(v.list)}</span>
+                  <span className="promo-card-price">S/ {v.price}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Promociones Mix (solo Overshark) */}
+        {!isBravos && (
+          <div className="promo-block promo-block--mix">
+            <div className="promo-block-header">
+              <Shuffle size={13} />
+              <span>Promociones Mix</span>
+            </div>
+            <div className="promo-mix-grid">
+              {Object.entries(MIX_PROMOS_DATA).map(([k, v]) => (
+                <button key={k} className="promo-mix-card" onClick={() => handlePromoLoad(k)}>
+                  <span className="promo-mix-name">{v.name}</span>
+                  <span className="promo-mix-items">{promoItemsLabel(v.list)}</span>
+                  <span className="promo-mix-price">S/ {v.price}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Manual promo + combo ── */}
       <div className="manual-promo-box">
         <div className="prod-section-lbl">Promo Manual / Combo personalizado</div>
         <div className="manual-promo-row">
-          <input
-            placeholder="Nombre promo..."
-            className="form-input"
-            style={{ flex: '1', minWidth: '110px' }}
-            value={newPromoName}
-            onChange={e => setNewPromoName(e.target.value)}
-          />
-          <input
-            placeholder="Cant"
-            type="number"
-            min="1"
-            className="form-input"
-            style={{ width: '62px' }}
-            value={newPromoQty}
-            onChange={e => setNewPromoQty(e.target.value)}
-          />
-          <input
-            placeholder="S/ Total"
-            className="form-input"
-            style={{ width: '80px' }}
-            value={newPromoPrice}
-            onChange={e => setNewPromoPrice(e.target.value)}
-          />
-          <button className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={handleAddManualPromo}>
-            + Añadir
-          </button>
+          <input placeholder="Nombre promo..." className="form-input" style={{ flex: '1', minWidth: '110px' }} value={newPromoName} onChange={e => setNewPromoName(e.target.value)} />
+          <input placeholder="Cant" type="number" min="1" className="form-input" style={{ width: '62px' }} value={newPromoQty} onChange={e => setNewPromoQty(e.target.value)} />
+          <input placeholder="S/ Total" className="form-input" style={{ width: '80px' }} value={newPromoPrice} onChange={e => setNewPromoPrice(e.target.value)} />
+          <button className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={handleAddManualPromo}>+ Añadir</button>
           <div className="manual-promo-divider" />
-          <input
-            placeholder="Nombre combo final..."
-            className="form-input"
-            style={{ flex: '1.5', minWidth: '140px' }}
-            value={customComboName}
-            onChange={e => setCustomComboName(e.target.value)}
-          />
-          <input
-            placeholder="Total S/"
-            className="form-input"
-            style={{ width: '80px' }}
-            value={promoPrice}
-            onChange={e => setPromoPrice(e.target.value)}
-          />
+          <input placeholder="Nombre combo final..." className="form-input" style={{ flex: '1.5', minWidth: '140px' }} value={customComboName} onChange={e => setCustomComboName(e.target.value)} />
+          <input placeholder="Total S/" className="form-input" style={{ width: '80px' }} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
         </div>
       </div>
 
@@ -204,29 +254,23 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         {products.map((p: any) => {
           const cfgKey = normalizePolName(p.name);
           const cfg = cfgKey ? VARIANTES[cfgKey] : null;
-          const tallas = cfg?.tallas || (isBravos ? ['S','M','L'] : TALLAS_SMLXL);
+          const tallas = cfg?.tallas || (isBravos ? ['S', 'M', 'L'] : TALLAS_SMLXL);
           const colorList = cfg?.colores ? cfg.colores.split(",").map((c: string) => c.trim()) : [];
           const hasColorLines = p.colorLines.length > 0;
+          const cpCode = PRODUCT_NAME_TO_CP[p.name?.trim().toUpperCase() ?? ''];
 
           return (
             <div key={p.id} className="product-card-v2">
-
-              {/* Row 1: nombre + badge + quitar */}
               <div className="pc-row pc-head-row">
-                <input
-                  list={listId}
-                  value={p.name}
-                  onChange={e => updateProduct(p.id, 'name', e.target.value)}
-                  placeholder="Escribe o elige producto..."
-                  style={{ flex: 1 }}
-                />
+                <input list={listId} value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)} placeholder="Escribe o elige producto..." style={{ flex: 1 }} />
+                {cpCode && (
+                  <span style={{ fontSize: '0.6rem', fontWeight: 900, padding: '0.12rem 0.5rem', borderRadius: '5px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(69,131,77,0.3)', color: '#45834D', whiteSpace: 'nowrap', letterSpacing: '0.05em', flexShrink: 0 }}>
+                    {cpCode}
+                  </span>
+                )}
                 {p.promoName && <span className="pc-promo-badge">{p.promoName}</span>}
-                <button className="pc-btn-rm" onClick={() => removeProduct(p.id)} title="Quitar">
-                  <X size={13} />
-                </button>
+                <button className="pc-btn-rm" onClick={() => removeProduct(p.id)} title="Quitar"><X size={13} /></button>
               </div>
-
-              {/* Row 2: talla + qty */}
               <div className="pc-row pc-controls-row">
                 <div>
                   <div className="pc-lbl">Talla</div>
@@ -248,8 +292,6 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                   </div>
                 )}
               </div>
-
-              {/* Row 3: colores */}
               <div className="pc-colors-section">
                 {colorList.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.5rem' }}>
@@ -259,22 +301,12 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    placeholder="Añadir color..."
-                    className="form-input"
-                    style={{ flex: 1, maxWidth: '160px', padding: '0.4rem 0.65rem', fontSize: '0.8rem' }}
-                    value={getColorInput(p.id)}
-                    onChange={e => setColorInput(p.id, e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddColorManual(p.id); } }}
-                  />
-                  <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleAddColorManual(p.id)}>
-                    + Color
-                  </button>
+                  <input type="text" placeholder="Añadir color..." className="form-input" style={{ flex: 1, maxWidth: '160px', padding: '0.4rem 0.65rem', fontSize: '0.8rem' }}
+                    value={getColorInput(p.id)} onChange={e => setColorInput(p.id, e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddColorManual(p.id); } }} />
+                  <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleAddColorManual(p.id)}>+ Color</button>
                 </div>
               </div>
-
-              {/* Color lines */}
               {hasColorLines && (
                 <div className="pc-color-lines">
                   {p.colorLines.map((cL: any) => (
@@ -288,9 +320,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                           <button className="qty-btn" onClick={() => updateColorQty(p.id, cL.color, 1)}>+</button>
                         </div>
                       </div>
-                      <button className="pc-color-rm" onClick={() => removeColorLine(p.id, cL.color)} title="Quitar color">
-                        <X size={11} />
-                      </button>
+                      <button className="pc-color-rm" onClick={() => removeColorLine(p.id, cL.color)} title="Quitar color"><X size={11} /></button>
                     </div>
                   ))}
                 </div>

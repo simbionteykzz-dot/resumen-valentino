@@ -4,6 +4,201 @@ import { jsPDF } from 'jspdf';
 import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
 import type { Profile } from '../../types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function drawCierreCajaPage(pdf: any, sales: any[], pageW: number, pageH: number) {
+  const M = 10;
+  const GAP = 3.5;
+
+  const totalVentas    = sales.length;
+  const totalPrendas   = sales.reduce((a, v) => a + (Number(v.qtyN) || 0), 0);
+  const totalSoles     = sales.reduce((a, v) => a + (Number(v.totalTotal) || 0), 0);
+  const enviosLima     = sales.filter(v => v.limaMark).length;
+  const enviosProv     = sales.filter(v => v.provMark).length;
+  const totalSeparos   = sales.reduce((a, v) => a + (parseFloat(v.separo) || 0), 0);
+  const totalDeudas    = sales.reduce((a, v) => a + (parseFloat(v.resta)  || 0), 0);
+  const pagosCompletos = sales.filter(v => v.pagoCompletoTxt).length;
+  const contraEntrega  = sales.filter(v => v.separo || v.resta).length;
+  const promedioVenta   = totalVentas > 0 ? totalSoles   / totalVentas : 0;
+  const promedioPrendas = totalVentas > 0 ? totalPrendas / totalVentas : 0;
+
+  const solesStr = (n: number) => n % 1 === 0 ? `S/ ${Math.round(n)}` : `S/ ${n.toFixed(2)}`;
+
+  const CW4 = (pageW - 2 * M - 3 * GAP) / 4;
+  const CW2 = (pageW - 2 * M - GAP) / 2;
+  const xs4 = [M, M + CW4 + GAP, M + 2 * (CW4 + GAP), M + 3 * (CW4 + GAP)];
+  const xs2 = [M, M + CW2 + GAP];
+
+  type RGB = [number, number, number];
+
+  // ── Card: filled bg + subtle border + full-width TOP accent bar ────────────
+  const card = (
+    x: number, y: number, w: number, h: number,
+    bg: RGB, accent: RGB,
+    label: string, value: string, sub?: string,
+  ) => {
+    // fill
+    pdf.setFillColor(...bg);
+    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'F');
+    // border
+    pdf.setDrawColor(accent[0], accent[1], accent[2]);
+    pdf.setLineWidth(0.2);
+    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'S');
+    // top accent bar (full width, 3mm)
+    pdf.setFillColor(...accent);
+    pdf.roundedRect(x, y, w, 3, 1.5, 1.5, 'F');
+    // label (below accent bar)
+    pdf.setFontSize(5.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(80, 100, 90);
+    pdf.text(label.toUpperCase(), x + 5, y + 9.5);
+    // value
+    const longVal = value.length > 9;
+    const valueSize = h <= 32 ? (longVal ? 14 : 17) : sub ? (longVal ? 15 : 18) : (longVal ? 16 : 21);
+    pdf.setFontSize(valueSize);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...accent);
+    pdf.text(value, x + 5, y + h - (sub ? 9 : 5.5));
+    // sub
+    if (sub) {
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(110, 130, 120);
+      pdf.text(sub, x + 5, y + h - 3.5);
+    }
+  };
+
+  // ── Section label: colored dot + text + line ───────────────────────────────
+  const sectionLabel = (label: string, y: number, color: RGB = [69, 131, 77]) => {
+    pdf.setFillColor(...color);
+    pdf.circle(M + 1.8, y - 1.8, 1.8, 'F');
+    pdf.setFontSize(6.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(...color);
+    pdf.text(label, M + 5.5, y);
+    const tw = pdf.getTextWidth(label);
+    pdf.setDrawColor(180, 210, 195);
+    pdf.setLineWidth(0.25);
+    pdf.line(M + 5.5 + tw + 3, y - 1.5, pageW - M, y - 1.5);
+  };
+
+  // ── TOP STRIPE (full page, 4mm dark green) ─────────────────────────────────
+  pdf.setFillColor(18, 50, 30);
+  pdf.rect(0, 0, pageW, 4, 'F');
+
+  // ── HEADER BAND (dark green panel) ─────────────────────────────────────────
+  const HY = 6, HH = 28;
+  pdf.setFillColor(22, 52, 33);
+  pdf.roundedRect(M, HY, pageW - 2 * M, HH, 3, 3, 'F');
+  pdf.setDrawColor(50, 100, 65);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(M, HY, pageW - 2 * M, HH, 3, 3, 'S');
+
+  // title + subtitle (left side)
+  pdf.setFontSize(15);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('CIERRE DE CAJA', M + 7, HY + 11);
+  pdf.setFontSize(7.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(120, 185, 145);
+  const dateStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  pdf.text(`${totalVentas} ventas registradas  ·  ${dateStr}`, M + 7, HY + 20);
+
+  // right side: LIVEX + total recaudado highlight box
+  const rhW = 72, rhX = pageW - M - rhW, rhY = HY + 3;
+  pdf.setFillColor(55, 110, 70);
+  pdf.roundedRect(rhX, rhY, rhW, HH - 6, 2.5, 2.5, 'F');
+  pdf.setFontSize(5.5);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(140, 215, 165);
+  pdf.text('TOTAL RECAUDADO', rhX + rhW / 2, rhY + 6, { align: 'center' });
+  pdf.setFontSize(15);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(255, 255, 255);
+  pdf.text(solesStr(totalSoles), rhX + rhW / 2, rhY + 15.5, { align: 'center' });
+  pdf.setFontSize(6);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(140, 215, 165);
+  pdf.text('LIVEX AGENCY', rhX + rhW / 2, rhY + HH - 9, { align: 'center' });
+
+  // ── SECTION 1: Métricas principales ────────────────────────────────────────
+  const Y1 = HY + HH + 8;
+  sectionLabel('METRICAS PRINCIPALES', Y1 - 2);
+  const H1 = 46;
+
+  card(xs4[0], Y1, CW4, H1, [228, 246, 233], [55, 120, 65],  'Ventas Registradas', String(totalVentas));
+  card(xs4[1], Y1, CW4, H1, [220, 240, 228], [35, 90, 48],   'Prendas Totales',    String(totalPrendas));
+  card(xs4[2], Y1, CW4, H1, [220, 237, 250], [25, 100, 155], 'Promedio por Venta', solesStr(promedioVenta));
+
+  // Envíos card (two sub-rows inside)
+  {
+    const x = xs4[3], y = Y1, w = CW4, h = H1;
+    pdf.setFillColor(252, 246, 225);
+    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'F');
+    pdf.setDrawColor(155, 115, 8);
+    pdf.setLineWidth(0.2);
+    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'S');
+    // top accent
+    pdf.setFillColor(155, 115, 8);
+    pdf.roundedRect(x, y, w, 3, 1.5, 1.5, 'F');
+    // label
+    pdf.setFontSize(5.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(80, 100, 90);
+    pdf.text('ENVIOS POR ZONAS', x + 5, y + 9.5);
+    // Lima row
+    const ry1 = y + 13;
+    pdf.setFillColor(210, 232, 248);
+    pdf.roundedRect(x + 3.5, ry1, w - 7, 12, 1.5, 1.5, 'F');
+    pdf.setFontSize(7.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(25, 100, 150);
+    pdf.text('Lima', x + 7, ry1 + 8);
+    pdf.setFontSize(13);
+    pdf.text(String(enviosLima), x + w - 6.5, ry1 + 8, { align: 'right' });
+    // Prov row
+    const ry2 = ry1 + 15;
+    pdf.setFillColor(255, 242, 212);
+    pdf.roundedRect(x + 3.5, ry2, w - 7, 12, 1.5, 1.5, 'F');
+    pdf.setFontSize(7.5);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(150, 110, 8);
+    pdf.text('Provincia', x + 7, ry2 + 8);
+    pdf.setFontSize(13);
+    pdf.text(String(enviosProv), x + w - 6.5, ry2 + 8, { align: 'right' });
+  }
+
+  // ── SECTION 2: Detalle de pagos ─────────────────────────────────────────────
+  const Y2 = Y1 + H1 + 9;
+  sectionLabel('DETALLE DE PAGOS', Y2 - 2, [20, 120, 170]);
+  const H2 = 38;
+
+  card(xs4[0], Y2, CW4, H2, [220, 244, 252], [15, 128, 180],  'Total Separos',    solesStr(totalSeparos));
+  card(xs4[1], Y2, CW4, H2, [252, 243, 220], [170, 110, 8],   'Por Cobrar',       solesStr(totalDeudas));
+  card(xs4[2], Y2, CW4, H2, [224, 248, 230], [35, 150, 72],   'Pago Completo',    String(pagosCompletos), `de ${totalVentas} ventas`);
+  card(xs4[3], Y2, CW4, H2, [236, 238, 246], [90, 100, 138],  'Contra Entrega',   String(contraEntrega),  'ventas con saldo');
+
+  // ── SECTION 3: Promedios ────────────────────────────────────────────────────
+  const Y3 = Y2 + H2 + 9;
+  sectionLabel('PROMEDIOS', Y3 - 2, [45, 100, 55]);
+  const H3 = 32;
+
+  card(xs2[0], Y3, CW2, H3, [228, 246, 233], [55, 120, 65],  'Promedio de Venta (S/)', solesStr(promedioVenta));
+  card(xs2[1], Y3, CW2, H3, [220, 237, 250], [25, 100, 155], 'Prendas por Venta',      promedioPrendas.toFixed(1));
+
+  // ── FOOTER ──────────────────────────────────────────────────────────────────
+  const yF = Y3 + H3 + 6;
+  if (yF < pageH - 6) {
+    pdf.setFillColor(18, 50, 30);
+    pdf.rect(0, pageH - 7, pageW, 7, 'F');
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(100, 170, 130);
+    pdf.text('LIVEX AGENCY — Sistema de Gestion de Ventas', M, pageH - 2.5);
+    pdf.text(new Date().toLocaleString('es-PE'), pageW - M, pageH - 2.5, { align: 'right' });
+  }
+}
+
 const abrevMetodo = (m: string) => {
   if (!m) return 'I.T';
   const l = m.toLowerCase();
@@ -23,95 +218,114 @@ interface PlanillaPanelProps {
   onDeleteSale?: (index: number) => void;
   onRestoreSale?: (dbId: string) => void;
   profiles?: Profile[];
+  /** Etiqueta que aparece en el encabezado: "Planilla de ventas · {title}" */
+  title?: string;
+  /**
+   * 'live'        → muestra solo ventas con codigoPublicidad === 'Live' o vacío
+   * 'publicidad'  → muestra ventas con codigoPublicidad distinto de 'Live' y no vacío
+   * undefined     → muestra todas (comportamiento original)
+   */
+  sourceFilter?: 'live' | 'publicidad';
+  /** ID del div exportable (único por instancia). Por defecto "sales-sheet-export". */
+  exportId?: string;
 }
 
 export default function PlanillaPanel({
   sales, deletedSales = [], selectedDate, onDateChange,
   loadingSync, syncError, onDeleteSale, onRestoreSale, profiles = [],
+  title, sourceFilter, exportId = 'sales-sheet-export',
 }: PlanillaPanelProps) {
   const [exporting, setExporting] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState('');
   const [brandView, setBrandView] = useState<'todas' | 'OVER' | 'BRV'>('todas');
+  const [sourceView, setSourceView] = useState('todas');
   const [blankMode, setBlankMode] = useState(false);
 
   const vendorLabel = selectedVendor
     ? (profiles.find(p => p.id === selectedVendor)?.full_name ?? 'VENDEDOR').toUpperCase()
     : 'VENDEDOR';
 
+  // Pre-filtrado por sourceFilter (cuando el panel está dedicado a una fuente)
+  const preFiltered = sourceFilter
+    ? sales.filter(s => {
+        const src = s.codigoPublicidad?.trim() || 'Live';
+        return sourceFilter === 'live' ? src === 'Live' : src !== 'Live';
+      })
+    : sales;
+
+  const uniqueSources = ['todas', ...Array.from(new Set(preFiltered.map(s => s.codigoPublicidad?.trim() || 'Live').filter(Boolean)))];
+
+  const visibleSales = blankMode
+    ? []
+    : preFiltered.filter(s => {
+        const matchBrand = brandView === 'todas' || (s.marcaLabel || 'OVER').toUpperCase().includes(brandView);
+        const matchSource = sourceView === 'todas' || (s.codigoPublicidad?.trim() || 'Live') === sourceView;
+        return matchBrand && matchSource;
+      });
+
+  const emptyRowsCount = Math.max(0, 40 - visibleSales.length);
+  const emptyRows = Array.from({ length: emptyRowsCount });
+
   const exportPdf = async () => {
     setExporting(true);
     try {
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const m = 5;
 
-      const targetPlanilla = document.getElementById("sales-sheet-export");
+      const targetPlanilla = document.getElementById(exportId);
       if (targetPlanilla) {
-        const clonePlanilla = targetPlanilla.cloneNode(true) as HTMLElement;
-        clonePlanilla.classList.add('print-mode');
-        Object.assign(clonePlanilla.style, {
+        const clone = targetPlanilla.cloneNode(true) as HTMLElement;
+        clone.classList.add('print-mode');
+        Object.assign(clone.style, {
           position: 'fixed', left: '-9999px', top: '0',
           width: '1200px', background: '#fff', padding: '0', margin: '0 auto',
         });
-        document.body.appendChild(clonePlanilla);
+        document.body.appendChild(clone);
         await new Promise(resolve => setTimeout(resolve, 50));
-        const canvasPlanilla = await html2canvas(clonePlanilla, {
-          backgroundColor: "#ffffff", scale: 3, useCORS: true,
+        const canvas = await html2canvas(clone, {
+          backgroundColor: '#ffffff', scale: 3, useCORS: true,
           logging: false, width: 1200, windowWidth: 1200,
         });
-        clonePlanilla.remove();
-        pdf.addImage(canvasPlanilla.toDataURL("image/png"), "PNG", m, m, pageW - m * 2, pageH - m * 2);
+        clone.remove();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', m, m, pageW - m * 2, pageH - m * 2);
       }
 
-      const targetCierre = document.getElementById("cierre-caja-export");
-      if (targetCierre) {
-        pdf.addPage();
-        const cloneCierre = targetCierre.cloneNode(true) as HTMLElement;
-        cloneCierre.classList.add('print-mode-cierre');
-        Object.assign(cloneCierre.style, {
-          position: 'fixed', left: '-9999px', top: '0',
-          width: '1150px', background: '#fff', padding: '20px',
-          margin: '0 auto', fontFamily: 'Arial, sans-serif',
-        });
-        document.body.appendChild(cloneCierre);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        const canvasCierre = await html2canvas(cloneCierre, {
-          backgroundColor: "#ffffff", scale: 2, useCORS: true,
-          logging: false, width: 1150, windowWidth: 1150,
-        });
-        cloneCierre.remove();
-        pdf.addImage(canvasCierre.toDataURL("image/png"), "PNG", m, m, pageW - m * 2, pageH - m * 2);
-      }
+      // Siempre incluir cierre de caja como página 2
+      pdf.addPage();
+      const cierreSales = sourceFilter
+        ? sales.filter((s: any) => {
+            const src = (s.codigoPublicidad?.trim() || 'Live');
+            return sourceFilter === 'live' ? src === 'Live' : src !== 'Live';
+          })
+        : sales;
+      drawCierreCajaPage(pdf, cierreSales, pageW, pageH);
 
-      pdf.save(`planilla-ventas-${new Date().toISOString().split('T')[0]}.pdf`);
+      const suffix = sourceFilter === 'live' ? '-live' : sourceFilter === 'publicidad' ? '-publicidad' : '';
+      pdf.save(`planilla-ventas${suffix}-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
-      console.error("Error exporting PDF:", err);
+      console.error('Error exporting PDF:', err);
     } finally {
       setExporting(false);
     }
   };
 
-  const visibleSales = blankMode
-    ? []
-    : brandView === 'todas'
-      ? sales
-      : sales.filter(s => (s.marcaLabel || 'OVER').toUpperCase().includes(brandView));
-
-  const emptyRowsCount = Math.max(0, 40 - visibleSales.length);
-  const emptyRows = Array.from({ length: emptyRowsCount });
+  const headingLabel = title ? `Planilla de ventas · ${title}` : 'Planilla de ventas';
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
       <div className="cliente-panel-head">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-            <FileSpreadsheet size={20} /> Planilla de ventas
+            <FileSpreadsheet size={20} /> {headingLabel}
           </h2>
           <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--muted)', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <BarChart3 size={14} /> <strong>{blankMode ? 0 : visibleSales.length}</strong> ventas{brandView !== 'todas' && !blankMode ? ` (${brandView})` : ''}
+              <BarChart3 size={14} /> <strong>{blankMode ? 0 : visibleSales.length}</strong> ventas
+              {!blankMode && brandView !== 'todas' && <span style={{ color: 'var(--accent)' }}>({brandView})</span>}
+              {!blankMode && sourceView !== 'todas' && <span style={{ color: '#7C3AED' }}>({sourceView})</span>}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <FileText size={14} /> <strong>{emptyRowsCount}</strong> filas disponibles
@@ -126,6 +340,26 @@ export default function PlanillaPanel({
           </div>
         </div>
         <div className="cliente-panel-actions" style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Filtro por sub-fuente (solo cuando no hay sourceFilter fijo, o cuando hay múltiples valores) */}
+          {!sourceFilter && uniqueSources.length > 2 && (
+            <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--surface2)', borderRadius: '8px', padding: '0.2rem', border: '1px solid var(--border)' }}>
+              {uniqueSources.map(src => (
+                <button
+                  key={src}
+                  onClick={() => { setSourceView(src); setBlankMode(false); }}
+                  style={{
+                    padding: '0.3rem 0.65rem', fontSize: '0.75rem', fontWeight: 800,
+                    border: 'none', borderRadius: '6px', cursor: 'pointer',
+                    background: !blankMode && sourceView === src ? '#7C3AED' : 'transparent',
+                    color: !blankMode && sourceView === src ? '#fff' : 'var(--muted)',
+                    transition: 'all 0.15s', whiteSpace: 'nowrap',
+                  }}>
+                  {src === 'todas' ? 'Todas fuentes' : src}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Filtro por marca */}
           <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--surface2)', borderRadius: '8px', padding: '0.2rem', border: '1px solid var(--border)' }}>
             {(['todas', 'OVER', 'BRV'] as const).map(b => (
@@ -187,7 +421,7 @@ export default function PlanillaPanel({
             }}
           />
           <button className="btn btn-primary" onClick={exportPdf} disabled={exporting || loadingSync} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {exporting ? "⏳ Generando PDF..." : <><Printer size={16} /> Exportar PDF</>}
+            {exporting ? '⏳ Generando PDF...' : <><Printer size={16} /> Exportar PDF</>}
           </button>
         </div>
       </div>
@@ -198,7 +432,7 @@ export default function PlanillaPanel({
       </p>
 
       {/* ── Tabla principal ── */}
-      <div id="sales-sheet-export" style={{ width: '100%' }}>
+      <div id={exportId} style={{ width: '100%' }}>
         <div className="sheet-wrap">
           <table className="sales-sheet">
             <colgroup>
@@ -277,7 +511,7 @@ export default function PlanillaPanel({
               ))}
               {emptyRows.map((_, i) => (
                 <tr key={`empty-${i}`}>
-                  <td className="col-n">{sales.length + i + 1}</td>
+                  <td className="col-n">{visibleSales.length + i + 1}</td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>
@@ -286,7 +520,7 @@ export default function PlanillaPanel({
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning>Live</td>
+                  <td contentEditable suppressContentEditableWarning>{sourceFilter === 'publicidad' ? '' : 'Live'}</td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>
                   <td contentEditable suppressContentEditableWarning></td>

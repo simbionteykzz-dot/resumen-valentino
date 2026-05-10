@@ -1,11 +1,11 @@
 import { useRef, useState, Fragment } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
-import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp, Archive, History } from 'lucide-react';
 import PlanillasPanel from './PlanillasPanel';
-import type { Profile } from '../../types';
-import type { AdminSale } from '../../types';
+import type { Profile, AdminSale, EditForm } from '../../types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getCodigoProducto } from '../../lib/data';
 
 interface AdminDashboardProps {
   adminName: string;
@@ -14,11 +14,6 @@ interface AdminDashboardProps {
   onSwitchToVendedor: () => void;
 }
 
-type EditForm = {
-  nom: string; cel: string; dni: string; hora: string; fecha: string;
-  codigo_publicidad: string; metodo_pago: string; separo: string;
-  resta: string; total_total: string; combo: string; marca_label: string;
-};
 
 function saleToForm(s: AdminSale): EditForm {
   return {
@@ -27,6 +22,7 @@ function saleToForm(s: AdminSale): EditForm {
     metodo_pago: s.metodoPago ?? '', separo: s.separo ?? '',
     resta: s.resta ?? '', total_total: String(s.totalTotal ?? ''),
     combo: s.combo ?? '', marca_label: s.marcaLabel ?? '',
+    user_id: s._userId ?? '',
   };
 }
 
@@ -38,7 +34,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   const [editError, setEditError] = useState('');
 
   const {
-    allSales, filteredSales, paginatedSales, loading,
+    allSales, filteredSales, paginatedSales, profiles, loading,
     dateFrom, setDateFrom, dateTo, setDateTo,
     exactDate, setExactDate, monthFilter, setMonthFilter,
     search, setSearch,
@@ -51,11 +47,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     metodoPagoFilter, setMetodoPagoFilter,
     showFilters, setShowFilters,
     page, setPage, totalPages,
-    globalStats, vendorStats, brandStats, salesByDay, pubStats,
+    globalStats, vendorStats, brandStats, salesByDay, pubStats, cpStats,
     liveCount,
     refresh, clearFilters,
     getRegion, getEstado, anularVenta, eliminarVenta, restaurarVenta, editSale,
     eliminatedSales,
+    showArchived, setShowArchived,
+    archivedSales, archiveLoading,
+    loadArchivedSales, archivarTodo, desarchivarTodo,
   } = useAdmin();
 
   const [activeTab, setActiveTab] = useState<'ventas' | 'planillas'>('ventas');
@@ -72,61 +71,67 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const H = doc.internal.pageSize.getHeight();
     const mg = 14;
 
-    // Header
-    doc.setFillColor(10, 14, 20);
-    doc.rect(0, 0, W, 44, 'F');
-    doc.setFillColor(255, 107, 0);
-    doc.rect(0, 0, 4, 44, 'F');
+    // ── Top accent stripe ──────────────────────────────────────────────
+    doc.setFillColor(18, 50, 30);
+    doc.rect(0, 0, W, 4, 'F');
+
+    // ── Header band ───────────────────────────────────────────────────
+    doc.setFillColor(22, 52, 33);
+    doc.rect(0, 4, W, 40, 'F');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
     doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg + 4, 13);
+    doc.text('LIVEX AGENCY', mg, 16);
 
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(56, 200, 245);
-    doc.text('Historial de Cliente', mg + 4, 20);
+    doc.setTextColor(120, 190, 145);
+    doc.text('Historial de Cliente', mg, 23);
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text(historyClient.nom.toUpperCase(), mg + 4, 29);
+    doc.text(historyClient.nom.toUpperCase(), mg, 31.5);
 
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(255, 107, 0);
-    doc.text(historyClient.cel, mg + 4, 36);
+    doc.setTextColor(100, 175, 135);
+    doc.text(historyClient.cel, mg, 38);
 
-    doc.setFontSize(7);
-    doc.setTextColor(100, 80, 55);
-    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W - mg, 39, { align: 'right' });
+    doc.setFontSize(6.5);
+    doc.setTextColor(75, 130, 100);
+    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W - mg, 38, { align: 'right' });
 
-    // KPI boxes
+    // ── KPI boxes ─────────────────────────────────────────────────────
     const totalRevenue = clientHistory.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0);
-    const totalDeuda = clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0);
+    const totalDeuda   = clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0);
     const kpis = [
-      { label: 'COMPRAS', value: String(clientHistory.length), rgb: [56, 200, 245] as [number, number, number] },
-      { label: 'TOTAL S/', value: `S/${totalRevenue.toLocaleString()}`, rgb: [0, 230, 150] as [number, number, number] },
-      { label: 'DEUDA S/', value: `S/${totalDeuda.toFixed(0)}`, rgb: totalDeuda > 0 ? [239, 68, 68] as [number, number, number] : [100, 100, 100] as [number, number, number] },
+      { label: 'COMPRAS',   value: String(clientHistory.length),       rgb: [55, 120, 65]  as [number, number, number] },
+      { label: 'TOTAL S/',  value: `S/${totalRevenue.toLocaleString()}`, rgb: [25, 120, 170] as [number, number, number] },
+      { label: 'DEUDA S/',  value: `S/${totalDeuda.toFixed(0)}`,         rgb: totalDeuda > 0 ? [185, 55, 55] as [number, number, number] : [85, 140, 100] as [number, number, number] },
     ];
     const boxW = (W - mg * 2 - 8) / 3;
     kpis.forEach((k, i) => {
       const x = mg + i * (boxW + 4);
-      doc.setFillColor(18, 24, 32);
-      doc.roundedRect(x, 50, boxW, 24, 2, 2, 'F');
+      doc.setFillColor(232, 246, 237);
+      doc.roundedRect(x, 50, boxW, 24, 2.5, 2.5, 'F');
+      doc.setDrawColor(...k.rgb);
+      doc.setLineWidth(0.25);
+      doc.roundedRect(x, 50, boxW, 24, 2.5, 2.5, 'S');
       doc.setFillColor(...k.rgb);
-      doc.rect(x, 50, boxW, 2, 'F');
-      doc.setFontSize(6);
+      doc.roundedRect(x, 50, boxW, 3, 1.5, 1.5, 'F');
+      doc.setFontSize(5.5);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...k.rgb);
-      doc.text(k.label, x + boxW / 2, 58, { align: 'center' });
-      doc.setFontSize(11);
-      doc.setTextColor(255, 255, 255);
-      doc.text(k.value, x + boxW / 2, 69, { align: 'center' });
+      doc.text(k.label, x + boxW / 2, 59, { align: 'center' });
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(22, 52, 33);
+      doc.text(k.value, x + boxW / 2, 70, { align: 'center' });
     });
 
-    // Table
+    // ── Table ─────────────────────────────────────────────────────────
     autoTable(doc, {
       startY: 82,
       head: [['FECHA', 'COMBO', 'MARCA', 'VENDEDOR', 'TOTAL S/', 'ESTADO', 'DEBE']],
@@ -143,34 +148,46 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         ];
       }),
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: { top: 3, bottom: 3, left: 3, right: 3 }, textColor: [190, 165, 140], lineColor: [35, 28, 20], lineWidth: 0.25 },
-      headStyles: { fillColor: [20, 28, 38], textColor: [255, 107, 0], fontStyle: 'bold', fontSize: 7.5 },
-      alternateRowStyles: { fillColor: [16, 20, 28] },
-      bodyStyles: { fillColor: [12, 16, 22] },
+      styles: {
+        fontSize: 8,
+        cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+        textColor: [38, 62, 48],
+        lineColor: [185, 215, 195],
+        lineWidth: 0.2,
+      },
+      headStyles: {
+        fillColor: [22, 52, 33],
+        textColor: [140, 210, 160],
+        fontStyle: 'bold',
+        fontSize: 7.5,
+        lineColor: [38, 85, 52],
+        lineWidth: 0.3,
+      },
+      alternateRowStyles: { fillColor: [240, 248, 243] },
+      bodyStyles: { fillColor: [248, 253, 250] },
       columnStyles: {
-        4: { textColor: [0, 230, 150], fontStyle: 'bold' },
+        4: { textColor: [35, 115, 55], fontStyle: 'bold' },
         5: { fontStyle: 'bold' },
-        6: { textColor: [239, 68, 68] },
+        6: { textColor: [175, 50, 50] },
       },
       didParseCell: (data) => {
         if (data.section !== 'body' || data.column.index !== 5) return;
         const v = String(data.cell.raw);
-        if (v === 'PAGO COMPLETO') data.cell.styles.textColor = [0, 230, 150];
-        else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [255, 160, 50];
-        else if (v === 'ANULADO') data.cell.styles.textColor = [239, 68, 68];
+        if (v === 'PAGO COMPLETO')    data.cell.styles.textColor = [32, 115, 50];
+        else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [160, 95, 10];
+        else if (v === 'ANULADO')     data.cell.styles.textColor = [180, 48, 48];
       },
       didDrawPage: (data) => {
         const totalPages = doc.getNumberOfPages();
-        doc.setDrawColor(255, 107, 0);
-        doc.setLineWidth(0.4);
-        doc.line(mg, H - 8, W - mg, H - 8);
+        doc.setFillColor(18, 50, 30);
+        doc.rect(0, H - 7, W, 7, 'F');
         doc.setFontSize(6.5);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 75, 50);
-        doc.text(`Livex Agency · ${historyClient.nom} · ${historyClient.cel}`, mg, H - 4.5);
-        doc.text(`Página ${data.pageNumber} de ${totalPages}`, W - mg, H - 4.5, { align: 'right' });
+        doc.setTextColor(100, 170, 130);
+        doc.text(`Livex Agency · ${historyClient.nom} · ${historyClient.cel}`, mg, H - 2.5);
+        doc.text(`Página ${data.pageNumber} de ${totalPages}`, W - mg, H - 2.5, { align: 'right' });
       },
-      margin: { top: 82, left: mg, right: mg, bottom: 12 },
+      margin: { top: 82, left: mg, right: mg, bottom: 10 },
     });
 
     doc.save(`cliente_${historyClient.cel}_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -183,71 +200,76 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const mg = 18;
     const estado = getEstado(s);
     const region = getRegion(s);
-    const estadoRgb: [number, number, number] = estado === 'PAGO COMPLETO' ? [0, 230, 150] : estado === 'CONTRA ENTREGA' ? [255, 160, 50] : estado === 'ANULADO' ? [239, 68, 68] : [160, 128, 96];
+    const estadoRgb: [number, number, number] =
+      estado === 'PAGO COMPLETO'  ? [35, 115, 55]  :
+      estado === 'CONTRA ENTREGA' ? [155, 95, 10]  :
+      estado === 'ANULADO'        ? [175, 48, 48]  : [90, 115, 100];
 
-    // Fondo total
-    doc.setFillColor(8, 11, 16);
-    doc.rect(0, 0, W, H, 'F');
+    // ── Top stripe ──────────────────────────────────────────────────
+    doc.setFillColor(18, 50, 30);
+    doc.rect(0, 0, W, 4, 'F');
 
-    // Barra superior naranja
-    doc.setFillColor(255, 107, 0);
-    doc.rect(0, 0, W, 6, 'F');
+    // ── Header band ─────────────────────────────────────────────────
+    doc.setFillColor(22, 52, 33);
+    doc.rect(0, 4, W, 32, 'F');
 
-    // Encabezado empresa
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
+    doc.setFontSize(17);
     doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg, 22);
+    doc.text('LIVEX AGENCY', mg, 17);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(56, 200, 245);
-    doc.text('COMPROBANTE DE COMPRA', mg, 29);
-
-    // Número de comprobante y fecha
     doc.setFontSize(7.5);
-    doc.setTextColor(100, 80, 55);
-    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 22, { align: 'right' });
-    doc.text(`${s.fecha ?? '—'}  ${s.hora ? `· ${s.hora}` : ''}`, W - mg, 29, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 190, 145);
+    doc.text('COMPROBANTE DE COMPRA', mg, 24);
 
-    // Línea separadora
-    doc.setDrawColor(255, 107, 0);
+    // Ref y fecha (derecha)
+    doc.setFontSize(7);
+    doc.setTextColor(80, 140, 105);
+    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 17, { align: 'right' });
+    doc.text(`${s.fecha ?? '—'}${s.hora ? `  ·  ${s.hora}` : ''}`, W - mg, 24, { align: 'right' });
+
+    // ── Thin divider below header ────────────────────────────────────
+    doc.setDrawColor(55, 120, 70);
     doc.setLineWidth(0.3);
-    doc.line(mg, 34, W - mg, 34);
+    doc.line(mg, 38, W - mg, 38);
 
-    // ── Bloque CLIENTE ──
-    let y = 42;
+    // ── Content sections ─────────────────────────────────────────────
+    let y = 46;
+
     const section = (title: string) => {
+      doc.setFillColor(232, 246, 237);
+      doc.roundedRect(mg, y - 4, W - mg * 2, 7, 1.5, 1.5, 'F');
+      doc.setFillColor(55, 120, 65);
+      doc.roundedRect(mg, y - 4, 3, 7, 1, 1, 'F');
       doc.setFontSize(6.5);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(255, 107, 0);
-      doc.text(title, mg, y);
-      y += 1;
-      doc.setDrawColor(255, 107, 0, );
-      doc.setLineWidth(0.2);
-      doc.line(mg, y + 1, W - mg, y + 1);
-      y += 5;
+      doc.setTextColor(28, 65, 38);
+      doc.text(title, mg + 6, y + 0.5);
+      y += 9;
     };
+
     const row = (label: string, value: string, valueColor?: [number, number, number]) => {
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 95, 70);
+      doc.setTextColor(85, 120, 98);
       doc.text(label, mg, y);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...(valueColor ?? [220, 200, 180] as [number, number, number]));
+      doc.setTextColor(...(valueColor ?? [30, 55, 40] as [number, number, number]));
       doc.text(value, mg + 42, y);
       y += 7;
     };
-    const rowHalf = (pairs: [string, string, ([number,number,number] | undefined)?][]) => {
+
+    const rowHalf = (pairs: [string, string, ([number, number, number] | undefined)?][]) => {
       const colW = (W - mg * 2) / pairs.length;
       pairs.forEach(([label, value, color], i) => {
         const x = mg + i * colW;
         doc.setFontSize(8.5);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(120, 95, 70);
+        doc.setTextColor(85, 120, 98);
         doc.text(label, x, y);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...(color ?? [220, 200, 180] as [number, number, number]));
+        doc.setTextColor(...(color ?? [30, 55, 40] as [number, number, number]));
         doc.text(value, x + 22, y);
       });
       y += 7;
@@ -255,86 +277,88 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
     section('DATOS DEL CLIENTE');
     row('Nombre', s.nom || '—');
-    rowHalf([['Celular', s.cel || '—', [56, 200, 245]], ['DNI', s.dni || '—']]);
-    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [255, 107, 0]]]);
+    rowHalf([['Celular', s.cel || '—', [22, 100, 155]], ['DNI', s.dni || '—']]);
+    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [42, 110, 55]]]);
 
-    // Destino según región
     if (region === 'Provincia' && (s.sede || s.provincia || s.depto)) {
       y += 1;
-      if (s.sede) row('Sede Shalom', s.sede, [255, 160, 50]);
+      if (s.sede) {
+        const sedeLines = doc.splitTextToSize(s.sede, W - mg * 2 - 44);
+        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(85, 120, 98);
+        doc.text('Courier / Sede', mg, y);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(150, 90, 10);
+        doc.text(sedeLines, mg + 44, y);
+        y += sedeLines.length * 6 + 1;
+      }
       if (s.provincia || s.depto) rowHalf([['Departamento', s.provincia || '—'], ['Provincia', s.depto || '—']]);
     } else if (region === 'Lima' && (s.distrito || s.ubicacion)) {
       y += 1;
-      if (s.distrito) row('Distrito', s.distrito, [56, 200, 245]);
+      if (s.distrito) row('Distrito', s.distrito, [22, 100, 155]);
       if (s.ubicacion) {
         const ubLines = doc.splitTextToSize(s.ubicacion, W - mg * 2 - 44);
-        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 95, 70);
+        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(85, 120, 98);
         doc.text('Ubicación', mg, y);
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(220, 200, 180);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 55, 40);
         doc.text(ubLines, mg + 42, y);
         y += ubLines.length * 6 + 1;
       }
     }
 
-    y += 2;
+    y += 3;
     section('DETALLE DEL PEDIDO');
 
-    // Detalle completo con colores/tallas si está disponible
     if (s.detalle && s.detalle.trim()) {
       const detalleLines = doc.splitTextToSize(s.detalle.trim(), W - mg * 2);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(190, 165, 130);
+      doc.setTextColor(50, 80, 60);
       doc.text(detalleLines, mg, y);
       y += detalleLines.length * 5.5 + 3;
     } else {
-      // Fallback: mostrar combo resumido
       const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', W - mg * 2 - 44);
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 95, 70);
+      doc.setTextColor(85, 120, 98);
       doc.text('Combo', mg, y);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(220, 200, 180);
+      doc.setTextColor(30, 55, 40);
       doc.text(comboLines, mg + 42, y);
       y += comboLines.length * 6 + 1;
     }
 
-    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [255, 107, 0]]]);
-    if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [167, 139, 250]);
+    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [42, 110, 55]]]);
+    if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [80, 80, 148]);
 
-    y += 2;
+    y += 3;
     section('RESUMEN DE PAGO');
     row('Método de pago', s.metodoPago || '—');
-    row('Total', `S/ ${s.totalTotal ?? 0}`, [0, 230, 150]);
-    if (s.separo) row('Separo / Adelanto', `S/ ${s.separo}`, [56, 200, 245]);
-    if (s.resta && parseFloat(s.resta) > 0) row('Saldo pendiente', `S/ ${s.resta}`, [239, 68, 68]);
+    row('Total', `S/ ${s.totalTotal ?? 0}`, [32, 115, 50]);
+    if (s.separo) row('Separo / Adelanto', `S/ ${s.separo}`, [22, 100, 155]);
+    if (s.resta && parseFloat(s.resta) > 0) row('Saldo pendiente', `S/ ${s.resta}`, [175, 48, 48]);
 
-    // Badge de estado centrado
-    y += 4;
-    const badgeW = 60;
+    // ── Estado badge ─────────────────────────────────────────────────
+    y += 5;
+    const badgeW = 64;
     const badgeX = (W - badgeW) / 2;
-    doc.setFillColor(estadoRgb[0], estadoRgb[1], estadoRgb[2]);
-    doc.setGState(new (doc as any).GState({ opacity: 0.12 }));
-    doc.roundedRect(badgeX, y, badgeW, 10, 2, 2, 'F');
-    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    doc.setFillColor(232, 246, 237);
+    doc.roundedRect(badgeX, y, badgeW, 11, 2.5, 2.5, 'F');
     doc.setDrawColor(...estadoRgb);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(badgeX, y, badgeW, 10, 2, 2, 'S');
+    doc.setLineWidth(0.5);
+    doc.roundedRect(badgeX, y, badgeW, 11, 2.5, 2.5, 'S');
+    doc.setFillColor(...estadoRgb);
+    doc.roundedRect(badgeX, y, badgeW, 3, 1.5, 1.5, 'F');
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...estadoRgb);
-    doc.text(estado, W / 2, y + 6.8, { align: 'center' });
+    doc.text(estado, W / 2, y + 8, { align: 'center' });
 
-    // Footer
-    doc.setDrawColor(255, 107, 0);
-    doc.setLineWidth(0.3);
-    doc.line(mg, H - 16, W - mg, H - 16);
-    doc.setFontSize(7);
+    // ── Footer strip ─────────────────────────────────────────────────
+    doc.setFillColor(18, 50, 30);
+    doc.rect(0, H - 8, W, 8, 'F');
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80, 60, 40);
-    doc.text('Livex Agency · Comprobante interno de venta', W / 2, H - 11, { align: 'center' });
-    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W / 2, H - 6, { align: 'center' });
+    doc.setTextColor(100, 170, 130);
+    doc.text('Livex Agency · Comprobante interno de venta', W / 2, H - 3, { align: 'center' });
 
     doc.save(`comprobante_${s.cel ?? 'cliente'}_${s.fecha ?? 'sin-fecha'}.pdf`);
   };
@@ -358,6 +382,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       metodo_pago: editForm.metodo_pago, separo: editForm.separo,
       resta: editForm.resta, total_total: Number(editForm.total_total) || 0,
       combo: editForm.combo, marca_label: editForm.marca_label,
+      ...(editForm.user_id ? { user_id: editForm.user_id } : {}),
     });
     setEditSaving(false);
     if (ok) closeEdit();
@@ -371,12 +396,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     setEstadoFilter(prev => prev.includes(estado) ? prev.filter(e => e !== estado) : [...prev, estado]);
 
   const exportCSV = () => {
-    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGION', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'];
+    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGION', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'];
     const rows = filteredSales.map(s => [
       s.fecha ?? '', s.marcaLabel ?? 'OVER', s.vendorName ?? '',
       s.hora ?? '', getRegion(s), s.nom ?? '', s.cel ?? '', s.dni ?? '',
       s.totalTotal ?? 0, s.resta ?? '', s.separo ?? '',
-      getEstado(s), s.codigoPublicidad ?? '', s.metodoPago ?? '', s.combo ?? '',
+      getEstado(s), getCodigoProducto(s.detalle || '', s.combo || ''), s.codigoPublicidad ?? '', s.metodoPago ?? '', s.combo ?? '',
     ]);
     const csv = [headers, ...rows]
       .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
@@ -394,66 +419,59 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();   // 297
     const H = doc.internal.pageSize.getHeight();  // 210
-    const mg = 14;
-    const headerH = 40;
+    const mg = 12;
+    const headerH = 38;
 
-    // ── Fondo del encabezado ──
-    doc.setFillColor(10, 14, 20);
-    doc.rect(0, 0, W, headerH, 'F');
+    // ── Top accent stripe ─────────────────────────────────────────────
+    doc.setFillColor(18, 50, 30);
+    doc.rect(0, 0, W, 4, 'F');
 
-    // Barra lateral naranja
-    doc.setFillColor(255, 107, 0);
-    doc.rect(0, 0, 5, headerH, 'F');
+    // ── Header band ───────────────────────────────────────────────────
+    doc.setFillColor(22, 52, 33);
+    doc.rect(0, 4, W, headerH, 'F');
 
-    // Título
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
+    doc.setFontSize(18);
     doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg + 4, 15);
+    doc.text('LIVEX AGENCY', mg, 16);
 
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(56, 200, 245);
-    doc.text('Reporte de Ventas', mg + 4, 22);
+    doc.setTextColor(120, 190, 145);
+    doc.text('Reporte de Ventas', mg, 23);
 
-    doc.setFontSize(7.5);
-    doc.setTextColor(130, 100, 70);
-    doc.text(`Período: ${dateFrom}  →  ${dateTo}`, mg + 4, 29);
-    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, mg + 4, 35);
+    doc.setFontSize(7);
+    doc.setTextColor(80, 140, 105);
+    doc.text(`Período: ${dateFrom}  →  ${dateTo}`, mg, 30);
+    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, mg, 36.5);
 
-    // ── KPI boxes ──
+    // ── KPI boxes (derecha, dentro del header) ────────────────────────
     const kpis = [
-      { label: 'VENTAS', value: String(globalStats.salesCount), rgb: [255, 107, 0] as [number, number, number] },
-      { label: 'INGRESOS', value: `S/${globalStats.totalRevenue.toLocaleString()}`, rgb: [56, 200, 245] as [number, number, number] },
-      { label: 'PRENDAS', value: String(globalStats.totalItems), rgb: [167, 139, 250] as [number, number, number] },
-      { label: 'DEUDA', value: `S/${globalStats.deudaTotal.toFixed(0)}`, rgb: [239, 68, 68] as [number, number, number] },
+      { label: 'VENTAS',   value: String(globalStats.salesCount),                    rgb: [69, 131, 77]  as [number, number, number] },
+      { label: 'INGRESOS', value: `S/${globalStats.totalRevenue.toLocaleString()}`,   rgb: [25, 120, 170] as [number, number, number] },
+      { label: 'PRENDAS',  value: String(globalStats.totalItems),                     rgb: [95, 95, 150]  as [number, number, number] },
+      { label: 'DEUDA',    value: `S/${globalStats.deudaTotal.toFixed(0)}`,           rgb: [185, 55, 55]  as [number, number, number] },
     ];
-    const boxW = 46;
-    const boxGap = 4;
-    const boxH = 28;
-    const boxTop = 6;
+    const boxW = 46, boxGap = 3.5, boxH = 30, boxTop = 5;
     const startX = W - mg - kpis.length * boxW - (kpis.length - 1) * boxGap;
 
     kpis.forEach((kpi, i) => {
       const x = startX + i * (boxW + boxGap);
-      // Box fill
-      doc.setFillColor(18, 24, 32);
+      doc.setFillColor(30, 68, 42);
       doc.roundedRect(x, boxTop, boxW, boxH, 2, 2, 'F');
-      // Top accent
       doc.setFillColor(...kpi.rgb);
-      doc.rect(x, boxTop, boxW, 2.5, 'F');
-      // Label
-      doc.setFontSize(6);
+      doc.roundedRect(x, boxTop, boxW, 3, 1, 1, 'F');
+      doc.setFontSize(5.5);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...kpi.rgb);
-      doc.text(kpi.label, x + boxW / 2, boxTop + 9, { align: 'center' });
-      // Value
+      doc.text(kpi.label, x + boxW / 2, boxTop + 9.5, { align: 'center' });
       doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
-      doc.text(kpi.value, x + boxW / 2, boxTop + 22, { align: 'center' });
+      doc.text(kpi.value, x + boxW / 2, boxTop + 23, { align: 'center' });
     });
 
-    // ── Tabla ──
+    // ── Tabla ─────────────────────────────────────────────────────────
     const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUB.', 'MET. PAGO', 'COMBO'];
 
     const rows = filteredSales.map(s => [
@@ -475,77 +493,63 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     ]);
 
     autoTable(doc, {
-      startY: headerH + 4,
+      startY: headerH + 6,
       head: [headers],
       body: rows,
       theme: 'grid',
       styles: {
         fontSize: 6.2,
         cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 },
-        lineColor: [35, 28, 20],
-        lineWidth: 0.25,
-        textColor: [190, 165, 140],
+        lineColor: [185, 215, 195],
+        lineWidth: 0.2,
+        textColor: [38, 62, 48],
         font: 'helvetica',
         overflow: 'ellipsize',
       },
       headStyles: {
-        fillColor: [20, 28, 38],
-        textColor: [255, 107, 0],
+        fillColor: [22, 52, 33],
+        textColor: [140, 210, 160],
         fontStyle: 'bold',
         fontSize: 6.2,
-        lineColor: [50, 38, 25],
-        lineWidth: 0.4,
+        lineColor: [38, 85, 52],
+        lineWidth: 0.3,
       },
-      alternateRowStyles: {
-        fillColor: [16, 20, 28],
-      },
-      bodyStyles: {
-        fillColor: [12, 16, 22],
-      },
+      alternateRowStyles: { fillColor: [240, 248, 243] },
+      bodyStyles: { fillColor: [248, 253, 250] },
       columnStyles: {
-        8:  { textColor: [0, 230, 150], fontStyle: 'bold' },
+        8:  { textColor: [35, 115, 55], fontStyle: 'bold' },
         11: { fontStyle: 'bold' },
       },
       didParseCell: (data) => {
         if (data.section !== 'body') return;
         if (data.column.index === 11) {
           const v = String(data.cell.raw);
-          if (v === 'PAGO COMPLETO') data.cell.styles.textColor = [0, 230, 150];
-          else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [255, 160, 50];
-          else if (v === 'ANULADO') data.cell.styles.textColor = [239, 68, 68];
-          else data.cell.styles.textColor = [190, 165, 140];
+          if (v === 'PAGO COMPLETO')    data.cell.styles.textColor = [32, 115, 50];
+          else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [155, 90, 10];
+          else if (v === 'ANULADO')     data.cell.styles.textColor = [175, 48, 48];
+          else data.cell.styles.textColor = [80, 110, 90];
         }
         if (data.column.index === 1) {
           const v = String(data.cell.raw).toUpperCase();
-          if (v.includes('BRV') || v.includes('BRAVOS')) data.cell.styles.textColor = [167, 139, 250];
-          else data.cell.styles.textColor = [255, 107, 0];
+          if (v.includes('BRV') || v.includes('BRAVOS')) data.cell.styles.textColor = [75, 75, 148];
+          else data.cell.styles.textColor = [42, 100, 55];
         }
         if (data.column.index === 2) {
-          data.cell.styles.textColor = [56, 200, 245];
+          data.cell.styles.textColor = [22, 100, 155];
         }
       },
       didDrawPage: (data) => {
         const totalPages = doc.getNumberOfPages();
         const pg = data.pageNumber;
-        // Footer line
-        doc.setDrawColor(255, 107, 0);
-        doc.setLineWidth(0.4);
-        doc.line(mg, H - 8, W - mg, H - 8);
-        // Footer text
-        doc.setFontSize(6.5);
+        doc.setFillColor(18, 50, 30);
+        doc.rect(0, H - 7, W, 7, 'F');
+        doc.setFontSize(6);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 75, 50);
-        doc.text(
-          `Livex Agency · Panel de Ventas · ${new Date().toLocaleDateString('es-PE')}`,
-          mg, H - 4.5,
-        );
-        doc.text(
-          `Página ${pg} de ${totalPages}`,
-          W - mg, H - 4.5,
-          { align: 'right' },
-        );
+        doc.setTextColor(100, 170, 130);
+        doc.text(`LIVEX AGENCY · Reporte de Ventas · ${new Date().toLocaleDateString('es-PE')}`, mg, H - 2.5);
+        doc.text(`Página ${pg} de ${totalPages}`, W - mg, H - 2.5, { align: 'right' });
       },
-      margin: { top: headerH + 4, left: mg, right: mg, bottom: 12 },
+      margin: { top: headerH + 6, left: mg, right: mg, bottom: 10 },
     });
 
     doc.save(`livex_ventas_${dateFrom}_${dateTo}.pdf`);
@@ -609,6 +613,19 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               {liveCount > 0 ? `+${liveCount} nueva${liveCount > 1 ? 's' : ''}` : 'EN VIVO'}
             </span>
           </div>
+          <button
+            onClick={async () => {
+              if (showArchived) {
+                setShowArchived(false);
+              } else {
+                await loadArchivedSales();
+                setShowArchived(true);
+              }
+            }}
+            style={{ ...btn('ghost'), border: `1px solid ${showArchived ? 'rgba(245,158,11,0.35)' : 'rgba(150,150,150,0.2)'}`, color: showArchived ? '#d97706' : S.muted, background: showArchived ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.9)' }}
+          >
+            <History size={13} /> {showArchived ? 'Ver activos' : 'Historial'}
+          </button>
           <button onClick={onSwitchToVendedor} style={{ ...btn('info'), border: '1px solid rgba(56,200,245,0.25)' }}>
             📋 Vista Vendedor
           </button>
@@ -653,6 +670,94 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             getEstado={getEstado}
           />
         ) : (<>
+
+        {/* ── Modo historial archivado ── */}
+        {showArchived ? (
+          <div>
+            {/* Banner */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', padding: '0.85rem 1.2rem', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Archive size={16} color="#f59e0b" />
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#f59e0b' }}>Historial archivado</div>
+                  <div style={{ fontSize: '0.7rem', color: S.muted }}>
+                    {archiveLoading ? 'Cargando...' : `${archivedSales.length} registros archivados`}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm(`¿Desarchivar todos los registros (${archivedSales.length}) y devolverlos al historial activo?`)) return;
+                    await desarchivarTodo();
+                  }}
+                  style={{ ...btn('ghost'), fontSize: '0.75rem', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)' }}
+                >
+                  <RotateCcw size={12} /> Desarchivar todo
+                </button>
+                <button onClick={() => setShowArchived(false)} style={{ ...btn('ghost'), fontSize: '0.75rem' }}>
+                  <X size={12} /> Cerrar historial
+                </button>
+              </div>
+            </div>
+
+            {/* Tabla archivados */}
+            {archiveLoading ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: S.muted, fontSize: '0.85rem' }}>Cargando historial...</div>
+            ) : archivedSales.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: S.muted, fontSize: '0.85rem' }}>No hay ventas archivadas</div>
+            ) : (
+              <div style={{ overflowX: 'auto', borderRadius: '12px', border: S.border }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(245,158,11,0.06)', borderBottom: '1px solid rgba(245,158,11,0.2)' }}>
+                      {['FECHA', 'VENDEDOR', 'CLIENTE', 'CEL', 'COMBO', 'TOTAL S/', 'ESTADO', 'REGIÓN'].map(h => (
+                        <th key={h} style={{ padding: '0.6rem 0.85rem', textAlign: 'left', fontSize: '0.6rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {archivedSales.map((s, i) => (
+                      <tr key={s._dbId ?? i} style={{ borderBottom: '1px solid rgba(104,168,119,.18)', background: i % 2 === 0 ? 'transparent' : 'rgba(245,158,11,0.02)' }}>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.muted, whiteSpace: 'nowrap' }}>{s.fecha}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', fontWeight: 600, color: S.text }}>{s.vendorName}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.text }}>{s.nom}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{s.cel}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.text, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.combo}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', fontWeight: 800, color: S.accent }}>S/{Number(s.totalTotal).toLocaleString()}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{getEstado(s)}</td>
+                        <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{getRegion(s)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (<>
+
+        {/* ── Banner archivar período ── */}
+        {allSales.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(69,131,77,0.04)', border: '1px solid rgba(69,131,77,0.15)', borderRadius: '10px', padding: '0.65rem 1rem', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Archive size={14} color={S.accent} />
+              <span style={{ fontSize: '0.75rem', color: S.muted }}>
+                <strong style={{ color: S.text }}>{allSales.filter(s => !s._anulado).length} ventas</strong> en el período activo
+              </span>
+            </div>
+            <button
+              onClick={async () => {
+                const count = allSales.filter(s => !s._anulado).length;
+                if (!window.confirm(`¿Archivar las ${count} ventas del período actual?\n\nPodrás consultarlas en "Historial" cuando quieras. Esta acción es reversible.`)) return;
+                const ok = await archivarTodo();
+                if (!ok) alert('Error al archivar. Intenta de nuevo.');
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.9rem', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)', color: '#d97706', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800 }}
+            >
+              <Archive size={12} /> Archivar período
+            </button>
+          </div>
+        )}
 
         {/* ── KPI cards (5) ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', marginBottom: '1rem' }}>
@@ -706,36 +811,150 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </div>
         )}
 
-        {/* ── Rendimiento por Código de Publicidad ── */}
-        {pubStats.length > 0 && (
-          <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
-            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.85rem' }}>
-              Rendimiento por Código de Publicidad
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              {pubStats.map((p, i) => {
-                const maxRev = pubStats[0].revenue;
-                const barPct = maxRev > 0 ? Math.round((p.revenue / maxRev) * 100) : 0;
-                const totalRev = pubStats.reduce((a, x) => a + x.revenue, 0);
-                const pct = totalRev > 0 ? Math.round((p.revenue / totalRev) * 100) : 0;
-                const hue = [S.accent, '#1e6fa0', '#EB7347', '#68A877', '#f59e0b', '#ec4899'][i % 6];
-                return (
-                  <div key={p.code} style={{ background: 'rgba(242,251,245,.5)', border: '1px solid rgba(104,168,119,.25)', borderRadius: '8px', padding: '0.5rem 0.85rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: S.text }}>{p.code}</span>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.68rem', color: S.muted }}>{p.count} ventas · {p.items} prendas</span>
-                        <span style={{ fontSize: '0.82rem', fontWeight: 900, color: hue }}>S/{p.revenue.toLocaleString()}</span>
-                        <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(69,131,77,.06)', borderRadius: '4px', padding: '0.1rem 0.45rem', color: hue }}>{pct}%</span>
-                      </div>
+        {/* ── KPIs: Publicidad + Producto en grid lado a lado ── */}
+        {(pubStats.length > 0 || cpStats.stats.length > 0) && (
+          <div style={{ display: 'grid', gridTemplateColumns: pubStats.length > 0 && cpStats.stats.length > 0 ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+
+            {/* Códigos de Publicidad */}
+            {pubStats.length > 0 && (() => {
+              const totalRev = pubStats.reduce((a, x) => a + x.revenue, 0);
+              const maxRev = pubStats[0]?.revenue ?? 1;
+              const PUB_COLORS = ['#6366f1','#ec4899','#f59e0b','#14b8a6','#8b5cf6','#ef4444'];
+              return (
+                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {/* header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.9rem' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <BarChart3 size={13} color="#6366f1" />
                     </div>
-                    <div style={{ height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${barPct}%`, background: `linear-gradient(90deg,${hue},${hue}88)`, borderRadius: '2px', transition: 'width 0.5s ease' }} />
+                    <span style={{ fontSize: '0.67rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                      Códigos de Publicidad
+                    </span>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.67rem', fontWeight: 800, color: '#6366f1', background: 'rgba(99,102,241,0.1)', borderRadius: '5px', padding: '0.1rem 0.45rem' }}>
+                      {pubStats.length} códigos
+                    </span>
+                  </div>
+                  {/* summary pills */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+                    <div style={{ flex: 1, minWidth: '80px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ventas</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6366f1', lineHeight: 1.1 }}>{pubStats.reduce((a, x) => a + x.count, 0)}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '80px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6366f1', lineHeight: 1.1 }}>S/{totalRev.toLocaleString()}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '80px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top</div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 900, color: '#6366f1', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pubStats[0]?.code ?? '—'}</div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                  {/* bars */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.38rem' }}>
+                    {pubStats.map((p, i) => {
+                      const barPct = maxRev > 0 ? Math.round((p.revenue / maxRev) * 100) : 0;
+                      const share = totalRev > 0 ? Math.round((p.revenue / totalRev) * 100) : 0;
+                      const hue = PUB_COLORS[i % PUB_COLORS.length];
+                      return (
+                        <div key={p.code} style={{ borderRadius: '8px', padding: '0.4rem 0.7rem', background: `rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.05)`, border: `1px solid rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.15)` }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.22rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: hue, flexShrink: 0 }} />
+                              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: S.text }}>{p.code}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.63rem', color: S.muted }}>{p.count}v · {p.items}p</span>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 900, color: hue }}>S/{p.revenue.toLocaleString()}</span>
+                              <span style={{ fontSize: '0.6rem', fontWeight: 800, background: `rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.12)`, borderRadius: '4px', padding: '0.08rem 0.38rem', color: hue }}>{share}%</span>
+                            </div>
+                          </div>
+                          <div style={{ height: '3px', background: 'rgba(150,150,150,0.12)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${barPct}%`, background: `linear-gradient(90deg,${hue},${hue}88)`, borderRadius: '2px', transition: 'width 0.5s ease' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Códigos de Producto (CP) */}
+            {cpStats.stats.length > 0 && (() => {
+              const filtered = cpStats.stats.filter(c => c.code !== 'Sin código');
+              const maxCount = filtered[0]?.count ?? 1;
+              const totalRev = filtered.reduce((a, x) => a + x.revenue, 0);
+              const totalItems = filtered.reduce((a, x) => a + x.items, 0);
+              const { uniqueWithCode, uniqueWithoutCode } = cpStats;
+              const totalUnique = uniqueWithCode + uniqueWithoutCode;
+              const coveragePct = totalUnique > 0 ? Math.round((uniqueWithCode / totalUnique) * 100) : 0;
+              const CP_COLORS = ['#45834D','#1e6fa0','#EB7347','#8b5cf6','#f59e0b','#14b8a6','#ec4899','#6366f1','#10b981','#ef4444','#78716c'];
+              return (
+                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {/* header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.9rem' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(69,131,77,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Package size={13} color={S.accent} />
+                    </div>
+                    <span style={{ fontSize: '0.67rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                      Códigos de Producto
+                    </span>
+                    <span style={{ marginLeft: 'auto', fontSize: '0.67rem', fontWeight: 800, color: S.accent, background: 'rgba(69,131,77,0.1)', borderRadius: '5px', padding: '0.1rem 0.45rem' }}>
+                      {filtered.length} tipos
+                    </span>
+                  </div>
+                  {/* summary pills */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+                    <div style={{ flex: 1, minWidth: '72px', background: 'rgba(69,131,77,0.07)', border: '1px solid rgba(69,131,77,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ventas</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: S.accent, lineHeight: 1.1 }}>{totalUnique}</div>
+                      {uniqueWithoutCode > 0 && (
+                        <div style={{ fontSize: '0.55rem', color: S.muted, marginTop: '0.1rem' }}>{uniqueWithCode} identificadas</div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: '72px', background: 'rgba(69,131,77,0.07)', border: '1px solid rgba(69,131,77,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 900, color: S.accent, lineHeight: 1.1 }}>S/{totalRev.toLocaleString()}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '72px', background: 'rgba(69,131,77,0.07)', border: '1px solid rgba(69,131,77,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Prendas</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: S.accent, lineHeight: 1.1 }}>{totalItems}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '72px', background: coveragePct >= 80 ? 'rgba(69,131,77,0.07)' : coveragePct >= 50 ? 'rgba(245,158,11,0.07)' : 'rgba(239,68,68,0.07)', border: `1px solid ${coveragePct >= 80 ? 'rgba(69,131,77,0.18)' : coveragePct >= 50 ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.18)'}`, borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.58rem', fontWeight: 700, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cobertura</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color: coveragePct >= 80 ? S.accent : coveragePct >= 50 ? '#f59e0b' : '#ef4444', lineHeight: 1.1 }}>{coveragePct}%</div>
+                    </div>
+                  </div>
+                  {/* bars — ordered by count, bar = relative to top */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.38rem' }}>
+                    {filtered.map((p, i) => {
+                      const barPct = maxCount > 0 ? Math.round((p.count / maxCount) * 100) : 0;
+                      const share = uniqueWithCode > 0 ? Math.round((p.count / uniqueWithCode) * 100) : 0;
+                      const hue = CP_COLORS[i % CP_COLORS.length];
+                      return (
+                        <div key={p.code} style={{ borderRadius: '8px', padding: '0.4rem 0.7rem', background: 'rgba(69,131,77,0.04)', border: '1px solid rgba(69,131,77,0.14)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.22rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span style={{ fontSize: '0.6rem', fontWeight: 900, padding: '0.08rem 0.38rem', borderRadius: '4px', background: `rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.12)`, border: `1px solid rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.25)`, color: hue, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{p.code}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.63rem', color: S.muted }}>{p.items}p</span>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 900, color: hue }}>S/{p.revenue.toLocaleString()}</span>
+                              <span style={{ fontSize: '0.6rem', fontWeight: 800, background: `rgba(${hue.slice(1).match(/../g)!.map(x=>parseInt(x,16)).join(',')},0.1)`, borderRadius: '4px', padding: '0.08rem 0.38rem', color: hue }}>{share}%</span>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 900, color: S.text }}>{p.count}v</span>
+                            </div>
+                          </div>
+                          <div style={{ height: '3px', background: 'rgba(150,150,150,0.12)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${barPct}%`, background: `linear-gradient(90deg,${hue},${hue}88)`, borderRadius: '2px', transition: 'width 0.5s ease' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
           </div>
         )}
 
@@ -884,7 +1103,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg,rgba(69,131,77,.12),rgba(58,109,66,.08))', borderBottom: '2px solid rgba(69,131,77,.25)' }}>
-                  {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO', ''].map(h => (
+                  {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO', ''].map(h => (
                     <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>
                   ))}
                 </tr>
@@ -937,6 +1156,16 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       <td style={{ ...td, color: S.muted }}>{s.hora ?? '—'}</td>
                       <td style={td}>
                         <span style={{ background: regionColor.bg, color: regionColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.68rem' }}>{region}</span>
+                        {region === 'Provincia' && (s.provincia || s.depto) && (
+                          <div style={{ fontSize: '0.6rem', color: '#a0780a', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }} title={[s.provincia, s.depto].filter(Boolean).join(' · ')}>
+                            {[s.provincia, s.depto].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
+                        {region === 'Lima' && s.distrito && (
+                          <div style={{ fontSize: '0.6rem', color: '#1e6fa0', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }} title={s.distrito}>
+                            {s.distrito}
+                          </div>
+                        )}
                       </td>
                       <td style={{ ...td, fontWeight: 600, color: '#111111' }}>
                         <span
@@ -953,6 +1182,21 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       <td style={td}>{s.separo || '—'}</td>
                       <td style={td}>
                         <span style={{ background: estadoColor.bg, color: estadoColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{estado}</span>
+                      </td>
+                      <td style={td}>
+                        {(() => {
+                          const cp = getCodigoProducto(s.detalle || '', s.combo || '');
+                          if (cp === '—') return <span style={{ color: S.muted }}>—</span>;
+                          return (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>
+                              {cp.split(', ').map(c => (
+                                <span key={c} style={{ fontSize: '0.6rem', fontWeight: 900, padding: '0.1rem 0.45rem', borderRadius: '4px', background: 'rgba(69,131,77,0.1)', border: '1px solid rgba(69,131,77,0.25)', color: '#45834D', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td style={td}>{s.codigoPublicidad || '—'}</td>
                       <td style={td}>{s.metodoPago || '—'}</td>
@@ -1070,6 +1314,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
       )}
 
+        </>)}
         </>)}
 
       </div>{/* fin contenedor 1500px */}
@@ -1211,6 +1456,15 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 <select value={editForm.marca_label} onChange={e => setEditForm(f => f ? { ...f, marca_label: e.target.value } : f)} style={{ ...iStyle, width: '100%' }}>
                   <option value="OVER">OVER</option>
                   <option value="BRV">BRV</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>Vendedor</div>
+                <select value={editForm.user_id} onChange={e => setEditForm(f => f ? { ...f, user_id: e.target.value } : f)} style={{ ...iStyle, width: '100%' }}>
+                  <option value="">— sin cambiar —</option>
+                  {profiles.map(p => (
+                    <option key={p.id} value={p.id}>{p.full_name}</option>
+                  ))}
                 </select>
               </div>
             </div>
