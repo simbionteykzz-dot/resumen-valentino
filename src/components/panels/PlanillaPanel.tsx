@@ -245,6 +245,13 @@ export default function PlanillaPanel({
   const [brandView, setBrandView] = useState<'todas' | 'OVER' | 'BRV'>(forcedBrand ?? 'todas');
   const [sourceView, setSourceView] = useState('todas');
   const [blankMode, setBlankMode] = useState(false);
+  const [localEdits, setLocalEdits] = useState<Record<string, Record<string, string>>>({});
+
+  const handleBlur = (rowKey: string, field: string, e: React.FocusEvent<HTMLTableCellElement>) => {
+    const value = e.currentTarget.textContent ?? '';
+    setLocalEdits(prev => ({ ...prev, [rowKey]: { ...(prev[rowKey] ?? {}), [field]: value } }));
+  };
+  const cv = (rowKey: string, field: string, fallback: string) => localEdits[rowKey]?.[field] ?? fallback;
 
   const vendorLabel = currentUserName ?? 'VENDEDOR';
 
@@ -514,25 +521,27 @@ export default function PlanillaPanel({
               </tr>
             </thead>
             <tbody>
-              {visibleSales.map((sale, i) => (
-                <tr key={`sale-${i}`}>
+              {visibleSales.map((sale, i) => {
+                const rk = sale._dbId ?? `s${i}`;
+                return (
+                <tr key={rk}>
                   <td className="col-n">{i + 1}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.cel}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.nom}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.dni}</td>
-                  <td contentEditable suppressContentEditableWarning>{abrevMetodo(sale.metodoPago)}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.hora}</td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning>{sale.codigoPublicidad}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.marcaLabel}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.limaMark}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.provMark}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.separo}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.resta}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.pagoCompletoTxt}</td>
-                  <td contentEditable suppressContentEditableWarning>{sale.combo}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'cel', e)}>{cv(rk, 'cel', sale.cel ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'nom', e)}>{cv(rk, 'nom', sale.nom ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'dni', e)}>{cv(rk, 'dni', sale.dni ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'metodo', e)}>{cv(rk, 'metodo', abrevMetodo(sale.metodoPago))}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'hora', e)}>{cv(rk, 'hora', sale.hora ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'etiq', e)}>{cv(rk, 'etiq', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'for', e)}>{cv(rk, 'for', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'sis', e)}>{cv(rk, 'sis', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'codPub', e)}>{cv(rk, 'codPub', sale.codigoPublicidad ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'marca', e)}>{cv(rk, 'marca', sale.marcaLabel ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'lima', e)}>{cv(rk, 'lima', sale.limaMark ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'prov', e)}>{cv(rk, 'prov', sale.provMark ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'separo', e)}>{cv(rk, 'separo', sale.separo ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'resta', e)}>{cv(rk, 'resta', sale.resta ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'pago', e)}>{cv(rk, 'pago', sale.pagoCompletoTxt ?? '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'combo', e)}>{cv(rk, 'combo', sale.combo ?? '')}</td>
                   <td className="col-del">
                     {onDeleteSale && !blankMode && (
                       <button className="btn-del-row" onClick={() => onDeleteSale(sales.indexOf(sale))} title="Eliminar venta">
@@ -541,29 +550,33 @@ export default function PlanillaPanel({
                     )}
                   </td>
                 </tr>
-              ))}
-              {emptyRows.map((_, i) => (
-                <tr key={`empty-${i}`}>
+                );
+              })}
+              {emptyRows.map((_, i) => {
+                const rk = `empty-${i}`;
+                return (
+                <tr key={rk}>
                   <td className="col-n">{visibleSales.length + i + 1}</td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning>I.T</td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning>{sourceFilter === 'publicidad' ? '' : 'Live'}</td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
-                  <td contentEditable suppressContentEditableWarning></td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'cel', e)}>{cv(rk, 'cel', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'nom', e)}>{cv(rk, 'nom', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'dni', e)}>{cv(rk, 'dni', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'metodo', e)}>{cv(rk, 'metodo', 'I.T')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'hora', e)}>{cv(rk, 'hora', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'etiq', e)}>{cv(rk, 'etiq', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'for', e)}>{cv(rk, 'for', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'sis', e)}>{cv(rk, 'sis', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'codPub', e)}>{cv(rk, 'codPub', sourceFilter === 'publicidad' ? '' : 'Live')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'marca', e)}>{cv(rk, 'marca', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'lima', e)}>{cv(rk, 'lima', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'prov', e)}>{cv(rk, 'prov', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'separo', e)}>{cv(rk, 'separo', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'resta', e)}>{cv(rk, 'resta', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'pago', e)}>{cv(rk, 'pago', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'combo', e)}>{cv(rk, 'combo', '')}</td>
                   <td className="col-del"></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
             <tfoot>
               <tr>

@@ -1504,3 +1504,99 @@ input[type="radio"]:checked { border-color: var(--accent) !important; }
   font-size: 7.5pt !important;
 }
 
+/* ══════════════════════════════════════════════
+   Responsive / Mobile
+══════════════════════════════════════════════ */
+
+/* KPI grid — 5 cols → 3 → 2 */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 680px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Header admin — apila botones en móvil */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+}
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Toolbar admin — botones de acción */
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+/* Tabla — scroll horizontal en móvil con tamaño mínimo legible */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+.admin-table-wrap table {
+  min-width: 900px;
+}
+
+/* Botones de acción por fila — tamaño mínimo WCAG */
+.row-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 28px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Drawer historial — ancho adaptable en móvil */
+@media (max-width: 500px) {
+  .history-drawer {
+    width: 100% !important;
+  }
+}
+
+/* Grid de filtros — colapsa en móvil */
+@media (max-width: 768px) {
+  .filters-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (max-width: 480px) {
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* prefers-reduced-motion — accesibilidad WCAG 2.1 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

@@ -33,6 +33,23 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
+  // ── Modal de confirmación ──
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    variant: 'danger' | 'warning';
+    onConfirm: () => void;
+  } | null>(null);
+
+  // ── Toggle de columnas ──
+  const ALL_COLS = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'] as const;
+  type ColName = typeof ALL_COLS[number];
+  const [hiddenCols, setHiddenCols] = useState<Set<ColName>>(new Set(['HORA', 'DNI', 'SEPARO', 'COD. PROD', 'COD. PUBLICIDAD']));
+  const [showColPicker, setShowColPicker] = useState(false);
+  const toggleCol = (col: ColName) => setHiddenCols(prev => { const n = new Set(prev); n.has(col) ? n.delete(col) : n.add(col); return n; });
+  const visible = (col: ColName) => !hiddenCols.has(col);
+
   const {
     allSales, filteredSales, paginatedSales, profiles, loading,
     dateFrom, setDateFrom, dateTo, setDateTo,
@@ -769,7 +786,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         )}
 
         {/* ── KPI cards (5) ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="kpi-grid">
           {[
             { label: 'Ventas', value: globalStats.salesCount, color: S.accent, icon: <ShoppingBag size={18} /> },
             { label: 'Total S/', value: `S/${globalStats.totalRevenue.toLocaleString()}`, color: '#1e6fa0', icon: <DollarSign size={18} /> },
@@ -1046,6 +1063,27 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             <RefreshCw size={13} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
             {loading ? 'Cargando...' : 'Actualizar'}
           </button>
+          {/* Toggle columnas */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowColPicker(p => !p)}
+              style={{ ...btn('ghost'), color: '#14b8a6', border: '1px solid rgba(20,184,166,0.25)', background: showColPicker ? 'rgba(20,184,166,0.08)' : undefined }}>
+              ⊞ Columnas {hiddenCols.size > 0 ? `(${ALL_COLS.length - hiddenCols.size}/${ALL_COLS.length})` : ''}
+            </button>
+            {showColPicker && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200, background: '#fff', border: '1px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '0.75rem', minWidth: '200px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#517861', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Mostrar columnas</div>
+                {ALL_COLS.map(col => (
+                  <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#2a4433', cursor: 'pointer', padding: '0.2rem 0.3rem', borderRadius: '6px', background: hiddenCols.has(col) ? 'transparent' : 'rgba(69,131,77,0.05)' }}>
+                    <input type="checkbox" checked={!hiddenCols.has(col)} onChange={() => toggleCol(col)} style={{ accentColor: '#45834D', width: '14px', height: '14px' }} />
+                    {col}
+                  </label>
+                ))}
+                <button onClick={() => setHiddenCols(new Set())} style={{ marginTop: '0.25rem', padding: '0.3rem', border: '1px solid rgba(104,168,119,.25)', borderRadius: '6px', background: 'transparent', color: '#517861', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700 }}>Mostrar todas</button>
+              </div>
+            )}
+          </div>
+
           <button onClick={() => { setShowTransfer(p => !p); setTransferMsg(null); }}
             style={{ ...btn('ghost'), color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)', background: showTransfer ? 'rgba(167,139,250,0.1)' : undefined }}>
             <ArrowRightLeft size={13} /> Traspasar fechas
@@ -1163,13 +1201,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
         {/* ── Tabla ── */}
         <div ref={tableRef} style={{ background: 'rgba(255,255,255,.97)', border: S.border, borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="admin-table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg,rgba(69,131,77,.12),rgba(58,109,66,.08))', borderBottom: '2px solid rgba(69,131,77,.25)' }}>
-                  {['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO', ''].map(h => (
-                    <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>
-                  ))}
+                  {([...ALL_COLS, ''] as (ColName | '')[]).map(h => {
+                    if (h !== '' && hiddenCols.has(h as ColName)) return null;
+                    return <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>;
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -1196,7 +1235,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                     <Fragment key={s._dbId ?? `frag-${i}`}>
                     {isNewBrand && (
                       <tr>
-                        <td colSpan={16} style={{ padding: '0.4rem 0.75rem', background: bc.bg, borderBottom: `2px solid ${bc.border}`, borderTop: i > 0 ? `2px solid ${bc.border}` : undefined }}>
+                        <td colSpan={ALL_COLS.length - hiddenCols.size + 1} style={{ padding: '0.4rem 0.75rem', background: bc.bg, borderBottom: `2px solid ${bc.border}`, borderTop: i > 0 ? `2px solid ${bc.border}` : undefined }}>
                           <span style={{ fontWeight: 900, fontSize: '0.72rem', color: bc.color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                             {brand === 'OVER' ? '▸ OVERSHARK' : brand === 'BRV' ? '▸ BRAVOS' : `▸ ${brand}`}
                           </span>
@@ -1210,15 +1249,15 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       style={{ borderBottom: '1px solid rgba(104,168,119,.2)', background: isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)', transition: 'background 0.15s', opacity: isAnulado ? 0.6 : 1 }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(69,131,77,.04)')}
                       onMouseLeave={e => (e.currentTarget.style.background = isAnulado ? 'rgba(239,68,68,.03)' : i % 2 === 0 ? 'transparent' : 'rgba(242,251,245,.6)')}>
-                      <td style={td}>{s.fecha ?? '—'}</td>
-                      <td style={td}>
+                      {visible('FECHA') && <td style={td}>{s.fecha ?? '—'}</td>}
+                      {visible('EMPRESA') && <td style={td}>
                         <span style={{ background: bc.bg, color: bc.color, border: `1px solid ${bc.border}`, borderRadius: '5px', padding: '0.15rem 0.55rem', fontWeight: 800, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
                           {s.marcaLabel || 'OVER'}
                         </span>
-                      </td>
-                      <td style={{ ...td, color: S.accent, fontWeight: 700 }}>{s.vendorName}</td>
-                      <td style={{ ...td, color: S.muted }}>{s.hora ?? '—'}</td>
-                      <td style={td}>
+                      </td>}
+                      {visible('VENDEDOR') && <td style={{ ...td, color: S.accent, fontWeight: 700 }}>{s.vendorName}</td>}
+                      {visible('HORA') && <td style={{ ...td, color: S.muted }}>{s.hora ?? '—'}</td>}
+                      {visible('REGIÓN') && <td style={td}>
                         <span style={{ background: regionColor.bg, color: regionColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.68rem' }}>{region}</span>
                         {region === 'Provincia' && (s.provincia || s.depto) && (
                           <div style={{ fontSize: '0.6rem', color: '#a0780a', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }} title={[s.provincia, s.depto].filter(Boolean).join(' · ')}>
@@ -1230,24 +1269,24 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                             {s.distrito}
                           </div>
                         )}
-                      </td>
-                      <td style={{ ...td, fontWeight: 600, color: '#111111' }}>
+                      </td>}
+                      {visible('CLIENTE') && <td style={{ ...td, fontWeight: 600, color: '#111111' }}>
                         <span
                           onClick={() => s.cel && setHistoryClient({ nom: s.nom || '—', cel: s.cel })}
                           style={{ cursor: s.cel ? 'pointer' : 'default', borderBottom: s.cel ? '1px dashed rgba(69,131,77,0.5)' : 'none' }}
                           title={s.cel ? 'Ver historial del cliente' : undefined}>
                           {s.nom || '—'}
                         </span>
-                      </td>
-                      <td style={td}>{s.cel || '—'}</td>
-                      <td style={td}>{s.dni || '—'}</td>
-                      <td style={{ ...td, fontWeight: 900, color: S.accent }}>S/{s.totalTotal ?? 0}</td>
-                      <td style={{ ...td, color: s.resta ? '#ef4444' : S.muted }}>{s.resta || '—'}</td>
-                      <td style={td}>{s.separo || '—'}</td>
-                      <td style={td}>
+                      </td>}
+                      {visible('CELULAR') && <td style={td}>{s.cel || '—'}</td>}
+                      {visible('DNI') && <td style={td}>{s.dni || '—'}</td>}
+                      {visible('TOTAL S/') && <td style={{ ...td, fontWeight: 900, color: S.accent }}>S/{s.totalTotal ?? 0}</td>}
+                      {visible('DEBE') && <td style={{ ...td, color: s.resta ? '#ef4444' : S.muted }}>{s.resta || '—'}</td>}
+                      {visible('SEPARO') && <td style={td}>{s.separo || '—'}</td>}
+                      {visible('ESTADO') && <td style={td}>
                         <span style={{ background: estadoColor.bg, color: estadoColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{estado}</span>
-                      </td>
-                      <td style={td}>
+                      </td>}
+                      {visible('COD. PROD') && <td style={td}>
                         {(() => {
                           const cp = getCodigoProducto(s.detalle || '', s.combo || '');
                           if (cp === '—') return <span style={{ color: S.muted }}>—</span>;
@@ -1261,10 +1300,10 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                             </div>
                           );
                         })()}
-                      </td>
-                      <td style={td}>{s.codigoPublicidad || '—'}</td>
-                      <td style={td}>{s.metodoPago || '—'}</td>
-                      <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: S.muted }}>{s.combo || '—'}</td>
+                      </td>}
+                      {visible('COD. PUBLICIDAD') && <td style={td}>{s.codigoPublicidad || '—'}</td>}
+                      {visible('MET. PAGO') && <td style={td}>{s.metodoPago || '—'}</td>}
+                      {visible('COMBO') && <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: S.muted }}>{s.combo || '—'}</td>}
                       <td style={{ ...td, padding: '0.3rem 0.5rem' }}>
                         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
                           {s._dbId && (
@@ -1277,7 +1316,13 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                           )}
                           {!isAnulado && s._dbId && (
                             <button
-                              onClick={() => anularVenta(s._dbId!)}
+                              onClick={() => setConfirmModal({
+                                title: 'Anular venta',
+                                description: `¿Anular la venta de ${s.nom || 'este cliente'} (${s.cel || '—'})? La venta quedará marcada como anulada.`,
+                                confirmLabel: 'Anular',
+                                variant: 'warning',
+                                onConfirm: () => anularVenta(s._dbId!),
+                              })}
                               title="Anular venta"
                               style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: '#ef4444', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
                               ✕ Anular
@@ -1300,7 +1345,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 })()}
                 {paginatedSales.length === 0 && (
                   <tr>
-                    <td colSpan={16} style={{ padding: '3rem', textAlign: 'center', color: S.muted, fontSize: '0.85rem' }}>
+                    <td colSpan={ALL_COLS.length - hiddenCols.size + 1} style={{ padding: '3rem', textAlign: 'center', color: S.muted, fontSize: '0.85rem' }}>
                       {loading ? 'Cargando ventas...' : 'Sin registros para los filtros seleccionados'}
                     </td>
                   </tr>
@@ -1464,6 +1509,38 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de confirmación ── */}
+      {confirmModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget) setConfirmModal(null); }}
+        >
+          <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '1.75rem', border: `2px solid ${confirmModal.variant === 'danger' ? 'rgba(239,68,68,.3)' : 'rgba(239,150,0,.3)'}`, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', marginBottom: '1.25rem' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0, background: confirmModal.variant === 'danger' ? 'rgba(239,68,68,.1)' : 'rgba(239,150,0,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                {confirmModal.variant === 'danger' ? '🗑' : '⚠️'}
+              </div>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: '0.95rem', color: '#162e20', marginBottom: '0.3rem' }}>{confirmModal.title}</div>
+                <div style={{ fontSize: '0.82rem', color: '#517861', lineHeight: 1.5 }}>{confirmModal.description}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setConfirmModal(null)}
+                style={{ padding: '0.5rem 1.1rem', borderRadius: '8px', border: '1px solid rgba(104,168,119,.35)', background: 'transparent', color: '#517861', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
+                Cancelar
+              </button>
+              <button
+                onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
+                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', border: 'none', background: confirmModal.variant === 'danger' ? '#ef4444' : '#e97700', color: '#fff', cursor: 'pointer', fontWeight: 800, fontSize: '0.82rem' }}>
+                {confirmModal.confirmLabel}
+              </button>
             </div>
           </div>
         </div>
