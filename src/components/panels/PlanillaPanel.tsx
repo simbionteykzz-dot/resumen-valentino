@@ -239,6 +239,7 @@ export default function PlanillaPanel({
   loadingSync, syncError, onDeleteSale, onRestoreSale, profiles = [],
   currentUserName, title, sourceFilter, exportId = 'sales-sheet-export', forcedBrand,
 }: PlanillaPanelProps) {
+  const [collapsed, setCollapsed] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [brandView, setBrandView] = useState<'todas' | 'OVER' | 'BRV'>(forcedBrand ?? 'todas');
@@ -326,11 +327,48 @@ export default function PlanillaPanel({
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
-      <div className="cliente-panel-head">
+      {/* ── Header / toggle ── */}
+      <button
+        onClick={() => setCollapsed(v => !v)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
+          background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0',
+          textAlign: 'left',
+        }}
+      >
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+          background: 'linear-gradient(135deg, var(--accent), #3a6d42)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(69,131,77,.25)',
+        }}>
+          <FileSpreadsheet size={18} color="#fff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 900, fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.1 }}>
+            {headingLabel}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.15rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span><strong>{blankMode ? 0 : visibleSales.length}</strong> ventas</span>
+            {deletedSales.length > 0 && <span style={{ color: '#ef4444' }}>{deletedSales.length} eliminadas</span>}
+            {loadingSync && <span style={{ color: 'var(--accent)' }}>Cargando…</span>}
+          </div>
+        </div>
+        <div style={{
+          width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0,
+          background: 'var(--surface2)', border: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'transform 0.2s',
+          transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+        }}>
+          <ChevronDown size={15} style={{ color: 'var(--muted)' }} />
+        </div>
+      </button>
+
+      {/* ── Contenido colapsable ── */}
+      {!collapsed && (<>
+      <div className="cliente-panel-head" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-            <FileSpreadsheet size={20} /> {headingLabel}
-          </h2>
           <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--muted)', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <BarChart3 size={14} /> <strong>{blankMode ? 0 : visibleSales.length}</strong> ventas
@@ -599,6 +637,7 @@ export default function PlanillaPanel({
           )}
         </div>
       )}
+      </>)}
     </div>
   );
 }
