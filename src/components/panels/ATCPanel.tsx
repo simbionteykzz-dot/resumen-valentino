@@ -34,6 +34,21 @@ const EMPRESAS = ['OVERSHARK', 'BRAVOS', 'OVERGIRLS'];
 
 const RESPONSABLES = ['VENDEDOR', 'SUBIDOR', 'ZAZU', 'TALLER', 'CLIENTE', 'SHALOM', 'SITEMA', 'DESPACHO'];
 
+type RespGroup = { group: string; items: string[] };
+const RESPONSABLES_DESCUENTOS: RespGroup[] = [
+  { group: 'Subidores', items: ['GRACE', 'ALEXEI', 'SEBASTIAN', 'STEVEN'] },
+  { group: 'Vendedores', items: [
+    'Alid', 'Aldair', 'Cristina', 'Gregorio', 'Jean Pool', 'Josema', 'Michael', 'Reyna',
+    'Tatiana', 'Angie', 'Valery', 'Giovanny', 'Kenyu', 'Tracy', 'Franco',
+    'Paul', 'Diego', 'Miguel', 'Alessandra', 'Eros', 'Nicolle', 'Leonardo', 'Dana',
+    'Elida', 'Estrella', 'Gabriel', 'Kiara', 'Alex', 'Abigail', 'Angel', 'Orlando',
+    'Andrea', 'Yanira', 'Anahí', 'Xiomara', 'Valentina', 'Camila', 'Alejandra',
+  ] },
+  { group: 'POST - FREDY', items: ['Angela', 'Genesis', 'Rosa', 'Daniel', 'Gustavo', 'Sandro', 'Eder'] },
+  { group: 'POST - STEVEN', items: ['Valentino', 'Gonzalo'] },
+  { group: 'Otros', items: ['ZAZU', 'TALLER', 'CLIENTE', 'SHALOM', 'SITEMA', 'DESPACHO'] },
+];
+
 const ESTADOS_PEDIDO = ['ENTREGADO', 'PENDIENTE', 'NO ENTREGADO', 'DEVOLUCIÓN', 'RETORNADO', 'EN RETORNO'];
 
 const TIPOS_TICKET = ['Información', 'Problema', 'Reclamo', 'Consulta', 'Devolución', 'Cambio', 'Seguimiento', 'Cobranza', 'Error de envío', 'Otro'];
@@ -361,7 +376,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
 
       {activeSection === 'descuentos' ? (
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem' }}>
-          <DescuentosModal inline userId={userId} onClose={() => setActiveSection('tickets')} responsables={RESPONSABLES} />
+          <DescuentosModal inline userId={userId} onClose={() => setActiveSection('tickets')} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />
         </div>
       ) : (
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem', display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1.25rem', alignItems: 'start' }}>
@@ -637,7 +652,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
       )}
 
       {showMetrics && <MetricsModal tickets={allTickets} onClose={() => setShowMetrics(false)} />}
-      {showDescuentos && <DescuentosModal userId={userId} onClose={() => setShowDescuentos(false)} responsables={RESPONSABLES} />}
+      {showDescuentos && <DescuentosModal userId={userId} onClose={() => setShowDescuentos(false)} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />}
 
       {/* ── Modal: Nuevo ticket ── */}
       {showTicketForm && selectedCustomer && (
@@ -920,9 +935,24 @@ const emptyDesc = (): DescForm => ({
   descripcion: '', descuento: '', responsable: '',
 });
 
-function DescuentosModal({ userId, onClose, responsables, inline }: {
-  userId?: string; onClose: () => void; responsables: string[]; inline?: boolean;
+function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, inline }: {
+  userId?: string; onClose: () => void; responsables: string[]; responsablesGrouped?: RespGroup[]; inline?: boolean;
 }) {
+  const renderRespOptions = (withBlank = true) => responsablesGrouped ? (
+    <>
+      {withBlank && <option value="">— Seleccionar —</option>}
+      {responsablesGrouped.map(g => (
+        <optgroup key={g.group} label={g.group}>
+          {g.items.map(r => <option key={r} value={r}>{r}</option>)}
+        </optgroup>
+      ))}
+    </>
+  ) : (
+    <>
+      {withBlank && <option value="">— Seleccionar —</option>}
+      {responsables.map(r => <option key={r} value={r}>{r}</option>)}
+    </>
+  );
   const [rows, setRows] = useState<ATCDescuento[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -1073,7 +1103,7 @@ function DescuentosModal({ userId, onClose, responsables, inline }: {
             <input value={filterNom} onChange={e => setFilterNom(e.target.value)} placeholder="Buscar cliente / cel / DNI..." style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: '#1a2e38', background: '#f8f5ff', outline: 'none', width: '210px' }} />
             <select value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: '#1a2e38', background: '#fff', cursor: 'pointer' }}>
               <option value="">Todos los responsables</option>
-              {responsables.map(r => <option key={r}>{r}</option>)}
+              {renderRespOptions(false)}
             </select>
             <button onClick={() => { setShowForm(f => !f); setForm(emptyDesc()); clearCust(); }}
               style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff' }}>
@@ -1199,8 +1229,7 @@ function DescuentosModal({ userId, onClose, responsables, inline }: {
               <div>
                 <label style={{ fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Responsable</label>
                 <select value={form.responsable} onChange={e => setForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
-                  <option value="">— Seleccionar —</option>
-                  {responsables.map(r => <option key={r}>{r}</option>)}
+                  {renderRespOptions()}
                 </select>
               </div>
             </div>
@@ -1241,7 +1270,7 @@ function DescuentosModal({ userId, onClose, responsables, inline }: {
                       <input value={editForm.descripcion} onChange={e => setEditForm(p => ({ ...p, descripcion: e.target.value }))} placeholder="Descripción" style={inp} />
                       <input type="number" value={editForm.descuento} onChange={e => setEditForm(p => ({ ...p, descuento: e.target.value }))} placeholder="0.00" style={inp} />
                       <select value={editForm.responsable} onChange={e => setEditForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
-                        <option value="">—</option>{responsables.map(res => <option key={res}>{res}</option>)}
+                        {renderRespOptions()}
                       </select>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button onClick={() => saveEdit(r.id!)} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer' }}><Check size={11} /></button>
