@@ -912,6 +912,7 @@ function DescuentosModal({ userId, onClose, responsables }: {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<DescForm>(emptyDesc());
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DescForm>(emptyDesc());
   const [filterResp, setFilterResp] = useState('');
@@ -978,8 +979,12 @@ function DescuentosModal({ userId, onClose, responsables }: {
   };
 
   const save = async () => {
-    if (!form.nombre_cliente.trim() || !form.descripcion.trim() || !form.descuento.trim()) return;
+    if (!form.nombre_cliente.trim() || !form.descripcion.trim() || !form.descuento.trim()) {
+      setSaveError('Completa: Nombre cliente, Descripción y Descuento.');
+      return;
+    }
     setSaving(true);
+    setSaveError(null);
     const created = await createATCDescuento({
       fecha: form.fecha,
       nota_venta: form.nota_venta.trim() || undefined,
@@ -991,7 +996,15 @@ function DescuentosModal({ userId, onClose, responsables }: {
       responsable: form.responsable.trim() || undefined,
       atc_user_id: userId,
     });
-    if (created) { setRows(prev => [created, ...prev]); setForm(emptyDesc()); clearCust(); setShowForm(false); }
+    if (created) {
+      setRows(prev => [created, ...prev]);
+      setForm(emptyDesc());
+      clearCust();
+      setShowForm(false);
+      setSaveError(null);
+    } else {
+      setSaveError('No se pudo guardar. Verifica que la tabla atc_descuentos exista en Supabase.');
+    }
     setSaving(false);
   };
 
@@ -1176,10 +1189,15 @@ function DescuentosModal({ userId, onClose, responsables }: {
               </div>
             </div>
 
+            {saveError && (
+              <div style={{ padding: '0.45rem 0.7rem', borderRadius: '7px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: '#ef4444', fontSize: '0.75rem', fontWeight: 600 }}>
+                ⚠️ {saveError}
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              <button onClick={() => { setShowForm(false); clearCust(); }} style={{ padding: '0.4rem 0.9rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(0,0,0,.12)', background: 'transparent', color: '#888' }}>Cancelar</button>
-              <button onClick={save} disabled={saving || !form.nombre_cliente.trim() || !form.descripcion.trim() || !form.descuento.trim()}
-                style={{ padding: '0.4rem 1.1rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', opacity: (saving || !form.nombre_cliente.trim() || !form.descripcion.trim() || !form.descuento.trim()) ? 0.6 : 1 }}>
+              <button onClick={() => { setShowForm(false); clearCust(); setSaveError(null); }} style={{ padding: '0.4rem 0.9rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(0,0,0,.12)', background: 'transparent', color: '#888' }}>Cancelar</button>
+              <button onClick={save} disabled={saving}
+                style={{ padding: '0.4rem 1.1rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
