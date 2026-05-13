@@ -135,6 +135,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [showMetrics, setShowMetrics] = useState(false);
   const [showDescuentos, setShowDescuentos] = useState(false);
+  const [activeSection, setActiveSection] = useState<'tickets' | 'descuentos'>('tickets');
 
   const [sheetsVentas, setSheetsVentas] = useState<SheetsVentaDB[]>([]);
   const [syncingSheets, setSyncingSheets] = useState(false);
@@ -305,6 +306,19 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
             <div style={{ fontSize: '0.7rem', color: S.muted }}>{userName}</div>
           </div>
         </div>
+        {/* Nav tabs */}
+        <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(26,127,189,.07)', borderRadius: '11px', padding: '0.22rem' }}>
+          <button onClick={() => setActiveSection('tickets')}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.2rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .15s', background: activeSection === 'tickets' ? 'linear-gradient(135deg,#1a7fbd,#155f8f)' : 'transparent', color: activeSection === 'tickets' ? '#fff' : S.muted, boxShadow: activeSection === 'tickets' ? '0 2px 8px rgba(26,127,189,.3)' : 'none' }}>
+            <Tag size={14} /> ATC Tickets
+            <span style={{ fontSize: '0.62rem', fontWeight: 900, background: activeSection === 'tickets' ? 'rgba(255,255,255,.25)' : 'rgba(26,127,189,.15)', color: activeSection === 'tickets' ? '#fff' : '#1a7fbd', borderRadius: '4px', padding: '0.05rem 0.38rem' }}>{allTickets.length}</span>
+          </button>
+          <button onClick={() => setActiveSection('descuentos')}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.2rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .15s', background: activeSection === 'descuentos' ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'transparent', color: activeSection === 'descuentos' ? '#fff' : S.muted, boxShadow: activeSection === 'descuentos' ? '0 2px 8px rgba(139,92,246,.3)' : 'none' }}>
+            <Percent size={14} /> Descuentos
+          </button>
+        </div>
+
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             {[
@@ -321,10 +335,6 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
           <button onClick={() => setShowMetrics(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(26,127,189,.25)', background: 'rgba(26,127,189,.08)', color: '#1a7fbd' }}>
             <BarChart2 size={13} /> Métricas
-          </button>
-          <button onClick={() => setShowDescuentos(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(139,92,246,.25)', background: 'rgba(139,92,246,.08)', color: '#8b5cf6' }}>
-            <Percent size={13} /> Descuentos
           </button>
           <div style={{ position: 'relative' }}>
             <button onClick={handleSyncSheets} disabled={syncingSheets}
@@ -349,6 +359,11 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
         </div>
       </div>
 
+      {activeSection === 'descuentos' ? (
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem' }}>
+          <DescuentosModal inline userId={userId} onClose={() => setActiveSection('tickets')} responsables={RESPONSABLES} />
+        </div>
+      ) : (
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem', display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1.25rem', alignItems: 'start' }}>
 
         {/* ── Columna izquierda ── */}
@@ -619,6 +634,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
           )}
         </div>
       </div>
+      )}
 
       {showMetrics && <MetricsModal tickets={allTickets} onClose={() => setShowMetrics(false)} />}
       {showDescuentos && <DescuentosModal userId={userId} onClose={() => setShowDescuentos(false)} responsables={RESPONSABLES} />}
@@ -904,8 +920,8 @@ const emptyDesc = (): DescForm => ({
   descripcion: '', descuento: '', responsable: '',
 });
 
-function DescuentosModal({ userId, onClose, responsables }: {
-  userId?: string; onClose: () => void; responsables: string[];
+function DescuentosModal({ userId, onClose, responsables, inline }: {
+  userId?: string; onClose: () => void; responsables: string[]; inline?: boolean;
 }) {
   const [rows, setRows] = useState<ATCDescuento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1043,9 +1059,8 @@ function DescuentosModal({ userId, onClose, responsables }: {
   const thStyle: React.CSSProperties = { padding: '0.5rem 0.7rem', textAlign: 'left', fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase' as const, letterSpacing: '0.05em', whiteSpace: 'nowrap' as const, background: 'rgba(139,92,246,.05)' };
   const inp: React.CSSProperties = { width: '100%', padding: '0.38rem 0.55rem', border: '1px solid rgba(139,92,246,.3)', borderRadius: '6px', fontSize: '0.78rem', color: '#1a2e38', background: '#fff', outline: 'none', boxSizing: 'border-box' };
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '1050px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+  const panelContent = (
+    <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: inline ? '100%' : '1050px', maxHeight: inline ? 'none' : '92vh', display: 'flex', flexDirection: 'column', boxShadow: inline ? '0 2px 16px rgba(139,92,246,.1)' : '0 24px 80px rgba(0,0,0,0.2)', border: inline ? '1px solid rgba(139,92,246,.2)' : 'none' }}>
 
         {/* Sticky header */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,92,246,.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -1315,7 +1330,14 @@ function DescuentosModal({ userId, onClose, responsables }: {
             <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#8b5cf6' }}>S/ {totalDesc.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
           </div>
         )}
-      </div>
+    </div>
+  );
+
+  if (inline) return panelContent;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      {panelContent}
     </div>
   );
 }
