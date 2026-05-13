@@ -23,18 +23,37 @@ interface ATCPanelProps {
 }
 
 const MOTIVOS = [
-  'Informacion mal registrada', 'NTV duplicada', 'NTV anulada', 'Devolucion',
-  'Envio erroneo', 'Cambio voluntario', 'Despacho', 'Sin NTV', 'Mal resumen',
-  'Clave', 'Voucher', 'Informacion provincia', 'Informacion lima',
+  'Clave', 'Despacho', 'Fallo de prendas', 'Cambios voluntarios', 'Devolucion',
+  'Fidelizacion', 'NTV mal registrada', 'Sin etiqueta', 'Transito',
+  'Informacion provincia', 'Mal resumen', 'Informacion agencia externa',
+  'Sin NV', 'Shalom', 'Envio erroneo', 'Respuesta', 'Sin stock',
+  'Sede', 'Informacion lima', 'Error de vendedor',
 ];
 
 const EMPRESAS = ['OVERSHARK', 'BRAVOS', 'OVERGIRLS'];
 
-const RESPONSABLES = ['ZAZU', 'SUBIDOR', 'VENDEDOR', 'CLIENTE', 'SHALOM', 'TALLER'];
+const RESPONSABLES = ['VENDEDOR', 'SUBIDOR', 'ZAZU', 'TALLER', 'CLIENTE', 'SHALOM', 'SITEMA', 'DESPACHO'];
 
 const ESTADOS_PEDIDO = ['ENTREGADO', 'PENDIENTE', 'NO ENTREGADO', 'DEVOLUCIÓN', 'RETORNADO', 'EN RETORNO'];
 
-const TIPOS_TICKET = ['Reclamo', 'Consulta', 'Devolución', 'Cambio', 'Seguimiento', 'Cobranza', 'Error de envío', 'Otro'];
+const TIPOS_TICKET = ['Información', 'Problema', 'Reclamo', 'Consulta', 'Devolución', 'Cambio', 'Seguimiento', 'Cobranza', 'Error de envío', 'Otro'];
+
+const LIMA_DISTRITOS = [
+  'Ate', 'Barranco', 'Breña', 'Callao', 'Carabayllo', 'Chorrillos', 'Comas',
+  'El Agustino', 'Independencia', 'Jesús María', 'La Molina', 'La Victoria',
+  'Lince', 'Los Olivos', 'Lurigancho-Chosica', 'Lurín', 'Magdalena del Mar',
+  'Miraflores', 'Pachacámac', 'Puente Piedra', 'Pueblo Libre', 'Rímac',
+  'San Borja', 'San Isidro', 'San Juan de Lurigancho', 'San Juan de Miraflores',
+  'San Martín de Porres', 'San Miguel', 'Santa Anita', 'Santiago de Surco',
+  'Surquillo', 'Villa El Salvador', 'Villa María del Triunfo',
+];
+
+const PROVINCIAS_DEPTO = [
+  'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca',
+  'Cusco', 'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad',
+  'Lambayeque', 'Lima Región', 'Loreto', 'Madre de Dios', 'Moquegua',
+  'Pasco', 'Piura', 'Puno', 'San Martín', 'Tacna', 'Tumbes', 'Ucayali',
+];
 const PRIORIDADES: ATCTicket['prioridad'][] = ['baja', 'normal', 'alta', 'urgente'];
 const ESTADOS: ATCTicket['estado'][] = ['abierto', 'en_proceso', 'resuelto', 'cerrado'];
 
@@ -80,9 +99,9 @@ type TicketFormState = {
   venta_id: string;
   notas: string;
   ntv: string;
-  fecha_emision: string;
-  fecha_venta: string;
+  fecha_atencion: string;
   region: string;
+  region_scope: 'LIMA' | 'PROVINCIA' | '';
   responsable: string;
   solicitud: string;
   solucion: string;
@@ -94,7 +113,7 @@ type TicketFormState = {
 
 const emptyForm = (): TicketFormState => ({
   asunto: MOTIVOS[0], descripcion: '', prioridad: 'normal', venta_id: '', notas: '',
-  ntv: '', fecha_emision: '', fecha_venta: '', region: '', responsable: '',
+  ntv: '', fecha_atencion: new Date().toISOString().slice(0, 10), region: '', region_scope: '', responsable: '',
   solicitud: '', solucion: '', estado_pedido: '', empresa: '', tipo: '', monto: '',
 });
 
@@ -200,8 +219,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
         venta_id: str(ticketForm.venta_id),
         notas: str(ticketForm.notas),
         ntv: str(ticketForm.ntv),
-        fecha_emision: str(ticketForm.fecha_emision),
-        fecha_venta: str(ticketForm.fecha_venta),
+        fecha_atencion: str(ticketForm.fecha_atencion),
         region: str(ticketForm.region),
         responsable: str(ticketForm.responsable),
         solicitud: str(ticketForm.solicitud),
@@ -663,22 +681,46 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                 )}
               </div>
 
-              {/* Fila: F.Emision + F.Venta */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                {field('F. Emisión',
-                  <input type="date" value={ticketForm.fecha_emision} onChange={e => setTicketForm(p => ({ ...p, fecha_emision: e.target.value }))} style={inputStyle} />
-                )}
-                {field('F. Venta',
-                  <input type="date" value={ticketForm.fecha_venta} onChange={e => setTicketForm(p => ({ ...p, fecha_venta: e.target.value }))} style={inputStyle} />
-                )}
-              </div>
+              {/* Fecha de atención */}
+              {field('Fecha de atención',
+                <input type="date" value={ticketForm.fecha_atencion}
+                  onChange={e => setTicketForm(p => ({ ...p, fecha_atencion: e.target.value }))}
+                  style={inputStyle} />
+              )}
 
               {/* Fila: Region + Responsable */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                {field('Región',
-                  <input value={ticketForm.region} onChange={e => setTicketForm(p => ({ ...p, region: e.target.value }))}
-                    placeholder="Lima, Arequipa..." style={inputStyle} />
-                )}
+                <div>
+                  <label style={labelStyle}>Región</label>
+                  <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.35rem' }}>
+                    {(['LIMA', 'PROVINCIA'] as const).map(scope => (
+                      <button key={scope} type="button"
+                        onClick={() => setTicketForm(p => ({ ...p, region_scope: p.region_scope === scope ? '' : scope, region: '' }))}
+                        style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', border: `1.5px solid ${ticketForm.region_scope === scope ? S.accent : 'rgba(0,0,0,.1)'}`, background: ticketForm.region_scope === scope ? S.accentLight : 'transparent', color: ticketForm.region_scope === scope ? S.accent : '#94a3b8' }}>
+                        {scope}
+                      </button>
+                    ))}
+                  </div>
+                  {ticketForm.region_scope === 'LIMA' && (
+                    <select value={ticketForm.region}
+                      onChange={e => setTicketForm(p => ({ ...p, region: e.target.value }))}
+                      style={inputStyle}>
+                      <option value="">— Distrito —</option>
+                      {LIMA_DISTRITOS.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  )}
+                  {ticketForm.region_scope === 'PROVINCIA' && (
+                    <select value={ticketForm.region}
+                      onChange={e => setTicketForm(p => ({ ...p, region: e.target.value }))}
+                      style={inputStyle}>
+                      <option value="">— Departamento —</option>
+                      {PROVINCIAS_DEPTO.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  )}
+                  {!ticketForm.region_scope && (
+                    <div style={{ ...inputStyle, color: '#94a3b8', lineHeight: '1.6' }}>Selecciona Lima o Provincia</div>
+                  )}
+                </div>
                 {field('Responsable',
                   <select value={ticketForm.responsable} onChange={e => setTicketForm(p => ({ ...p, responsable: e.target.value }))} style={inputStyle}>
                     <option value="">— Seleccionar —</option>

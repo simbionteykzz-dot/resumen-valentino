@@ -346,6 +346,7 @@ export interface ATCTicket {
   ntv?: string;
   fecha_emision?: string;
   fecha_venta?: string;
+  fecha_atencion?: string;
   region?: string;
   responsable?: string;
   solicitud?: string;
