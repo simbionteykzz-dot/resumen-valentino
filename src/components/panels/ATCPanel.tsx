@@ -108,13 +108,12 @@ type TicketFormState = {
   estado_pedido: string;
   empresa: string;
   tipo: string;
-  monto: string;
 };
 
 const emptyForm = (): TicketFormState => ({
   asunto: MOTIVOS[0], descripcion: '', prioridad: 'normal', venta_id: '', notas: '',
   ntv: '', fecha_atencion: new Date().toISOString().slice(0, 10), region: '', region_scope: '', responsable: '',
-  solicitud: '', solucion: '', estado_pedido: '', empresa: '', tipo: '', monto: '',
+  solicitud: '', solucion: '', estado_pedido: '', empresa: '', tipo: '',
 });
 
 export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut }: ATCPanelProps) {
@@ -227,7 +226,6 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
         estado_pedido: str(ticketForm.estado_pedido),
         empresa: str(ticketForm.empresa),
         tipo: str(ticketForm.tipo),
-        monto: ticketForm.monto.trim() ? Number(ticketForm.monto) : undefined,
       }, userId);
       if (ticket) {
         setAllTickets(prev => [ticket, ...prev]);
@@ -653,20 +651,13 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                 </div>
               </div>
 
-              {/* Fila: Tipo + Monto */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                {field('Tipo de caso',
-                  <select value={ticketForm.tipo} onChange={e => setTicketForm(p => ({ ...p, tipo: e.target.value }))} style={inputStyle}>
-                    <option value="">— Seleccionar —</option>
-                    {TIPOS_TICKET.map(t => <option key={t}>{t}</option>)}
-                  </select>
-                )}
-                {field('Monto S/',
-                  <input type="number" min="0" step="0.01" value={ticketForm.monto}
-                    onChange={e => setTicketForm(p => ({ ...p, monto: e.target.value }))}
-                    placeholder="0.00" style={inputStyle} />
-                )}
-              </div>
+              {/* Tipo de caso */}
+              {field('Tipo de caso',
+                <select value={ticketForm.tipo} onChange={e => setTicketForm(p => ({ ...p, tipo: e.target.value }))} style={inputStyle}>
+                  <option value="">— Seleccionar —</option>
+                  {TIPOS_TICKET.map(t => <option key={t}>{t}</option>)}
+                </select>
+              )}
 
               {/* Fila: NTV + Motivo */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
