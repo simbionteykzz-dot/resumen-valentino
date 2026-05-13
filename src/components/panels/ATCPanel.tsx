@@ -914,6 +914,7 @@ function DescuentosModal({ userId, onClose, responsables }: {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<DescForm>(emptyDesc());
   const [filterResp, setFilterResp] = useState('');
   const [filterNom, setFilterNom] = useState('');
@@ -1204,57 +1205,106 @@ function DescuentosModal({ userId, onClose, responsables }: {
           </div>
         )}
 
-        {/* Tabla */}
+        {/* Lista */}
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {loading ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem' }}>Cargando...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: '2.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem' }}>Sin registros de descuentos.</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-                <tr style={{ borderBottom: '2px solid rgba(139,92,246,.15)' }}>
-                  {['Fecha', 'Nota de Venta', 'DNI', 'Teléfono', 'Nombre del Cliente', 'Descripción', 'Descuento S/', 'Responsable', ''].map(h => (
-                    <th key={h} style={thStyle}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((r, i) => editingId === r.id ? (
-                  <tr key={r.id} style={{ background: 'rgba(139,92,246,.06)', borderBottom: '1px solid rgba(139,92,246,.12)' }}>
-                    <td style={tdStyle}><input type="date" value={editForm.fecha} onChange={e => setEditForm(p => ({ ...p, fecha: e.target.value }))} style={{ ...inp, width: '120px' }} /></td>
-                    <td style={tdStyle}><input value={editForm.nota_venta} onChange={e => setEditForm(p => ({ ...p, nota_venta: e.target.value }))} style={{ ...inp, width: '110px' }} /></td>
-                    <td style={tdStyle}><input value={editForm.dni} onChange={e => setEditForm(p => ({ ...p, dni: e.target.value }))} style={{ ...inp, width: '90px' }} /></td>
-                    <td style={tdStyle}><input value={editForm.telefono} onChange={e => setEditForm(p => ({ ...p, telefono: e.target.value }))} style={{ ...inp, width: '105px' }} /></td>
-                    <td style={tdStyle}><input value={editForm.nombre_cliente} onChange={e => setEditForm(p => ({ ...p, nombre_cliente: e.target.value }))} style={inp} /></td>
-                    <td style={tdStyle}><input value={editForm.descripcion} onChange={e => setEditForm(p => ({ ...p, descripcion: e.target.value }))} style={inp} /></td>
-                    <td style={tdStyle}><input type="number" value={editForm.descuento} onChange={e => setEditForm(p => ({ ...p, descuento: e.target.value }))} style={{ ...inp, width: '90px' }} /></td>
-                    <td style={tdStyle}><select value={editForm.responsable} onChange={e => setEditForm(p => ({ ...p, responsable: e.target.value }))} style={{ ...inp, width: '110px' }}>
-                      <option value="">—</option>{responsables.map(res => <option key={res}>{res}</option>)}
-                    </select></td>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                      <button onClick={() => saveEdit(r.id!)} style={{ padding: '0.25rem 0.55rem', borderRadius: '5px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', marginRight: '0.3rem' }}><Check size={11} /></button>
-                      <button onClick={() => setEditingId(null)} style={{ padding: '0.25rem 0.55rem', borderRadius: '5px', border: '1px solid #ccc', background: 'transparent', color: '#888', cursor: 'pointer' }}><X size={11} /></button>
-                    </td>
-                  </tr>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {filtered.map((r, i) => {
+                const isExpanded = expandedId === r.id;
+                return editingId === r.id ? (
+                  <div key={r.id} style={{ borderBottom: '1px solid rgba(139,92,246,.12)', background: 'rgba(139,92,246,.04)', padding: '0.65rem 1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '120px 110px 90px 105px 1fr 1fr 90px 110px auto', gap: '0.4rem', alignItems: 'center' }}>
+                      <input type="date" value={editForm.fecha} onChange={e => setEditForm(p => ({ ...p, fecha: e.target.value }))} style={inp} />
+                      <input value={editForm.nota_venta} onChange={e => setEditForm(p => ({ ...p, nota_venta: e.target.value }))} placeholder="NTV" style={inp} />
+                      <input value={editForm.dni} onChange={e => setEditForm(p => ({ ...p, dni: e.target.value }))} placeholder="DNI" style={inp} />
+                      <input value={editForm.telefono} onChange={e => setEditForm(p => ({ ...p, telefono: e.target.value }))} placeholder="Teléfono" style={inp} />
+                      <input value={editForm.nombre_cliente} onChange={e => setEditForm(p => ({ ...p, nombre_cliente: e.target.value }))} placeholder="Nombre cliente" style={inp} />
+                      <input value={editForm.descripcion} onChange={e => setEditForm(p => ({ ...p, descripcion: e.target.value }))} placeholder="Descripción" style={inp} />
+                      <input type="number" value={editForm.descuento} onChange={e => setEditForm(p => ({ ...p, descuento: e.target.value }))} placeholder="0.00" style={inp} />
+                      <select value={editForm.responsable} onChange={e => setEditForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
+                        <option value="">—</option>{responsables.map(res => <option key={res}>{res}</option>)}
+                      </select>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button onClick={() => saveEdit(r.id!)} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer' }}><Check size={11} /></button>
+                        <button onClick={() => setEditingId(null)} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: '1px solid #ccc', background: 'transparent', color: '#888', cursor: 'pointer' }}><X size={11} /></button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <tr key={r.id} style={{ borderBottom: '1px solid rgba(139,92,246,.08)', background: i % 2 === 0 ? 'transparent' : 'rgba(139,92,246,.02)' }}>
-                    <td style={{ ...tdStyle, fontWeight: 700, whiteSpace: 'nowrap' }}>{r.fecha}</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.72rem', color: '#8b5cf6', fontWeight: 800 }}>{r.nota_venta || '—'}</td>
-                    <td style={{ ...tdStyle, color: '#64748b' }}>{r.dni || '—'}</td>
-                    <td style={{ ...tdStyle, color: '#64748b' }}>{r.telefono || '—'}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nombre_cliente}</td>
-                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3d6070' }}>{r.descripcion}</td>
-                    <td style={{ ...tdStyle, fontWeight: 900, color: '#8b5cf6', whiteSpace: 'nowrap' }}>S/ {Number(r.descuento).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</td>
-                    <td style={tdStyle}>{r.responsable ? <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(139,92,246,.1)', color: '#8b5cf6', borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{r.responsable}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                      <button onClick={() => startEdit(r)} style={{ padding: '0.25rem 0.5rem', borderRadius: '5px', border: '1px solid rgba(139,92,246,.3)', background: 'transparent', color: '#8b5cf6', cursor: 'pointer', marginRight: '0.3rem' }}><Pencil size={11} /></button>
-                      <button onClick={() => remove(r.id!)} style={{ padding: '0.25rem 0.5rem', borderRadius: '5px', border: '1px solid rgba(239,68,68,.25)', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={11} /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  <div key={r.id} style={{ borderBottom: '1px solid rgba(139,92,246,.08)', background: isExpanded ? 'rgba(139,92,246,.035)' : i % 2 === 0 ? 'transparent' : 'rgba(139,92,246,.015)' }}>
+                    {/* Fila principal */}
+                    <div
+                      onClick={() => setExpandedId(prev => prev === r.id ? null : r.id!)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1rem', cursor: 'pointer' }}
+                    >
+                      <div style={{ width: '28px', height: '28px', borderRadius: '7px', background: 'rgba(139,92,246,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 900, color: '#8b5cf6', flexShrink: 0 }}>
+                        {r.nombre_cliente.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1a2e38', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nombre_cliente}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.descripcion}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                        {r.nota_venta && <span style={{ fontSize: '0.65rem', fontWeight: 800, fontFamily: 'monospace', background: 'rgba(139,92,246,.1)', color: '#8b5cf6', borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{r.nota_venta}</span>}
+                        {r.responsable && <span style={{ fontSize: '0.62rem', fontWeight: 800, background: 'rgba(100,116,139,.1)', color: '#475569', borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{r.responsable}</span>}
+                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{r.fecha}</span>
+                        <span style={{ fontSize: '1rem', fontWeight: 900, color: '#8b5cf6', minWidth: '70px', textAlign: 'right' }}>S/ {Number(r.descuento).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
+                        <span style={{ color: isExpanded ? '#8b5cf6' : '#94a3b8', fontSize: '0.7rem', transition: 'transform 0.2s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>▶</span>
+                      </div>
+                    </div>
+
+                    {/* Panel expandido */}
+                    {isExpanded && (
+                      <div style={{ padding: '0 1rem 0.85rem 1rem', borderTop: '1px solid rgba(139,92,246,.1)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.65rem', marginBottom: '0.65rem', paddingTop: '0.65rem' }}>
+                          {[
+                            { label: 'Fecha', val: r.fecha },
+                            { label: 'Nota de Venta', val: r.nota_venta || '—' },
+                            { label: 'DNI', val: r.dni || '—' },
+                            { label: 'Teléfono', val: r.telefono || '—' },
+                          ].map(f => (
+                            <div key={f.label}>
+                              <div style={{ fontSize: '0.58rem', fontWeight: 800, color: '#6b8fa3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>{f.label}</div>
+                              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1a2e38' }}>{f.val}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ marginBottom: '0.65rem' }}>
+                          <div style={{ fontSize: '0.58rem', fontWeight: 800, color: '#6b8fa3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.3rem' }}>Descripción</div>
+                          <div style={{ fontSize: '0.8rem', color: '#1a2e38', background: 'rgba(139,92,246,.05)', border: '1px solid rgba(139,92,246,.15)', borderRadius: '7px', padding: '0.5rem 0.75rem', lineHeight: 1.5 }}>{r.descripcion}</div>
+                        </div>
+                        {r.responsable && (
+                          <div style={{ marginBottom: '0.65rem' }}>
+                            <div style={{ fontSize: '0.58rem', fontWeight: 800, color: '#6b8fa3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>Responsable</div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 800, background: 'rgba(139,92,246,.1)', color: '#8b5cf6', borderRadius: '5px', padding: '0.15rem 0.6rem' }}>{r.responsable}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                          <button onClick={() => printDescuentoPDF(r)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.75rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(139,92,246,.3)', background: 'rgba(139,92,246,.07)', color: '#8b5cf6' }}>
+                            <Printer size={12} /> Exportar PDF
+                          </button>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button onClick={e => { e.stopPropagation(); startEdit(r); setExpandedId(null); }}
+                              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(139,92,246,.3)', background: 'transparent', color: '#8b5cf6' }}>
+                              <Pencil size={11} />
+                            </button>
+                            <button onClick={e => { e.stopPropagation(); if (window.confirm('¿Eliminar este descuento?')) remove(r.id!); }}
+                              style={{ padding: '0.3rem 0.65rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(239,68,68,.25)', background: 'rgba(239,68,68,.07)', color: '#ef4444' }}>
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
@@ -1442,6 +1492,106 @@ const EMPRESA_ACCENT: Record<string, string> = {
   BRAVOS: '#EB7347',
   OVERGIRLS: '#d946ef',
 };
+
+function printDescuentoPDF(r: ATCDescuento) {
+  const now = new Date();
+  const generatedAt = now.toLocaleString('es-PE', { dateStyle: 'long', timeStyle: 'short' });
+  const row = (label: string, value?: string) =>
+    value ? `<tr><td class="lbl">${label}</td><td class="val">${value}</td></tr>` : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Constancia Descuento – ${(r.id ?? '').slice(-8).toUpperCase()}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a2e38; background: #fff; padding: 32px 40px; }
+  .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #8b5cf6; padding-bottom: 14px; margin-bottom: 20px; }
+  .brand { font-size: 18px; font-weight: 900; color: #1a2e38; letter-spacing: -0.03em; }
+  .brand span { color: #8b5cf6; }
+  .doc-title { text-align: right; }
+  .doc-title h2 { font-size: 15px; font-weight: 800; color: #8b5cf6; }
+  .doc-title p { font-size: 11px; color: #6b8fa3; margin-top: 2px; }
+  .ref-id { display: inline-block; margin-bottom: 16px; font-size: 11px; font-weight: 700; background: #8b5cf622; color: #8b5cf6; border: 1px solid #8b5cf644; border-radius: 6px; padding: 4px 12px; letter-spacing: 0.06em; }
+  .section { margin-bottom: 18px; }
+  .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #6b8fa3; border-bottom: 1px solid #ede9fe; padding-bottom: 5px; margin-bottom: 10px; }
+  table.fields { width: 100%; border-collapse: collapse; }
+  table.fields .lbl { width: 130px; font-size: 11px; font-weight: 700; color: #6b8fa3; padding: 5px 0; vertical-align: top; }
+  table.fields .val { font-size: 12px; color: #1a2e38; padding: 5px 0 5px 8px; vertical-align: top; }
+  .text-block { font-size: 12px; color: #1a2e38; line-height: 1.6; background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 7px; padding: 10px 12px; min-height: 36px; }
+  .amount { font-size: 22px; font-weight: 900; color: #8b5cf6; }
+  .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #ede9fe; display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer p { font-size: 10px; color: #94a3b8; }
+  .seal { text-align: right; font-size: 10px; color: #94a3b8; }
+  .seal strong { display: block; font-size: 11px; color: #6b8fa3; }
+  @media print {
+    body { padding: 20px 28px; }
+    @page { size: A4; margin: 18mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">LIVEX <span>ATC</span></div>
+    <div style="font-size:10px;color:#6b8fa3;margin-top:2px">Atención al Cliente</div>
+  </div>
+  <div class="doc-title">
+    <h2>Constancia de Descuento</h2>
+    <p>Documento generado el ${generatedAt}</p>
+  </div>
+</div>
+
+<div class="ref-id">DESC # ${(r.id ?? '').slice(-8).toUpperCase()}</div>
+
+<div class="section">
+  <div class="section-title">Datos del cliente</div>
+  <table class="fields">
+    ${row('Nombre', r.nombre_cliente)}
+    ${row('Teléfono', r.telefono)}
+    ${row('DNI', r.dni)}
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Detalle del descuento</div>
+  <table class="fields">
+    ${row('Fecha', r.fecha)}
+    ${row('Nota de Venta', r.nota_venta)}
+    ${row('Responsable', r.responsable)}
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Descripción</div>
+  <div class="text-block">${r.descripcion}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Monto descontado</div>
+  <div class="amount">S/ ${Number(r.descuento).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</div>
+</div>
+
+<div class="footer">
+  <div>
+    <p>Este documento es una constancia oficial del descuento aplicado por el equipo Livex ATC.</p>
+    <p style="margin-top:3px">Para consultas adicionales comunícate con nuestro equipo de atención.</p>
+  </div>
+  <div class="seal">
+    <strong>LIVEX Agency</strong>
+    Atención al Cliente
+  </div>
+</div>
+
+<script>window.onload = () => { window.print(); }</script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=800,height=900');
+  if (win) { win.document.write(html); win.document.close(); }
+}
 
 function printTicketPDF(ticket: ATCTicket) {
   const now = new Date();
