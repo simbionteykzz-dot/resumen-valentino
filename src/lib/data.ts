@@ -15,7 +15,7 @@ export const COLORES_15_POLO = "Azul, Beige, Botella, Camote, Cemento, Denim, Ma
 export const COLORES_CUELLO_CHINO = "Azul, Beige, Botella, Cemento, Negro, Topo, P. Rosa, Perla, Vino";
 export const COLORES_CUELLO_CHINO_WAFFLE = "Azul, Botella, Cemento, Negro, Pacay, P. Rosa, Perla, Plomo, Vino";
 export const COLORES_JERSEY_ML = "Azul, Beige, Cemento, Denim, Melange O., Negro, Topo, Pacay, P. Rosa, Perla, Plomo, Vino";
-export const COLORES_MEDIAS = "Plomo, Negro, Melange";
+export const COLORES_MEDIAS = "Melange, Plomo, Perla";
 
 export const POL_VARIANTES_OVERSHARK: Record<string, { tallas: string[], colores: string }> = {
   "BABY TY": { tallas: TALLAS_SML, colores: COLORES_BABY_TY },
@@ -106,7 +106,7 @@ export const PROMOS_DATA: Record<string, {name: string, comboData: string, price
   "notch_wafle_8_198":  { name: "Cuello Notch Wafle 8×198",  comboData: "CUELLO NOTCH WAFLE 8 X 198",  price: 198, list: [{n:"CUELLO NOTCH WAFLE", q:8}] },
   "notch_wafle_10_248": { name: "Cuello Notch Wafle 10×248", comboData: "CUELLO NOTCH WAFLE 10 X 248", price: 248, list: [{n:"CUELLO NOTCH WAFLE", q:10}] },
   // ── Medias ───────────────────────────────────────────────────────────────
-  "medias_1": { name: "Medias (unidad)", comboData: "MEDIAS", price: 17.50, list: [{n:"MEDIAS", q:1}] },
+  "medias_3": { name: "Medias 3×17.50", comboData: "MEDIAS 3 X 17.50", price: 17.50, list: [{n:"MEDIAS", q:3}] },
 };
 
 export const MIX_PROMOS_DATA: Record<string, {name: string, comboData: string, price: number, list: {n: string, q: number}[]}> = {
@@ -140,7 +140,7 @@ export const PROMOS_GROUPS: { label: string; keys: string[] }[] = [
   { label: "Baby Ty Manga Esc.", keys: ["baby_ty_mesc_3_50","baby_ty_mesc_7_99","baby_ty_mesc_live"] },
   { label: "Notch Pique",        keys: ["notch_pique_3_75","notch_pique_5_99","notch_pique_10_198","notch_pique_12_230"] },
   { label: "Notch Wafle",        keys: ["notch_wafle_2_55","notch_wafle_4_99","notch_wafle_8_198","notch_wafle_10_248"] },
-  { label: "Medias",             keys: ["medias_1"] },
+  { label: "Medias",             keys: ["medias_3"] },
 ];
 
 // ── BRAVOS ──────────────────────────────────────────────────────────────────

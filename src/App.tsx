@@ -4,16 +4,19 @@ import { useAuth } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import AdminDashboard from './components/panels/AdminDashboard';
 import VendorApp from './pages/VendorApp';
+import ATCPanel from './components/panels/ATCPanel';
 import { useToast } from './hooks/useToast';
 import { getProfile, getAllProfiles } from './lib/supabase';
 import type { Profile } from './types';
+
+type AppMode = 'admin' | 'vendedor' | 'atc';
 
 export default function App() {
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [adminMode, setAdminMode] = useState<'admin' | 'vendedor'>('admin');
+  const [appMode, setAppMode] = useState<AppMode>('admin');
 
   useEffect(() => {
     if (user?.id) getProfile(user.id).then(setProfile);
@@ -23,8 +26,8 @@ export default function App() {
     if (user) getAllProfiles().then(setProfiles);
   }, [user?.id]);
 
-  const emailPrefix = user?.email?.split('@')[0] || 'VENDEDOR';
-  const vendedorName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
+  const emailPrefix = user?.email?.split('@')[0] || 'USUARIO';
+  const userName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
 
   if (loading) {
     return (
@@ -38,14 +41,21 @@ export default function App() {
 
   if (!user) return <LoginPage />;
 
-  if (profile?.role === 'admin' && adminMode === 'admin') {
+  // ATC user → siempre ve ATCPanel
+  if (profile?.role === 'atc' && appMode !== 'atc') {
+    setAppMode('atc');
+  }
+
+  // Admin en modo ATC
+  if (appMode === 'atc') {
     return (
       <>
-        <AdminDashboard
-          adminName={vendedorName}
-          profiles={[]}
+        <ATCPanel
+          userId={user.id}
+          userName={userName}
+          isAdmin={profile?.role === 'admin'}
+          onBack={profile?.role === 'admin' ? () => setAppMode('admin') : undefined}
           onSignOut={signOut}
-          onSwitchToVendedor={() => setAdminMode('vendedor')}
         />
         {toast && (
           <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
@@ -56,11 +66,32 @@ export default function App() {
     );
   }
 
+  // Admin en modo admin
+  if (profile?.role === 'admin' && appMode === 'admin') {
+    return (
+      <>
+        <AdminDashboard
+          adminName={userName}
+          profiles={[]}
+          onSignOut={signOut}
+          onSwitchToVendedor={() => setAppMode('vendedor')}
+          onSwitchToATC={() => setAppMode('atc')}
+        />
+        {toast && (
+          <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
+            {toast.type === 'ok' ? '✓' : '⚠'} {toast.msg}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Vendedor (incluye admin en modo vendedor)
   return (
     <VendorApp
       profile={profile}
       profiles={profiles}
-      onSwitchToAdmin={() => setAdminMode('admin')}
+      onSwitchToAdmin={profile?.role === 'admin' ? () => setAppMode('admin') : undefined}
     />
   );
 }

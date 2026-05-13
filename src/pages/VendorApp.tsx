@@ -3,6 +3,7 @@ import { Trash2, Store, Bike, Package, BarChart3, Wrench, Radio, Megaphone, X, H
 import { useAuth } from '../auth/AuthContext';
 import { useSales } from '../hooks/useSales';
 import { useToast } from '../hooks/useToast';
+import { getVendorGoals } from '../lib/supabase';
 import AppHeader from '../components/layout/AppHeader';
 import ClientePanel from '../components/panels/ClientePanel';
 import CuentaPanel from '../components/panels/CuentaPanel';
@@ -51,7 +52,7 @@ function getInitialPubCode(): string {
 interface VendorAppProps {
   profile: Profile | null;
   profiles: Profile[];
-  onSwitchToAdmin: () => void;
+  onSwitchToAdmin?: () => void;
 }
 
 export default function VendorApp({ profile, profiles, onSwitchToAdmin }: VendorAppProps) {
@@ -82,9 +83,15 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
     recomendacion: false, descuento: false, fraseVenta: true,
     garantia: false, referido: false,
   });
-  const [metaDiaria, setMetaDiaria] = useState<number>(
-    () => parseInt(localStorage.getItem('overshark_meta') || '20'),
-  );
+  const [metaVentas, setMetaVentas] = useState<number>(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getVendorGoals().then(goals => {
+      const mine = goals.find(g => g.vendor_id === user.id);
+      setMetaVentas(mine?.meta_ventas ?? 0);
+    });
+  }, [user?.id]);
 
   const { sales, deletedSales, selectedDate, setSelectedDate, loadingSync, syncError, addSale, deleteSale, restoreSale } =
     useSales(user?.id, showToast);
@@ -198,8 +205,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         <AppHeader
           salesCount={sales.length}
           totalSoles={totalSoles}
-          metaDiaria={metaDiaria}
-          onMetaChange={v => { setMetaDiaria(v); localStorage.setItem('overshark_meta', String(v)); }}
+          metaDiaria={metaVentas}
           userName={vendedorName}
           onSignOut={signOut}
           brand={brand}

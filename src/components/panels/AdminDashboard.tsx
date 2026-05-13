@@ -2,6 +2,7 @@ import { useRef, useState, Fragment } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp, Archive, History, ArrowRightLeft } from 'lucide-react';
 import PlanillasPanel from './PlanillasPanel';
+import MetasPanel from './MetasPanel';
 import type { Profile, AdminSale, EditForm } from '../../types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -12,6 +13,7 @@ interface AdminDashboardProps {
   profiles: Profile[];
   onSignOut: () => void;
   onSwitchToVendedor: () => void;
+  onSwitchToATC?: () => void;
 }
 
 
@@ -26,7 +28,7 @@ function saleToForm(s: AdminSale): EditForm {
   };
 }
 
-export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedor }: AdminDashboardProps) {
+export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedor, onSwitchToATC }: AdminDashboardProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
@@ -48,6 +50,8 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   const [hiddenCols, setHiddenCols] = useState<Set<ColName>>(new Set(['HORA', 'DNI', 'SEPARO', 'COD. PROD', 'COD. PUBLICIDAD']));
   const [showColPicker, setShowColPicker] = useState(false);
   const toggleCol = (col: ColName) => setHiddenCols(prev => { const n = new Set(prev); n.has(col) ? n.delete(col) : n.add(col); return n; });
+  const [pubCollapsed, setPubCollapsed] = useState(true);
+  const [cpCollapsed, setCpCollapsed] = useState(true);
   const visible = (col: ColName) => !hiddenCols.has(col);
 
   const {
@@ -75,7 +79,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     transferDates,
   } = useAdmin();
 
-  const [activeTab, setActiveTab] = useState<'ventas' | 'planillas'>('ventas');
+  const [activeTab, setActiveTab] = useState<'ventas' | 'planillas' | 'metas'>('ventas');
 
   // ── Traspaso de fechas ──
   const [showTransfer, setShowTransfer] = useState(false);
@@ -615,6 +619,10 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   };
 
   const maxVendorRevenue = vendorStats.length > 0 ? vendorStats[0].totalRevenue : 1;
+  const [vendorChartMode, setVendorChartMode] = useState<'ranking' | 'chart'>('ranking');
+
+  const VENDOR_COLORS = ['#45834D','#EB7347','#38c8f5','#a78bfa','#f59e0b','#ec4899','#06b6d4','#84cc16'];
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#EAF5EE 0%,#DDEEE3 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
@@ -652,6 +660,11 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           >
             <History size={13} /> {showArchived ? 'Ver activos' : 'Historial'}
           </button>
+          {onSwitchToATC && (
+            <button onClick={onSwitchToATC} style={{ ...btn('ghost'), border: '1px solid rgba(26,127,189,0.25)', color: '#1a7fbd', background: 'rgba(26,127,189,0.08)' }}>
+              🎧 ATC
+            </button>
+          )}
           <button onClick={onSwitchToVendedor} style={{ ...btn('info'), border: '1px solid rgba(56,200,245,0.25)' }}>
             📋 Vista Vendedor
           </button>
@@ -668,6 +681,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           {([
             { id: 'ventas', label: '📊 Ventas', count: null },
             { id: 'planillas', label: '📋 Planillas', count: null },
+            { id: 'metas', label: '🎯 Metas', count: null },
           ] as const).map(tab => (
             <button
               key={tab.id}
@@ -686,7 +700,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
 
         {/* ── Contenido por tab ── */}
-        {activeTab === 'planillas' ? (
+        {activeTab === 'metas' ? (
+          <MetasPanel
+            profiles={profiles}
+            vendorStats={vendorStats}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+          />
+        ) : activeTab === 'planillas' ? (
           <PlanillasPanel
             filteredSales={filteredSales}
             dateFrom={dateFrom}
@@ -847,10 +868,13 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               const maxRev = pubStats[0]?.revenue ?? 1;
               const PUB_COLORS = ['#6366f1','#ec4899','#f59e0b','#14b8a6','#8b5cf6','#ef4444'];
               return (
-                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', overflow: 'hidden' }}>
                   {/* header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.9rem' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div
+                    onClick={() => setPubCollapsed(v => !v)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.85rem 1.1rem', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <BarChart3 size={13} color="#6366f1" />
                     </div>
                     <span style={{ fontSize: '0.67rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
@@ -859,7 +883,9 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                     <span style={{ marginLeft: 'auto', fontSize: '0.67rem', fontWeight: 800, color: '#6366f1', background: 'rgba(99,102,241,0.1)', borderRadius: '5px', padding: '0.1rem 0.45rem' }}>
                       {pubStats.length} códigos
                     </span>
+                    {pubCollapsed ? <ChevronDown size={14} style={{ color: '#6366f1', flexShrink: 0 }} /> : <ChevronUp size={14} style={{ color: '#6366f1', flexShrink: 0 }} />}
                   </div>
+                  {!pubCollapsed && <div style={{ padding: '0 1.1rem 1rem' }}>
                   {/* summary pills */}
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
                     <div style={{ flex: 1, minWidth: '80px', background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
@@ -901,6 +927,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       );
                     })}
                   </div>
+                  </div>}
                 </div>
               );
             })()}
@@ -916,10 +943,13 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               const coveragePct = totalUnique > 0 ? Math.round((uniqueWithCode / totalUnique) * 100) : 0;
               const CP_COLORS = ['#45834D','#1e6fa0','#EB7347','#8b5cf6','#f59e0b','#14b8a6','#ec4899','#6366f1','#10b981','#ef4444','#78716c'];
               return (
-                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', overflow: 'hidden' }}>
                   {/* header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.9rem' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(69,131,77,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div
+                    onClick={() => setCpCollapsed(v => !v)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.85rem 1.1rem', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(69,131,77,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Package size={13} color={S.accent} />
                     </div>
                     <span style={{ fontSize: '0.67rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
@@ -928,7 +958,9 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                     <span style={{ marginLeft: 'auto', fontSize: '0.67rem', fontWeight: 800, color: S.accent, background: 'rgba(69,131,77,0.1)', borderRadius: '5px', padding: '0.1rem 0.45rem' }}>
                       {filtered.length} tipos
                     </span>
+                    {cpCollapsed ? <ChevronDown size={14} style={{ color: S.accent, flexShrink: 0 }} /> : <ChevronUp size={14} style={{ color: S.accent, flexShrink: 0 }} />}
                   </div>
+                  {!cpCollapsed && <div style={{ padding: '0 1.1rem 1rem' }}>
                   {/* summary pills */}
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
                     <div style={{ flex: 1, minWidth: '72px', background: 'rgba(69,131,77,0.07)', border: '1px solid rgba(69,131,77,0.18)', borderRadius: '8px', padding: '0.45rem 0.7rem', textAlign: 'center' }}>
@@ -977,6 +1009,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       );
                     })}
                   </div>
+                  </div>}
                 </div>
               );
             })()}
@@ -987,34 +1020,107 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         {/* ── Ranking + Gráfico por día ── */}
         <div style={{ display: 'grid', gridTemplateColumns: vendorStats.length > 0 ? '1fr 320px' : '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
 
-          {/* Ranking mejorado */}
+          {/* Ranking + Gráfico de Vendedores */}
           {vendorStats.length > 0 && (
             <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem' }}>
-              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem' }}>Ranking de Vendedores</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {vendorStats.map((v, i) => {
-                  const pct = globalStats.totalRevenue > 0 ? Math.round((v.totalRevenue / globalStats.totalRevenue) * 100) : 0;
-                  const barPct = maxVendorRevenue > 0 ? Math.round((v.totalRevenue / maxVendorRevenue) * 100) : 0;
-                  const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-                  return (
-                    <div key={v.id} style={{ background: i === 0 ? 'rgba(69,131,77,0.08)' : 'rgba(242,251,245,.6)', border: `1px solid ${i === 0 ? 'rgba(69,131,77,0.25)' : 'rgba(104,168,119,.25)'}`, borderRadius: '8px', padding: '0.55rem 0.85rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: S.text }}>
-                          {medal} {v.name}
-                        </span>
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount}v · {v.totalItems}p</span>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#EB7347', background: 'rgba(235,115,71,0.1)', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
+              {/* Header con toggle */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Vendedores</div>
+                <div style={{ display: 'flex', background: 'rgba(242,251,245,.9)', border: '1px solid rgba(104,168,119,.3)', borderRadius: '8px', overflow: 'hidden' }}>
+                  {(['ranking', 'chart'] as const).map(mode => (
+                    <button key={mode} onClick={() => setVendorChartMode(mode)}
+                      style={{ padding: '0.3rem 0.75rem', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: vendorChartMode === mode ? 'linear-gradient(135deg,#45834D,#3a6d42)' : 'transparent', color: vendorChartMode === mode ? '#fff' : S.muted, transition: 'all 0.2s' }}>
+                      {mode === 'ranking' ? '≡ Lista' : '▦ Gráfico'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vista Lista/Ranking */}
+              {vendorChartMode === 'ranking' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {vendorStats.map((v, i) => {
+                    const pct = globalStats.totalRevenue > 0 ? Math.round((v.totalRevenue / globalStats.totalRevenue) * 100) : 0;
+                    const barPct = maxVendorRevenue > 0 ? Math.round((v.totalRevenue / maxVendorRevenue) * 100) : 0;
+                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+                    const color = VENDOR_COLORS[i % VENDOR_COLORS.length];
+                    return (
+                      <div key={v.id} style={{ background: i === 0 ? 'rgba(69,131,77,0.06)' : 'rgba(242,251,245,.5)', border: `1px solid ${i === 0 ? 'rgba(69,131,77,0.2)' : 'rgba(104,168,119,.2)'}`, borderRadius: '8px', padding: '0.6rem 0.85rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text }}>{medal} {v.name}</span>
+                          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount} v · {v.totalItems} p · prom S/{v.avgPerSale.toLocaleString()}</span>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: color, background: `${color}18`, borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{pct}%</span>
+                          </div>
+                        </div>
+                        <div style={{ height: '6px', background: 'rgba(104,168,119,.15)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${barPct}%`, background: `linear-gradient(90deg,${color},${color}99)`, borderRadius: '3px', transition: 'width 0.5s ease' }} />
                         </div>
                       </div>
-                      <div style={{ height: '4px', background: 'rgba(104,168,119,.2)', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${barPct}%`, background: i === 0 ? 'linear-gradient(90deg,#45834D,#8FCA97)' : 'linear-gradient(90deg,rgba(174,219,184,.7),rgba(143,202,151,.5))', borderRadius: '2px', transition: 'width 0.4s ease' }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Vista Gráfico de barras */}
+              {vendorChartMode === 'chart' && (
+                <div>
+                  {/* Barras verticales */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', height: '160px', padding: '0 0.25rem' }}>
+                    {vendorStats.map((v, i) => {
+                      const barPct = maxVendorRevenue > 0 ? (v.totalRevenue / maxVendorRevenue) : 0;
+                      const color = VENDOR_COLORS[i % VENDOR_COLORS.length];
+                      return (
+                        <div key={v.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', minWidth: 0 }}>
+                          {/* Valor encima */}
+                          <span style={{ fontSize: '0.6rem', fontWeight: 800, color: S.text, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                            S/{v.totalRevenue >= 1000 ? `${(v.totalRevenue/1000).toFixed(1)}k` : v.totalRevenue}
+                          </span>
+                          {/* Barra */}
+                          <div style={{ width: '100%', background: 'rgba(104,168,119,.12)', borderRadius: '6px 6px 0 0', height: '120px', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
+                            <div style={{ width: '100%', height: `${Math.max(barPct * 100, 4)}%`, background: `linear-gradient(180deg,${color},${color}bb)`, borderRadius: '6px 6px 0 0', transition: 'height 0.5s ease', position: 'relative' }}>
+                              {/* Ventas count en la barra */}
+                              {barPct > 0.2 && (
+                                <span style={{ position: 'absolute', top: '6px', left: 0, right: 0, textAlign: 'center', fontSize: '0.58rem', fontWeight: 800, color: '#fff' }}>
+                                  {v.salesCount}v
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Nombres debajo */}
+                  <div style={{ display: 'flex', gap: '0.5rem', padding: '0 0.25rem', marginTop: '0.4rem' }}>
+                    {vendorStats.map((v, i) => {
+                      const color = VENDOR_COLORS[i % VENDOR_COLORS.length];
+                      const firstName = v.name.split(' ')[0];
+                      return (
+                        <div key={v.id} style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, margin: '0 auto 0.2rem' }} />
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: S.muted, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Leyenda % */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.75rem', paddingTop: '0.65rem', borderTop: '1px solid rgba(104,168,119,.15)' }}>
+                    {vendorStats.map((v, i) => {
+                      const pct = globalStats.totalRevenue > 0 ? Math.round((v.totalRevenue / globalStats.totalRevenue) * 100) : 0;
+                      const color = VENDOR_COLORS[i % VENDOR_COLORS.length];
+                      return (
+                        <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: `${color}12`, border: `1px solid ${color}30`, borderRadius: '6px', padding: '0.2rem 0.5rem' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: color }} />
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: S.text }}>{v.name.split(' ')[0]}</span>
+                          <span style={{ fontSize: '0.65rem', color: S.muted }}>{pct}% · {v.salesCount}v</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

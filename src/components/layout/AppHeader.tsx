@@ -4,7 +4,6 @@ interface AppHeaderProps {
   salesCount: number;
   totalSoles: number;
   metaDiaria: number;
-  onMetaChange: (v: number) => void;
   userName?: string;
   onSignOut: () => void;
   brand?: 'overshark' | 'bravos';
@@ -14,7 +13,6 @@ export default function AppHeader({
   salesCount,
   totalSoles,
   metaDiaria,
-  onMetaChange,
   userName,
   onSignOut,
   brand = 'overshark',
@@ -120,27 +118,22 @@ export default function AppHeader({
           </div>
         </div>
         <span style={{ fontSize: '0.75rem', fontWeight: 800, color: reached ? '#45834D' : mutedColor, whiteSpace: 'nowrap' }}>
-          {salesCount} / {metaDiaria}
+          {salesCount} / {metaDiaria > 0 ? metaDiaria : '—'}
         </span>
-        <input
-          type="number"
-          min={1}
-          max={999}
-          value={metaDiaria}
-          onChange={e => onMetaChange(Math.max(1, parseInt(e.target.value) || 1))}
-          title="Meta diaria de ventas"
-          style={{
-            width: '52px',
+        {metaDiaria > 0 && (
+          <span style={{
+            minWidth: '40px', textAlign: 'center',
             background: isBravos ? 'rgba(255,255,255,0.05)' : 'rgba(69,131,77,.06)',
             border: `1px solid ${headerBorder}`,
             borderRadius: '6px',
-            color: mutedColor,
+            color: reached ? accent : mutedColor,
             fontSize: '0.78rem',
             fontWeight: 800,
             padding: '0.2rem 0.4rem',
-            textAlign: 'center',
-          }}
-        />
+          }}>
+            {metaDiaria}
+          </span>
+        )}
       </div>
     </header>
   );

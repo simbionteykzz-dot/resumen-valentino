@@ -78,7 +78,7 @@ export interface ToastState {
 export interface Profile {
   id: string;
   full_name: string;
-  role: 'admin' | 'vendedor';
+  role: 'admin' | 'vendedor' | 'atc';
 }
 
 export interface AdminSale extends Sale {
