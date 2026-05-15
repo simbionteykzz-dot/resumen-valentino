@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown, AlertTriangle } from 'lucide-react';
 import type { Profile } from '../../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -391,7 +391,7 @@ export default function PlanillaPanel({
               </span>
             )}
             {loadingSync && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>⏳ Cargando...</span>}
-            {syncError && <span style={{ color: 'var(--danger)', fontSize: '0.78rem' }}>⚠ {syncError}</span>}
+            {syncError && <span style={{ color: 'var(--danger)', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={12} /> {syncError}</span>}
           </div>
         </div>
         <div className="cliente-panel-actions" style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>

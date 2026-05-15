@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Tag, Shuffle, ChevronDown } from 'lucide-react';
+import { Plus, X, Tag, Shuffle, ChevronDown, Package } from 'lucide-react';
 import {
   POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, MIX_PROMOS_DATA, PROMOS_GROUPS, TALLAS_SMLXL,
   POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, PRODUCT_NAME_TO_CP,
@@ -255,7 +255,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
         {products.length === 0 && (
           <div className="prod-empty">
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📦</div>
+            <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}><Package size={32} /></div>
             <div>Carga una promoción o añade un producto</div>
           </div>
         )}

@@ -1,6 +1,6 @@
 import { useRef, useState, Fragment } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
-import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp, Archive, History, ArrowRightLeft } from 'lucide-react';
+import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp, Archive, History, ArrowRightLeft, Headphones, ClipboardList, Target, CheckCircle2, XCircle, CircleOff, TriangleAlert, Medal } from 'lucide-react';
 import PlanillasPanel from './PlanillasPanel';
 import MetasPanel from './MetasPanel';
 import type { Profile, AdminSale, EditForm } from '../../types';
@@ -75,11 +75,17 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     eliminatedSales,
     showArchived, setShowArchived,
     archivedSales, archiveLoading,
-    loadArchivedSales, archivarTodo, desarchivarTodo,
+    loadArchivedSales, archivarTodo, archivarRango, desarchivarTodo,
     transferDates,
   } = useAdmin();
 
   const [activeTab, setActiveTab] = useState<'ventas' | 'planillas' | 'metas'>('ventas');
+
+  // ── Archivar por rango ──
+  const [showArchivar, setShowArchivar] = useState(false);
+  const [archivarDesde, setArchivarDesde] = useState('');
+  const [archivarHasta, setArchivarHasta] = useState('');
+  const [archivando, setArchivando] = useState(false);
 
   // ── Traspaso de fechas ──
   const [showTransfer, setShowTransfer] = useState(false);
@@ -227,168 +233,162 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
-    const mg = 18;
+    const mg = 16;
     const estado = getEstado(s);
     const region = getRegion(s);
     const estadoRgb: [number, number, number] =
       estado === 'PAGO COMPLETO'  ? [35, 115, 55]  :
       estado === 'CONTRA ENTREGA' ? [155, 95, 10]  :
       estado === 'ANULADO'        ? [175, 48, 48]  : [90, 115, 100];
+    const dark: [number, number, number] = [17, 24, 39];
+    const muted: [number, number, number] = [107, 114, 128];
+    const border: [number, number, number] = [229, 231, 235];
+    const accent: [number, number, number] = [31, 41, 55];
 
-    // ── Top stripe ──────────────────────────────────────────────────
-    doc.setFillColor(18, 50, 30);
-    doc.rect(0, 0, W, 4, 'F');
+    doc.setFillColor(250, 250, 251);
+    doc.rect(0, 0, W, H, 'F');
 
-    // ── Header band ─────────────────────────────────────────────────
-    doc.setFillColor(22, 52, 33);
-    doc.rect(0, 4, W, 32, 'F');
-
+    // Header
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, W, 28, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(17);
+    doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg, 17);
-
+    doc.text('LIVEX AGENCY', mg, 11);
+    doc.setFontSize(8);
+    doc.setTextColor(209, 213, 219);
+    doc.text('COMPROBANTE DE COMPRA', mg, 17);
     doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120, 190, 145);
-    doc.text('COMPROBANTE DE COMPRA', mg, 24);
+    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 11, { align: 'right' });
+    doc.text(`${s.fecha ?? '—'}${s.hora ? ` · ${s.hora}` : ''}`, W - mg, 17, { align: 'right' });
 
-    // Ref y fecha (derecha)
-    doc.setFontSize(7);
-    doc.setTextColor(80, 140, 105);
-    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 17, { align: 'right' });
-    doc.text(`${s.fecha ?? '—'}${s.hora ? `  ·  ${s.hora}` : ''}`, W - mg, 24, { align: 'right' });
+    // Status badge
+    const statusW = 62;
+    const statusX = W - mg - statusW;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(statusX, 31, statusW, 10, 2.2, 2.2, 'F');
+    doc.setDrawColor(...estadoRgb);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(statusX, 31, statusW, 10, 2.2, 2.2, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.2);
+    doc.setTextColor(...estadoRgb);
+    doc.text(estado, statusX + statusW / 2, 37.3, { align: 'center' });
 
-    // ── Thin divider below header ────────────────────────────────────
-    doc.setDrawColor(55, 120, 70);
-    doc.setLineWidth(0.3);
-    doc.line(mg, 38, W - mg, 38);
-
-    // ── Content sections ─────────────────────────────────────────────
-    let y = 46;
+    let y = 40;
+    const contentW = W - mg * 2;
 
     const section = (title: string) => {
-      doc.setFillColor(232, 246, 237);
-      doc.roundedRect(mg, y - 4, W - mg * 2, 7, 1.5, 1.5, 'F');
-      doc.setFillColor(55, 120, 65);
-      doc.roundedRect(mg, y - 4, 3, 7, 1, 1, 'F');
-      doc.setFontSize(6.5);
+      doc.setDrawColor(...border);
+      doc.setLineWidth(0.3);
+      doc.line(mg, y, W - mg, y);
+      doc.setFillColor(245, 247, 250);
+      doc.roundedRect(mg, y + 2, contentW, 7, 1.5, 1.5, 'F');
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(28, 65, 38);
-      doc.text(title, mg + 6, y + 0.5);
-      y += 9;
+      doc.setFontSize(7.2);
+      doc.setTextColor(...accent);
+      doc.text(title, mg + 3, y + 6.8);
+      y += 13;
     };
 
     const row = (label: string, value: string, valueColor?: [number, number, number]) => {
-      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(85, 120, 98);
+      doc.setFontSize(8.3);
+      doc.setTextColor(...muted);
       doc.text(label, mg, y);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...(valueColor ?? [30, 55, 40] as [number, number, number]));
-      doc.text(value, mg + 42, y);
-      y += 7;
+      doc.setTextColor(...(valueColor ?? dark));
+      doc.text(value, mg + 44, y);
+      y += 6.5;
     };
 
     const rowHalf = (pairs: [string, string, ([number, number, number] | undefined)?][]) => {
-      const colW = (W - mg * 2) / pairs.length;
+      const colW = contentW / pairs.length;
       pairs.forEach(([label, value, color], i) => {
         const x = mg + i * colW;
-        doc.setFontSize(8.5);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(85, 120, 98);
+        doc.setFontSize(8.3);
+        doc.setTextColor(...muted);
         doc.text(label, x, y);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...(color ?? [30, 55, 40] as [number, number, number]));
+        doc.setTextColor(...(color ?? dark));
         doc.text(value, x + 22, y);
       });
-      y += 7;
+      y += 6.5;
     };
 
     section('DATOS DEL CLIENTE');
     row('Nombre', s.nom || '—');
     rowHalf([['Celular', s.cel || '—', [22, 100, 155]], ['DNI', s.dni || '—']]);
-    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [42, 110, 55]]]);
+    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [31, 41, 55]]]);
 
     if (region === 'Provincia' && (s.sede || s.provincia || s.depto)) {
-      y += 1;
       if (s.sede) {
-        const sedeLines = doc.splitTextToSize(s.sede, W - mg * 2 - 44);
-        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(85, 120, 98);
+        const sedeLines = doc.splitTextToSize(s.sede, contentW - 46);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.3);
+        doc.setTextColor(...muted);
         doc.text('Courier / Sede', mg, y);
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(150, 90, 10);
-        doc.text(sedeLines, mg + 44, y);
-        y += sedeLines.length * 6 + 1;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...dark);
+        doc.text(sedeLines, mg + 46, y);
+        y += sedeLines.length * 5.6 + 1;
       }
       if (s.provincia || s.depto) rowHalf([['Departamento', s.provincia || '—'], ['Provincia', s.depto || '—']]);
     } else if (region === 'Lima' && (s.distrito || s.ubicacion)) {
-      y += 1;
       if (s.distrito) row('Distrito', s.distrito, [22, 100, 155]);
       if (s.ubicacion) {
-        const ubLines = doc.splitTextToSize(s.ubicacion, W - mg * 2 - 44);
-        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(85, 120, 98);
+        const ubLines = doc.splitTextToSize(s.ubicacion, contentW - 44);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.3);
+        doc.setTextColor(...muted);
         doc.text('Ubicación', mg, y);
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 55, 40);
-        doc.text(ubLines, mg + 42, y);
-        y += ubLines.length * 6 + 1;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...dark);
+        doc.text(ubLines, mg + 44, y);
+        y += ubLines.length * 5.6 + 1;
       }
     }
 
-    y += 3;
+    y += 2;
     section('DETALLE DEL PEDIDO');
-
     if (s.detalle && s.detalle.trim()) {
-      const detalleLines = doc.splitTextToSize(s.detalle.trim(), W - mg * 2);
-      doc.setFontSize(8);
+      const detalleLines = doc.splitTextToSize(s.detalle.trim(), contentW);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(50, 80, 60);
+      doc.setFontSize(8.2);
+      doc.setTextColor(...dark);
       doc.text(detalleLines, mg, y);
-      y += detalleLines.length * 5.5 + 3;
+      y += detalleLines.length * 5.2 + 2;
     } else {
-      const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', W - mg * 2 - 44);
-      doc.setFontSize(8.5);
+      const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', contentW - 44);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(85, 120, 98);
+      doc.setFontSize(8.3);
+      doc.setTextColor(...muted);
       doc.text('Combo', mg, y);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 55, 40);
-      doc.text(comboLines, mg + 42, y);
-      y += comboLines.length * 6 + 1;
+      doc.setTextColor(...dark);
+      doc.text(comboLines, mg + 44, y);
+      y += comboLines.length * 5.6 + 1;
     }
-
-    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [42, 110, 55]]]);
+    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [31, 41, 55]]]);
     if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [80, 80, 148]);
 
-    y += 3;
+    y += 2;
     section('RESUMEN DE PAGO');
     row('Método de pago', s.metodoPago || '—');
-    row('Total', `S/ ${s.totalTotal ?? 0}`, [32, 115, 50]);
+    row('Total', `S/ ${s.totalTotal ?? 0}`, [35, 115, 55]);
     if (s.separo) row('Separo / Adelanto', `S/ ${s.separo}`, [22, 100, 155]);
     if (s.resta && parseFloat(s.resta) > 0) row('Saldo pendiente', `S/ ${s.resta}`, [175, 48, 48]);
 
-    // ── Estado badge ─────────────────────────────────────────────────
-    y += 5;
-    const badgeW = 64;
-    const badgeX = (W - badgeW) / 2;
-    doc.setFillColor(232, 246, 237);
-    doc.roundedRect(badgeX, y, badgeW, 11, 2.5, 2.5, 'F');
-    doc.setDrawColor(...estadoRgb);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(badgeX, y, badgeW, 11, 2.5, 2.5, 'S');
-    doc.setFillColor(...estadoRgb);
-    doc.roundedRect(badgeX, y, badgeW, 3, 1.5, 1.5, 'F');
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...estadoRgb);
-    doc.text(estado, W / 2, y + 8, { align: 'center' });
-
-    // ── Footer strip ─────────────────────────────────────────────────
-    doc.setFillColor(18, 50, 30);
-    doc.rect(0, H - 8, W, 8, 'F');
-    doc.setFontSize(6.5);
+    // Footer
+    doc.setDrawColor(...border);
+    doc.setLineWidth(0.3);
+    doc.line(mg, H - 15, W - mg, H - 15);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 170, 130);
-    doc.text('Livex Agency · Comprobante interno de venta', W / 2, H - 3, { align: 'center' });
+    doc.setFontSize(6.6);
+    doc.setTextColor(...muted);
+    doc.text('Documento interno de operaciones · Livex Agency', mg, H - 10);
+    doc.text(new Date().toLocaleString('es-PE'), W - mg, H - 10, { align: 'right' });
 
     doc.save(`comprobante_${s.cel ?? 'cliente'}_${s.fecha ?? 'sin-fecha'}.pdf`);
   };
@@ -589,16 +589,19 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     surface: 'rgba(255,255,255,0.97)',
     surface2: 'rgba(242,251,245,0.97)',
     border: '1px solid rgba(104,168,119,.35)',
+    borderSoft: '1px solid rgba(104,168,119,.22)',
     accent: '#45834D',
     muted: '#517861',
     text: '#2a4433',
     text2: '#162e20',
+    shadowSm: '0 4px 14px rgba(22,46,32,.06)',
+    shadowMd: '0 10px 30px rgba(22,46,32,.08)',
   };
 
   const btn = (variant: 'accent' | 'ghost' | 'danger' | 'info' | 'active'): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: '0.4rem',
-    padding: '0.45rem 0.9rem', borderRadius: '8px',
-    fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+    padding: '0.5rem 0.95rem', borderRadius: '10px',
+    fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer',
     border: variant === 'ghost' ? '1px solid rgba(104,168,119,.35)' : variant === 'active' ? '1px solid rgba(69,131,77,0.5)' : 'none',
     background: variant === 'accent' ? 'linear-gradient(135deg,#45834D,#3a6d42)'
       : variant === 'danger' ? 'rgba(239,68,68,0.1)'
@@ -610,6 +613,8 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       : variant === 'info' ? '#1e6fa0'
       : variant === 'active' ? '#45834D'
       : S.muted,
+    boxShadow: variant === 'accent' ? '0 6px 16px rgba(69,131,77,.28)' : 'none',
+    transition: 'all .18s ease',
   });
 
   const getBrandColor = (label: string) => {
@@ -625,19 +630,19 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#EAF5EE 0%,#DDEEE3 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 20% 0%, #f3fbf7 0%, #e8f4ee 45%, #ddeee3 100%)', color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.98),rgba(242,251,245,0.95))', borderBottom: '1px solid rgba(104,168,119,.3)', padding: '1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 2px 12px rgba(69,131,77,.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg,#45834D,#3a6d42)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(69,131,77,.3)' }}>
-            <BarChart3 size={18} color="#fff" />
+      <div style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.98),rgba(242,251,245,0.95))', borderBottom: '1px solid rgba(104,168,119,.3)', padding: '1.1rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 2px 12px rgba(69,131,77,.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
+          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg,#45834D,#3a6d42)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(69,131,77,.3)' }}>
+            <BarChart3 size={20} color="#fff" />
           </div>
           <div>
-            <div style={{ fontWeight: 900, fontSize: '1rem', color: S.text2, letterSpacing: '-0.02em' }}>
+            <div style={{ fontWeight: 900, fontSize: '1.05rem', color: S.text2, letterSpacing: '-0.02em' }}>
               LIVEX <span style={{ color: S.accent }}>Admin</span>
             </div>
-            <div style={{ fontSize: '0.75rem', color: S.muted }}>{adminName}</div>
+            <div style={{ fontSize: '0.76rem', color: S.muted, opacity: 0.95 }}>{adminName}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -662,11 +667,11 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </button>
           {onSwitchToATC && (
             <button onClick={onSwitchToATC} style={{ ...btn('ghost'), border: '1px solid rgba(26,127,189,0.25)', color: '#1a7fbd', background: 'rgba(26,127,189,0.08)' }}>
-              🎧 ATC
+              <Headphones size={13} /> ATC
             </button>
           )}
           <button onClick={onSwitchToVendedor} style={{ ...btn('info'), border: '1px solid rgba(56,200,245,0.25)' }}>
-            📋 Vista Vendedor
+            <ClipboardList size={13} /> Vista Vendedor
           </button>
           <button onClick={onSignOut} style={{ ...btn('danger'), border: '1px solid rgba(239,68,68,0.2)' }}>
             <LogOut size={13} /> Salir
@@ -674,27 +679,27 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
       </div>
 
-      <div style={{ maxWidth: '1500px', margin: '0 auto', padding: '1.5rem 2rem' }}>
+      <div style={{ maxWidth: '1520px', margin: '0 auto', padding: '1.6rem 2rem 2.2rem' }}>
 
         {/* ── Tabs ── */}
-        <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '1.25rem', borderBottom: '2px solid rgba(104,168,119,.2)', paddingBottom: '0' }}>
+        <div style={{ display: 'flex', gap: '0.38rem', marginBottom: '1.25rem', borderBottom: '2px solid rgba(104,168,119,.2)', paddingBottom: '0' }}>
           {([
-            { id: 'ventas', label: '📊 Ventas', count: null },
-            { id: 'planillas', label: '📋 Planillas', count: null },
-            { id: 'metas', label: '🎯 Metas', count: null },
+            { id: 'ventas', label: 'Ventas', icon: <BarChart3 size={13} />, count: null },
+            { id: 'planillas', label: 'Planillas', icon: <ClipboardList size={13} />, count: null },
+            { id: 'metas', label: 'Metas', icon: <Target size={13} />, count: null },
           ] as const).map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '0.55rem 1.25rem', fontSize: '0.82rem', fontWeight: 800,
+                padding: '0.62rem 1.25rem', fontSize: '0.8rem', fontWeight: 800,
                 border: 'none', borderBottom: activeTab === tab.id ? '2px solid #45834D' : '2px solid transparent',
                 background: activeTab === tab.id ? 'rgba(69,131,77,.08)' : 'transparent',
                 color: activeTab === tab.id ? '#45834D' : '#517861',
-                cursor: 'pointer', borderRadius: '8px 8px 0 0', marginBottom: '-2px',
+                cursor: 'pointer', borderRadius: '10px 10px 0 0', marginBottom: '-2px',
                 transition: 'all 0.15s',
               }}>
-              {tab.label}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>{tab.icon}{tab.label}</span>
             </button>
           ))}
         </div>
@@ -710,6 +715,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         ) : activeTab === 'planillas' ? (
           <PlanillasPanel
             filteredSales={filteredSales}
+            allSales={allSales}
             dateFrom={dateFrom}
             dateTo={dateTo}
             brandFilter={brandFilter}
@@ -793,12 +799,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               </span>
             </div>
             <button
-              onClick={async () => {
-                const count = allSales.filter(s => !s._anulado).length;
-                if (!window.confirm(`¿Archivar las ${count} ventas del período actual?\n\nPodrás consultarlas en "Historial" cuando quieras. Esta acción es reversible.`)) return;
-                const ok = await archivarTodo();
-                if (!ok) alert('Error al archivar. Intenta de nuevo.');
-              }}
+              onClick={() => { setArchivarDesde(dateFrom); setArchivarHasta(dateTo); setShowArchivar(true); }}
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.9rem', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)', color: '#d97706', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800 }}
             >
               <Archive size={12} /> Archivar período
@@ -815,12 +816,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             { label: 'Promedio/venta', value: `S/${globalStats.avgPerSale}`, color: '#45834D', icon: <BarChart3 size={18} /> },
             { label: 'Deuda total S/', value: globalStats.deudaTotal > 0 ? `S/${globalStats.deudaTotal.toFixed(0)}` : 'S/0', color: globalStats.deudaTotal > 0 ? '#ef4444' : '#517861', icon: <AlertTriangle size={18} /> },
           ].map(k => (
-            <div key={k.label} style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '1rem 1.25rem', borderLeft: `3px solid ${k.color}` }}>
+            <div key={k.label} style={{ background: S.surface, border: S.borderSoft, borderRadius: '14px', padding: '1rem 1.2rem', borderLeft: `3px solid ${k.color}`, boxShadow: S.shadowSm }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: k.color, marginBottom: '0.4rem' }}>
                 {k.icon}
                 <span style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</span>
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
+              <div style={{ fontSize: '1.58rem', fontWeight: 900, color: k.color, lineHeight: 1 }}>{k.value}</div>
             </div>
           ))}
         </div>
@@ -860,7 +861,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
 
         {/* ── KPIs: Publicidad + Producto en grid lado a lado ── */}
         {(pubStats.length > 0 || cpStats.stats.length > 0) && (
-          <div style={{ display: 'grid', gridTemplateColumns: pubStats.length > 0 && cpStats.stats.length > 0 ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: pubStats.length > 0 && cpStats.stats.length > 0 ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.25rem', alignItems: 'start' }}>
 
             {/* Códigos de Publicidad */}
             {pubStats.length > 0 && (() => {
@@ -1042,12 +1043,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                   {vendorStats.map((v, i) => {
                     const pct = globalStats.totalRevenue > 0 ? Math.round((v.totalRevenue / globalStats.totalRevenue) * 100) : 0;
                     const barPct = maxVendorRevenue > 0 ? Math.round((v.totalRevenue / maxVendorRevenue) * 100) : 0;
-                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+                    const medal = i < 3
+                      ? <Medal size={14} color={i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : '#b45309'} />
+                      : <span>#{i + 1}</span>;
                     const color = VENDOR_COLORS[i % VENDOR_COLORS.length];
                     return (
                       <div key={v.id} style={{ background: i === 0 ? 'rgba(69,131,77,0.06)' : 'rgba(242,251,245,.5)', border: `1px solid ${i === 0 ? 'rgba(69,131,77,0.2)' : 'rgba(104,168,119,.2)'}`, borderRadius: '8px', padding: '0.6rem 0.85rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text }}>{medal} {v.name}</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: S.text, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>{medal} {v.name}</span>
                           <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
                             <span style={{ fontSize: '0.68rem', color: S.muted }}>{v.salesCount} v · {v.totalItems} p · prom S/{v.avgPerSale.toLocaleString()}</span>
                             <span style={{ fontSize: '0.82rem', fontWeight: 900, color: S.accent }}>S/{v.totalRevenue.toLocaleString()}</span>
@@ -1138,12 +1141,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
 
         {/* ── Toolbar ── */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.82rem', flexWrap: 'wrap', background: 'rgba(255,255,255,.76)', border: S.borderSoft, borderRadius: '12px', padding: '0.55rem' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
             <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: S.muted }} />
             <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Buscar por cliente, vendedor, celular o DNI..."
-              style={{ width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem', border: '1px solid rgba(104,168,119,.35)', borderRadius: '8px', fontSize: '0.82rem', background: 'rgba(255,255,255,.95)', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '0.54rem 0.75rem 0.54rem 2rem', border: '1px solid rgba(104,168,119,.35)', borderRadius: '10px', fontSize: '0.82rem', background: 'rgba(255,255,255,.98)', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Filtro rápido por marca */}
@@ -1177,7 +1180,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
               ⊞ Columnas {hiddenCols.size > 0 ? `(${ALL_COLS.length - hiddenCols.size}/${ALL_COLS.length})` : ''}
             </button>
             {showColPicker && (
-              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200, background: '#fff', border: '1px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '0.75rem', minWidth: '200px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200, background: '#fff', border: '1px solid rgba(104,168,119,.35)', borderRadius: '12px', padding: '0.75rem', minWidth: '220px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#517861', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Mostrar columnas</div>
                 {ALL_COLS.map(col => (
                   <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', fontWeight: 600, color: '#2a4433', cursor: 'pointer', padding: '0.2rem 0.3rem', borderRadius: '6px', background: hiddenCols.has(col) ? 'transparent' : 'rgba(69,131,77,0.05)' }}>
@@ -1241,7 +1244,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
             </div>
             {transferMsg && (
               <div style={{ marginTop: '0.6rem', fontSize: '0.78rem', fontWeight: 700, color: transferMsg.ok ? '#4ade80' : '#f87171', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {transferMsg.ok ? '✓' : '✗'} {transferMsg.text}
+                {transferMsg.ok ? <CheckCircle2 size={13} /> : <XCircle size={13} />} {transferMsg.text}
               </div>
             )}
           </div>
@@ -1306,14 +1309,14 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         </div>
 
         {/* ── Tabla ── */}
-        <div ref={tableRef} style={{ background: 'rgba(255,255,255,.97)', border: S.border, borderRadius: '12px', overflow: 'hidden' }}>
+        <div ref={tableRef} style={{ background: 'rgba(255,255,255,.98)', border: S.borderSoft, borderRadius: '14px', overflow: 'hidden', boxShadow: S.shadowMd }}>
           <div className="admin-table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg,rgba(69,131,77,.12),rgba(58,109,66,.08))', borderBottom: '2px solid rgba(69,131,77,.25)' }}>
                   {([...ALL_COLS, ''] as (ColName | '')[]).map(h => {
                     if (h !== '' && hiddenCols.has(h as ColName)) return null;
-                    return <th key={h} style={{ padding: '0.65rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.65rem', letterSpacing: '0.05em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>;
+                    return <th key={h} style={{ padding: '0.72rem 0.75rem', textAlign: 'left', fontWeight: 800, whiteSpace: 'nowrap', fontSize: '0.64rem', letterSpacing: '0.06em', color: '#45834D', textTransform: 'uppercase' }}>{h}</th>;
                   })}
                 </tr>
               </thead>
@@ -1431,7 +1434,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                               })}
                               title="Anular venta"
                               style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: '#ef4444', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                              ✕ Anular
+                              <CircleOff size={12} /> Anular
                             </button>
                           )}
                           {s._dbId && (
@@ -1451,7 +1454,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                 })()}
                 {paginatedSales.length === 0 && (
                   <tr>
-                    <td colSpan={ALL_COLS.length - hiddenCols.size + 1} style={{ padding: '3rem', textAlign: 'center', color: S.muted, fontSize: '0.85rem' }}>
+                    <td colSpan={ALL_COLS.length - hiddenCols.size + 1} style={{ padding: '3.25rem', textAlign: 'center', color: S.muted, fontSize: '0.85rem', background: 'rgba(242,251,245,.6)' }}>
                       {loading ? 'Cargando ventas...' : 'Sin registros para los filtros seleccionados'}
                     </td>
                   </tr>
@@ -1461,7 +1464,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.9rem' }}>
           <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
 
@@ -1628,8 +1631,8 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         >
           <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '1.75rem', border: `2px solid ${confirmModal.variant === 'danger' ? 'rgba(239,68,68,.3)' : 'rgba(239,150,0,.3)'}`, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', marginBottom: '1.25rem' }}>
-              <div style={{ width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0, background: confirmModal.variant === 'danger' ? 'rgba(239,68,68,.1)' : 'rgba(239,150,0,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-                {confirmModal.variant === 'danger' ? '🗑' : '⚠️'}
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0, background: confirmModal.variant === 'danger' ? 'rgba(239,68,68,.1)' : 'rgba(239,150,0,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {confirmModal.variant === 'danger' ? <Trash2 size={18} color="#ef4444" /> : <TriangleAlert size={18} color="#e97700" />}
               </div>
               <div>
                 <div style={{ fontWeight: 900, fontSize: '0.95rem', color: '#162e20', marginBottom: '0.3rem' }}>{confirmModal.title}</div>
@@ -1733,6 +1736,66 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           </div>
         </div>
       )}
+
+      {/* ── Modal archivar por rango ── */}
+      {showArchivar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowArchivar(false); }}>
+          <div style={{ background: '#fff', borderRadius: '14px', padding: '1.75rem', width: '100%', maxWidth: '420px', border: '1px solid rgba(245,158,11,0.35)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
+              <Archive size={18} color="#d97706" />
+              <span style={{ fontWeight: 900, fontSize: '1rem', color: '#92400e' }}>Archivar período</span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#b45309', marginBottom: '1.25rem' }}>
+              Las ventas en el rango seleccionado se moverán al Historial. Esta acción es reversible.
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.85rem' }}>
+              <div>
+                <label style={{ fontSize: '0.62rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Desde</label>
+                <input type="date" value={archivarDesde} onChange={e => setArchivarDesde(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem 0.7rem', border: '1px solid rgba(245,158,11,.45)', borderRadius: '8px', fontSize: '0.85rem', color: '#162e20', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.62rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Hasta</label>
+                <input type="date" value={archivarHasta} onChange={e => setArchivarHasta(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem 0.7rem', border: '1px solid rgba(245,158,11,.45)', borderRadius: '8px', fontSize: '0.85rem', color: '#162e20', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+
+            {/* Conteo en vivo */}
+            {archivarDesde && archivarHasta && (() => {
+              const count = allSales.filter(s => s.fecha && s.fecha >= archivarDesde && s.fecha <= archivarHasta && !s._anulado).length;
+              return (
+                <div style={{ background: 'rgba(254,243,199,.8)', border: '1px solid rgba(245,158,11,.3)', borderRadius: '8px', padding: '0.55rem 0.85rem', marginBottom: '1rem', fontSize: '0.75rem', color: '#92400e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Rango: <strong>{archivarDesde}</strong> → <strong>{archivarHasta}</strong></span>
+                  <span style={{ fontWeight: 800, color: '#d97706' }}>{count} ventas</span>
+                </div>
+              );
+            })()}
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowArchivar(false)}
+                style={{ padding: '0.5rem 1rem', borderRadius: '7px', border: '1px solid rgba(245,158,11,.3)', background: 'transparent', color: '#b45309', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>
+                Cancelar
+              </button>
+              <button
+                disabled={!archivarDesde || !archivarHasta || archivando}
+                onClick={async () => {
+                  setArchivando(true);
+                  const ok = await archivarRango(archivarDesde, archivarHasta);
+                  setArchivando(false);
+                  if (ok) { setShowArchivar(false); }
+                  else alert('Error al archivar. Intenta de nuevo.');
+                }}
+                style={{ padding: '0.5rem 1.1rem', borderRadius: '7px', border: 'none', background: (!archivarDesde || !archivarHasta) ? 'rgba(245,158,11,.3)' : 'linear-gradient(135deg,#d97706,#b45309)', color: '#fff', cursor: (!archivarDesde || !archivarHasta) ? 'default' : 'pointer', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                {archivando ? <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Archive size={13} />}
+                {archivando ? 'Archivando...' : 'Archivar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1781,12 +1844,12 @@ function Pagination({ page, totalPages, onPage }: { page: number; totalPages: nu
 }
 
 const iStyle: React.CSSProperties = {
-  padding: '0.45rem 0.65rem', border: '1px solid rgba(104,168,119,.35)',
-  borderRadius: '8px', fontSize: '0.82rem',
+  padding: '0.5rem 0.68rem', border: '1px solid rgba(104,168,119,.35)',
+  borderRadius: '10px', fontSize: '0.82rem',
   background: 'rgba(255,255,255,.97)', color: '#162e20',
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 
 const td: React.CSSProperties = {
-  padding: '0.55rem 0.75rem', color: '#517861', whiteSpace: 'nowrap',
+  padding: '0.58rem 0.75rem', color: '#517861', whiteSpace: 'nowrap',
 };

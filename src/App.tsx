@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Truck } from 'lucide-react';
+import { Truck, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import AdminDashboard from './components/panels/AdminDashboard';
@@ -59,7 +59,10 @@ export default function App() {
         />
         {toast && (
           <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
-            {toast.type === 'ok' ? '✓' : '⚠'} {toast.msg}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              {toast.type === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+              {toast.msg}
+            </span>
           </div>
         )}
       </>
@@ -79,7 +82,10 @@ export default function App() {
         />
         {toast && (
           <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
-            {toast.type === 'ok' ? '✓' : '⚠'} {toast.msg}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              {toast.type === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+              {toast.msg}
+            </span>
           </div>
         )}
       </>

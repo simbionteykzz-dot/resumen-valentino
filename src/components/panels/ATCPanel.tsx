@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, X, MessageSquare, LogOut, RotateCcw, ChevronRight, RefreshCw, Printer, Phone, CreditCard, ShoppingBag, Tag, Table2, Truck, User, Calendar, Wrench, MapPin, BarChart2, Clock, Percent, Trash2, Pencil, Check } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { Search, Plus, X, RotateCcw, ChevronRight, Printer, Phone, CreditCard, ShoppingBag, Tag, Table2, Truck, User, Calendar, Wrench, MapPin, BarChart2, Clock, Percent, Trash2, Pencil, Check, Download, AlertTriangle } from 'lucide-react';
 import oversharkLogo from '../../icon-marca/OverShark.jpeg';
 import bravosLogo from '../../icon-marca/Bravos.png';
 import overgirlLogo from '../../icon-marca/OverGirl.png';
+import atcLogo from '../../icon-marca/atc/atc.png';
 import {
   searchCustomers, getCustomerVentas, getATCTickets,
   createATCTicket, updateATCTicket, deleteATCTicket,
@@ -13,6 +15,8 @@ import type { ATCTicket, CustomerBasic, VentaDB, SheetsVentaDB, ATCDescuento } f
 import { syncSheetsData } from '../../lib/sheetsSync';
 import { searchZazuEnvios } from '../../lib/zazuSupabase';
 import type { ZazuEnvio } from '../../lib/zazuSupabase';
+import ATCHeader from './atc/ATCHeader';
+import ATCTicketsPage from './atc/pages/ATCTicketsPage';
 
 interface ATCPanelProps {
   userId?: string;
@@ -43,9 +47,9 @@ const RESPONSABLES_DESCUENTOS: RespGroup[] = [
     'Paul', 'Diego', 'Miguel', 'Alessandra', 'Eros', 'Nicolle', 'Leonardo', 'Dana',
     'Elida', 'Estrella', 'Gabriel', 'Kiara', 'Alex', 'Abigail', 'Angel', 'Orlando',
     'Andrea', 'Yanira', 'Anahí', 'Xiomara', 'Valentina', 'Camila', 'Alejandra',
+    'Angela', 'Genesis', 'Rosa', 'Daniel', 'Gustavo', 'Sandro', 'Eder',
+    'Valentino', 'Gonzalo',
   ] },
-  { group: 'POST - FREDY', items: ['Angela', 'Genesis', 'Rosa', 'Daniel', 'Gustavo', 'Sandro', 'Eder'] },
-  { group: 'POST - STEVEN', items: ['Valentino', 'Gonzalo'] },
   { group: 'Otros', items: ['ZAZU', 'TALLER', 'CLIENTE', 'SHALOM', 'SITEMA', 'DESPACHO'] },
 ];
 
@@ -87,19 +91,25 @@ const ESTADO_PEDIDO_COLOR: Record<string, string> = {
 };
 
 const S = {
-  bg: 'linear-gradient(135deg,#EAF5EE 0%,#DDEEE3 100%)',
-  surface: 'rgba(255,255,255,0.97)',
-  border: '1px solid rgba(104,168,119,.35)',
-  accent: '#1a7fbd',
-  accentLight: 'rgba(26,127,189,0.1)',
-  muted: '#3d6070',
-  text: '#1a2e38',
-  text2: '#0d1f28',
+  bg: '#eef2f7',
+  surface: '#ffffff',
+  border: '1px solid rgba(15,23,42,.12)',
+  borderSoft: '1px solid rgba(15,23,42,.08)',
+  borderAccent: '1px solid rgba(29,78,216,.22)',
+  accent: '#1d4ed8',
+  accentLight: 'rgba(29,78,216,0.1)',
+  success: '#15803d',
+  warning: '#b45309',
+  danger: '#dc2626',
+  muted: '#475569',
+  text: '#1e293b',
+  text2: '#0f172a',
+  shadow: '0 2px 8px rgba(15,23,42,.04)',
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '0.42rem 0.65rem', border: '1px solid rgba(26,127,189,.25)',
-  borderRadius: '7px', fontSize: '0.82rem', color: S.text2, background: '#fff',
+  width: '100%', padding: '0.42rem 0.65rem', border: S.borderSoft,
+  borderRadius: '8px', fontSize: '0.82rem', color: S.text2, background: '#fff',
   outline: 'none', boxSizing: 'border-box',
 };
 const labelStyle: React.CSSProperties = {
@@ -107,7 +117,14 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.25rem',
 };
 
-type TicketFormState = {
+const panelCard: React.CSSProperties = {
+  background: S.surface,
+  border: S.border,
+  borderRadius: '12px',
+  boxShadow: S.shadow,
+};
+
+export type TicketFormState = {
   asunto: string;
   descripcion: string;
   prioridad: ATCTicket['prioridad'];
@@ -149,8 +166,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   const [savingTicket, setSavingTicket] = useState(false);
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [showMetrics, setShowMetrics] = useState(false);
-  const [showDescuentos, setShowDescuentos] = useState(false);
-  const [activeSection, setActiveSection] = useState<'tickets' | 'descuentos'>('tickets');
+  const [activeSection, setActiveSection] = useState<'tickets' | 'descuentos' | 'reporte'>('tickets');
 
   const [sheetsVentas, setSheetsVentas] = useState<SheetsVentaDB[]>([]);
   const [syncingSheets, setSyncingSheets] = useState(false);
@@ -214,7 +230,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
     setSyncMsg(null);
     const result = await syncSheetsData();
     setSyncingSheets(false);
-    setSyncMsg(result.ok ? `✓ ${result.count} registros sincronizados` : `Error: ${result.error}`);
+    setSyncMsg(result.ok ? `OK ${result.count} registros sincronizados` : `ERROR ${result.error}`);
     setTimeout(() => setSyncMsg(null), 4000);
   };
 
@@ -309,350 +325,99 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
     <div style={{ minHeight: '100vh', background: S.bg, color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,rgba(255,255,255,0.98),rgba(235,245,255,0.95))', borderBottom: '1px solid rgba(26,127,189,.25)', padding: '0.85rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', boxShadow: '0 2px 12px rgba(26,127,189,.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,#1a7fbd,#155f8f)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(26,127,189,.3)' }}>
-            <MessageSquare size={16} color="#fff" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: '0.95rem', color: S.text2, letterSpacing: '-0.02em' }}>
-              LIVEX <span style={{ color: S.accent }}>ATC</span>
-            </div>
-            <div style={{ fontSize: '0.7rem', color: S.muted }}>{userName}</div>
-          </div>
-        </div>
-        {/* Nav tabs */}
-        <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(26,127,189,.07)', borderRadius: '11px', padding: '0.22rem' }}>
-          <button onClick={() => setActiveSection('tickets')}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.2rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .15s', background: activeSection === 'tickets' ? 'linear-gradient(135deg,#1a7fbd,#155f8f)' : 'transparent', color: activeSection === 'tickets' ? '#fff' : S.muted, boxShadow: activeSection === 'tickets' ? '0 2px 8px rgba(26,127,189,.3)' : 'none' }}>
-            <Tag size={14} /> ATC Tickets
-            <span style={{ fontSize: '0.62rem', fontWeight: 900, background: activeSection === 'tickets' ? 'rgba(255,255,255,.25)' : 'rgba(26,127,189,.15)', color: activeSection === 'tickets' ? '#fff' : '#1a7fbd', borderRadius: '4px', padding: '0.05rem 0.38rem' }}>{allTickets.length}</span>
-          </button>
-          <button onClick={() => setActiveSection('descuentos')}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.2rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .15s', background: activeSection === 'descuentos' ? 'linear-gradient(135deg,#8b5cf6,#6d28d9)' : 'transparent', color: activeSection === 'descuentos' ? '#fff' : S.muted, boxShadow: activeSection === 'descuentos' ? '0 2px 8px rgba(139,92,246,.3)' : 'none' }}>
-            <Percent size={14} /> Descuentos
-          </button>
-        </div>
+      <ATCHeader
+        userName={userName}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        ticketsCount={allTickets.length}
+        openCount={openCount}
+        inProcessCount={inProcessCount}
+        resolvedToday={resolvedToday}
+        onShowMetrics={() => setShowMetrics(true)}
+        onSyncSheets={handleSyncSheets}
+        syncingSheets={syncingSheets}
+        syncMsg={syncMsg}
+        isAdmin={isAdmin}
+        onBack={onBack}
+        onSignOut={onSignOut}
+        theme={{
+          borderSoft: S.borderSoft,
+          borderAccent: S.borderAccent,
+          accent: S.accent,
+          accentLight: S.accentLight,
+          muted: S.muted,
+          text2: S.text2,
+          success: S.success,
+          warning: S.warning,
+          danger: S.danger,
+        }}
+      />
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {[
-              { label: 'Abiertos', val: openCount, color: '#ef4444' },
-              { label: 'En proceso', val: inProcessCount, color: '#f59e0b' },
-              { label: 'Resueltos hoy', val: resolvedToday, color: '#45834D' },
-            ].map(k => (
-              <div key={k.label} style={{ background: `${k.color}10`, border: `1px solid ${k.color}30`, borderRadius: '8px', padding: '0.3rem 0.65rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: 900, color: k.color }}>{k.val}</div>
-                <div style={{ fontSize: '0.58rem', fontWeight: 700, color: k.color, opacity: 0.8 }}>{k.label}</div>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => setShowMetrics(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(26,127,189,.25)', background: 'rgba(26,127,189,.08)', color: '#1a7fbd' }}>
-            <BarChart2 size={13} /> Métricas
-          </button>
-          <div style={{ position: 'relative' }}>
-            <button onClick={handleSyncSheets} disabled={syncingSheets}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: syncingSheets ? 'default' : 'pointer', border: '1px solid rgba(69,131,77,.25)', background: 'rgba(69,131,77,.08)', color: '#45834D', opacity: syncingSheets ? 0.7 : 1 }}>
-              <RefreshCw size={13} style={{ animation: syncingSheets ? 'spin 1s linear infinite' : 'none' }} />
-              {syncingSheets ? 'Sincronizando...' : 'Sync Sheets'}
-            </button>
-            {syncMsg && (
-              <div style={{ position: 'absolute', top: '110%', right: 0, background: syncMsg.startsWith('✓') ? '#45834D' : '#ef4444', color: '#fff', borderRadius: '7px', padding: '0.35rem 0.75rem', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', zIndex: 100 }}>
-                {syncMsg}
-              </div>
-            )}
-          </div>
-          {isAdmin && onBack && (
-            <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(26,127,189,.25)', background: S.accentLight, color: S.accent }}>
-              ← Admin
-            </button>
-          )}
-          <button onClick={onSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(239,68,68,.2)', background: 'rgba(239,68,68,.08)', color: '#ef4444' }}>
-            <LogOut size={13} /> Salir
-          </button>
+      {activeSection === 'reporte' ? (
+        <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '1rem 1.2rem 1.4rem' }}>
+          <ReporteSection tickets={allTickets} />
         </div>
-      </div>
-
-      {activeSection === 'descuentos' ? (
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem' }}>
+      ) : activeSection === 'descuentos' ? (
+        <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '1rem 1.2rem 1.4rem' }}>
           <DescuentosModal inline userId={userId} onClose={() => setActiveSection('tickets')} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />
         </div>
       ) : (
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.25rem 1.5rem', display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1.25rem', alignItems: 'start' }}>
-
-        {/* ── Columna izquierda ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '0.85rem' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.5rem' }}>Buscar cliente</div>
-            <div style={{ position: 'relative' }}>
-              <Search size={13} style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: S.muted }} />
-              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Celular, nombre o DNI..."
-                style={{ width: '100%', padding: '0.45rem 0.65rem 0.45rem 2rem', border: '1px solid rgba(26,127,189,.25)', borderRadius: '7px', fontSize: '0.8rem', color: S.text2, background: 'rgba(235,245,255,.5)', outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-          </div>
-
-          {(searchResults.length > 0 || searching) && (
-            <div style={{ background: S.surface, border: S.border, borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ padding: '0.6rem 0.85rem', fontSize: '0.62rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', borderBottom: '1px solid rgba(26,127,189,.12)' }}>
-                {searching ? 'Buscando...' : `${searchResults.length} resultado${searchResults.length !== 1 ? 's' : ''}`}
-              </div>
-              <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
-                {searchResults.map(c => (
-                  <button key={c.cel} onClick={() => selectCustomer(c)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 0.85rem', background: selectedCustomer?.cel === c.cel ? S.accentLight : 'transparent', border: 'none', borderBottom: '1px solid rgba(26,127,189,.08)', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: selectedCustomer?.cel === c.cel ? 'linear-gradient(135deg,#1a7fbd,#155f8f)' : 'rgba(26,127,189,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, color: selectedCustomer?.cel === c.cel ? '#fff' : S.accent, flexShrink: 0 }}>
-                      {c.nom.charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: S.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nom || '—'}</div>
-                      <div style={{ fontSize: '0.65rem', color: S.muted }}>{c.cel}</div>
-                    </div>
-                    {selectedCustomer?.cel === c.cel && <ChevronRight size={12} color={S.accent} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{ background: S.surface, border: S.border, borderRadius: '12px', padding: '0.85rem' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.6rem' }}>Filtrar tickets</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-              {(['todos', ...ESTADOS] as const).map(e => {
-                const count = e === 'todos' ? allTickets.length : allTickets.filter(t => t.estado === e).length;
-                const color = e === 'todos' ? S.accent : ESTADO_COLOR[e];
-                const isActive = ticketEstadoFilter === e;
-                return (
-                  <button key={e} onClick={() => { setTicketEstadoFilter(e as any); setSelectedCustomer(null); }}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', borderRadius: '7px', border: `1px solid ${isActive ? color + '40' : 'transparent'}`, background: isActive ? `${color}12` : 'transparent', cursor: 'pointer' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isActive ? color : S.muted }}>{e === 'todos' ? 'Todos' : ESTADO_LABEL[e]}</span>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 800, background: `${color}20`, color, borderRadius: '4px', padding: '0.05rem 0.4rem' }}>{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Columna derecha ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {selectedCustomer ? (
-            <>
-              <div style={{ background: S.surface, border: '1px solid rgba(26,127,189,.25)', borderRadius: '14px', padding: '1.1rem 1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg,#1a7fbd,#155f8f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 900, color: '#fff', flexShrink: 0 }}>
-                      {selectedCustomer.nom.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1rem', fontWeight: 900, color: S.text2 }}>{selectedCustomer.nom || '—'}</div>
-                      <div style={{ fontSize: '0.72rem', color: S.muted, display: 'flex', gap: '0.75rem', marginTop: '0.15rem' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Phone size={11} /> {selectedCustomer.cel}</span>
-                        {selectedCustomer.dni && <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CreditCard size={11} /> {selectedCustomer.dni}</span>}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    {!loadingVentas && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 900, color: '#45834D' }}>S/{totalSpent.toLocaleString()}</div>
-                        <div style={{ fontSize: '0.62rem', color: S.muted }}>{customerVentas.filter(v => !v.anulado).length} compras</div>
-                      </div>
-                    )}
-                    <button onClick={() => { setTicketForm(emptyForm()); setShowTicketForm(true); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#1a7fbd,#155f8f)', color: '#fff' }}>
-                      <Plus size={13} /> Nuevo ticket
-                    </button>
-                    <button onClick={() => setSelectedCustomer(null)}
-                      style={{ display: 'flex', alignItems: 'center', padding: '0.4rem', borderRadius: '7px', border: '1px solid rgba(104,168,119,.25)', background: 'transparent', cursor: 'pointer', color: S.muted }}>
-                      <X size={13} />
-                    </button>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.25rem', borderBottom: '2px solid rgba(26,127,189,.12)' }}>
-                  {([
-                    { id: 'historial' as const, Icon: ShoppingBag, text: `Historial (${customerVentas.filter(v => !v.anulado).length})` },
-                    { id: 'tickets' as const, Icon: Tag, text: `Tickets (${customerTickets.length})` },
-                    { id: 'sheets' as const, Icon: Table2, text: `Sheets (${sheetsVentas.length})` },
-                    { id: 'zazu' as const, Icon: Truck, text: loadingZazu ? 'ZAZU...' : `ZAZU (${zazuEnvios.length})` },
-                  ]).map(tab => (
-                    <button key={tab.id} onClick={() => setCustomerTab(tab.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.85rem', fontSize: '0.78rem', fontWeight: 800, border: 'none', borderBottom: customerTab === tab.id ? '2px solid #1a7fbd' : '2px solid transparent', background: customerTab === tab.id ? 'rgba(26,127,189,.07)' : 'transparent', color: customerTab === tab.id ? '#1a7fbd' : S.muted, cursor: 'pointer', borderRadius: '6px 6px 0 0', marginBottom: '-2px' }}>
-                      <tab.Icon size={12} />
-                      {tab.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {customerTab === 'historial' && (
-                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', overflow: 'hidden' }}>
-                  {loadingVentas ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: S.muted, fontSize: '0.82rem' }}>Cargando historial...</div>
-                  ) : customerVentas.length === 0 ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: S.muted, fontSize: '0.82rem' }}>Sin compras registradas.</div>
-                  ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
-                      <thead>
-                        <tr style={{ background: 'rgba(26,127,189,.05)', borderBottom: '1px solid rgba(26,127,189,.15)' }}>
-                          {['Fecha', 'Marca', 'Combo', 'Total S/', 'Debe', 'Método', 'Estado'].map(h => (
-                            <th key={h} style={{ padding: '0.55rem 0.85rem', textAlign: 'left', fontSize: '0.62rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {customerVentas.map((v, i) => {
-                          const anulado = v.anulado || v.metodo_pago === 'Anulado';
-                          return (
-                            <tr key={v.id ?? i} style={{ borderBottom: '1px solid rgba(26,127,189,.08)', opacity: anulado ? 0.5 : 1, background: i % 2 === 0 ? 'transparent' : 'rgba(26,127,189,.02)' }}>
-                              <td style={{ padding: '0.5rem 0.85rem', fontWeight: 700, color: S.text2 }}>{fmtDate(v.fecha)}</td>
-                              <td style={{ padding: '0.5rem 0.85rem' }}>
-                                <span style={{ fontSize: '0.68rem', fontWeight: 800, background: (v.marca_label || '').toUpperCase().includes('BRV') ? 'rgba(235,115,71,.1)' : 'rgba(69,131,77,.1)', color: (v.marca_label || '').toUpperCase().includes('BRV') ? '#EB7347' : '#45834D', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>
-                                  {v.marca_label || 'OVER'}
-                                </span>
-                              </td>
-                              <td style={{ padding: '0.5rem 0.85rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.combo || '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem', fontWeight: 900, color: '#45834D' }}>S/{Number(v.total_total || 0).toLocaleString()}</td>
-                              <td style={{ padding: '0.5rem 0.85rem', fontWeight: 700, color: Number(v.resta) > 0 ? '#ef4444' : S.muted }}>{Number(v.resta) > 0 ? `S/${v.resta}` : '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{v.metodo_pago || '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem' }}>
-                                {anulado
-                                  ? <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(239,68,68,.1)', color: '#ef4444', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>Anulado</span>
-                                  : v.separo === 'Sí'
-                                    ? <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(245,158,11,.1)', color: '#f59e0b', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>Separado</span>
-                                    : <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(69,131,77,.1)', color: '#45834D', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>Pagado</span>
-                                }
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-
-              {customerTab === 'sheets' && (
-                <div style={{ background: S.surface, border: S.border, borderRadius: '14px', overflow: 'hidden' }}>
-                  {sheetsVentas.length === 0 ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: S.muted, fontSize: '0.82rem' }}>
-                      Sin datos en Sheets para este cliente. Usa "Sync Sheets" para cargar.
-                    </div>
-                  ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
-                      <thead>
-                        <tr style={{ background: 'rgba(26,127,189,.05)', borderBottom: '1px solid rgba(26,127,189,.15)' }}>
-                          {['Fecha', 'Empresa', 'Vendedor', 'Región', 'Total S/', 'Estado pedido'].map(h => (
-                            <th key={h} style={{ padding: '0.55rem 0.85rem', textAlign: 'left', fontSize: '0.62rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sheetsVentas.map((v, i) => {
-                          const epColor = v.estado_pedido ? (ESTADO_PEDIDO_COLOR[v.estado_pedido] ?? '#888') : null;
-                          return (
-                            <tr key={v.id} style={{ borderBottom: '1px solid rgba(26,127,189,.08)', background: i % 2 === 0 ? 'transparent' : 'rgba(26,127,189,.02)' }}>
-                              <td style={{ padding: '0.5rem 0.85rem', fontWeight: 700, color: S.text2 }}>{v.fecha?.slice(0, 10) ?? '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem' }}>
-                                <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(69,131,77,.1)', color: '#45834D', borderRadius: '4px', padding: '0.1rem 0.4rem' }}>
-                                  {v.empresa || '—'}
-                                </span>
-                              </td>
-                              <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{v.vendedor || '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem', color: S.muted }}>{v.lima_provincia || '—'}</td>
-                              <td style={{ padding: '0.5rem 0.85rem', fontWeight: 900, color: '#45834D' }}>
-                                {v.monto_total ? `S/${v.monto_total}` : '—'}
-                              </td>
-                              <td style={{ padding: '0.5rem 0.85rem' }}>
-                                {epColor
-                                  ? <span style={{ fontSize: '0.65rem', fontWeight: 800, background: `${epColor}18`, color: epColor, borderRadius: '4px', padding: '0.1rem 0.4rem' }}>{v.estado_pedido}</span>
-                                  : <span style={{ color: S.muted }}>—</span>
-                                }
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-
-              {customerTab === 'zazu' && (
-                <ZazuTab envios={zazuEnvios} loading={loadingZazu} S={S}
-                  onUseNtv={envio => {
-                    const region = [envio.fuente, envio.ubicacion].filter(Boolean).join(' · ');
-                    setTicketForm(p => ({ ...p, ntv: envio.ntv, region }));
-                    setShowTicketForm(true);
-                  }}
-                />
-              )}
-
-              {customerTab === 'tickets' && (
-                <TicketList
-                  tickets={customerTickets}
-                  expandedTicket={expandedTicket}
-                  editingNote={editingNote}
-                  editingSolucion={editingSolucion}
-                  onToggle={id => setExpandedTicket(prev => prev === id ? null : id)}
-                  onChangeEstado={changeEstado}
-                  onChangeEstadoPedido={changeEstadoPedido}
-                  onEditNote={id => setEditingNote({ id, value: customerTickets.find(t => t.id === id)?.notas ?? '' })}
-                  onSaveNote={saveNote}
-                  onCancelNote={() => setEditingNote(null)}
-                  onNoteChange={val => setEditingNote(prev => prev ? { ...prev, value: val } : null)}
-                  onEditSolucion={id => setEditingSolucion({ id, value: customerTickets.find(t => t.id === id)?.solucion ?? '' })}
-                  onSaveSolucion={saveSolucion}
-                  onCancelSolucion={() => setEditingSolucion(null)}
-                  onSolucionChange={val => setEditingSolucion(prev => prev ? { ...prev, value: val } : null)}
-                  onDelete={removeTicket}
-                  emptyMsg="Sin tickets para este cliente."
-                  S={S}
-                />
-              )}
-            </>
-          ) : (
-            <div style={{ background: S.surface, border: S.border, borderRadius: '14px', overflow: 'hidden' }}>
-              <div style={{ padding: '0.85rem 1.25rem', borderBottom: '1px solid rgba(26,127,189,.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: '0.68rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                  {ticketEstadoFilter === 'todos' ? 'Todos los tickets' : ESTADO_LABEL[ticketEstadoFilter]} — {filteredTickets.length}
-                </div>
-                <button onClick={loadTickets} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.75rem', borderRadius: '7px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(26,127,189,.25)', background: S.accentLight, color: S.accent }}>
-                  <RotateCcw size={11} /> Actualizar
-                </button>
-              </div>
-              {loadingTickets ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: S.muted, fontSize: '0.82rem' }}>Cargando...</div>
-              ) : (
-                <TicketList
-                  tickets={filteredTickets}
-                  expandedTicket={expandedTicket}
-                  editingNote={editingNote}
-                  editingSolucion={editingSolucion}
-                  onToggle={id => setExpandedTicket(prev => prev === id ? null : id)}
-                  onChangeEstado={changeEstado}
-                  onChangeEstadoPedido={changeEstadoPedido}
-                  onEditNote={id => setEditingNote({ id, value: filteredTickets.find(t => t.id === id)?.notas ?? '' })}
-                  onSaveNote={saveNote}
-                  onCancelNote={() => setEditingNote(null)}
-                  onNoteChange={val => setEditingNote(prev => prev ? { ...prev, value: val } : null)}
-                  onEditSolucion={id => setEditingSolucion({ id, value: filteredTickets.find(t => t.id === id)?.solucion ?? '' })}
-                  onSaveSolucion={saveSolucion}
-                  onCancelSolucion={() => setEditingSolucion(null)}
-                  onSolucionChange={val => setEditingSolucion(prev => prev ? { ...prev, value: val } : null)}
-                  onDelete={removeTicket}
-                  emptyMsg="No hay tickets con este estado."
-                  S={S}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+        <ATCTicketsPage
+          panelCard={panelCard}
+          S={S}
+          ESTADOS={ESTADOS}
+          ESTADO_COLOR={ESTADO_COLOR}
+          ESTADO_LABEL={ESTADO_LABEL}
+          ESTADO_PEDIDO_COLOR={ESTADO_PEDIDO_COLOR}
+          ticketEstadoFilter={ticketEstadoFilter}
+          setTicketEstadoFilter={setTicketEstadoFilter}
+          allTickets={allTickets}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchResults={searchResults}
+          searching={searching}
+          selectedCustomer={selectedCustomer}
+          selectCustomer={selectCustomer}
+          setSelectedCustomer={setSelectedCustomer}
+          loadingVentas={loadingVentas}
+          customerVentas={customerVentas}
+          totalSpent={totalSpent}
+          onNewTicket={() => { setTicketForm(emptyForm()); setShowTicketForm(true); }}
+          customerTab={customerTab}
+          setCustomerTab={setCustomerTab}
+          customerTickets={customerTickets}
+          sheetsVentas={sheetsVentas}
+          loadingZazu={loadingZazu}
+          zazuEnvios={zazuEnvios}
+          fmtDate={fmtDate}
+          expandedTicket={expandedTicket}
+          editingNote={editingNote}
+          editingSolucion={editingSolucion}
+          onToggleTicket={id => setExpandedTicket(prev => prev === id ? null : id)}
+          changeEstado={changeEstado}
+          changeEstadoPedido={changeEstadoPedido}
+          onStartEditCustomerNote={id => setEditingNote({ id, value: customerTickets.find(t => t.id === id)?.notas ?? '' })}
+          onStartEditCustomerSolucion={id => setEditingSolucion({ id, value: customerTickets.find(t => t.id === id)?.solucion ?? '' })}
+          onStartEditFilteredNote={id => setEditingNote({ id, value: filteredTickets.find(t => t.id === id)?.notas ?? '' })}
+          onStartEditFilteredSolucion={id => setEditingSolucion({ id, value: filteredTickets.find(t => t.id === id)?.solucion ?? '' })}
+          saveNote={saveNote}
+          saveSolucion={saveSolucion}
+          onCancelNote={() => setEditingNote(null)}
+          onNoteChange={val => setEditingNote(prev => prev ? { ...prev, value: val } : null)}
+          onCancelSolucion={() => setEditingSolucion(null)}
+          onSolucionChange={val => setEditingSolucion(prev => prev ? { ...prev, value: val } : null)}
+          removeTicket={removeTicket}
+          filteredTickets={filteredTickets}
+          loadTickets={loadTickets}
+          loadingTickets={loadingTickets}
+          setTicketForm={setTicketForm}
+          setShowTicketForm={setShowTicketForm}
+          ZazuTabComponent={ZazuTab}
+          TicketListComponent={TicketList}
+        />
       )}
 
       {showMetrics && <MetricsModal tickets={allTickets} onClose={() => setShowMetrics(false)} />}
-      {showDescuentos && <DescuentosModal userId={userId} onClose={() => setShowDescuentos(false)} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />}
 
       {/* ── Modal: Nuevo ticket ── */}
       {showTicketForm && selectedCustomer && (
@@ -812,7 +577,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
 
             {ticketError && (
               <div style={{ marginTop: '0.75rem', padding: '0.55rem 0.85rem', borderRadius: '8px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: '#ef4444', fontSize: '0.78rem', fontWeight: 600 }}>
-                ⚠️ {ticketError}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={12} /> {ticketError}</span>
               </div>
             )}
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
@@ -964,6 +729,8 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
   const [editForm, setEditForm] = useState<DescForm>(emptyDesc());
   const [filterResp, setFilterResp] = useState('');
   const [filterNom, setFilterNom] = useState('');
+  const [tipoResp, setTipoResp] = useState('');
+  const [editTipoResp, setEditTipoResp] = useState('');
 
   // Customer autocomplete for the form
   const [custQuery, setCustQuery] = useState('');
@@ -1046,6 +813,7 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
     if (created) {
       setRows(prev => [created, ...prev]);
       setForm(emptyDesc());
+      setTipoResp('');
       clearCust();
       setShowForm(false);
       setSaveError(null);
@@ -1062,7 +830,10 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
 
   const startEdit = (r: ATCDescuento) => {
     setEditingId(r.id!);
-    setEditForm({ fecha: r.fecha, nota_venta: r.nota_venta ?? '', dni: r.dni ?? '', telefono: r.telefono ?? '', nombre_cliente: r.nombre_cliente, descripcion: r.descripcion, descuento: String(r.descuento), responsable: r.responsable ?? '' });
+    const respName = r.responsable ?? '';
+    const respGroup = responsablesGrouped?.find(g => g.items.includes(respName))?.group ?? '';
+    setEditTipoResp(respGroup);
+    setEditForm({ fecha: r.fecha, nota_venta: r.nota_venta ?? '', dni: r.dni ?? '', telefono: r.telefono ?? '', nombre_cliente: r.nombre_cliente, descripcion: r.descripcion, descuento: String(r.descuento), responsable: respName });
   };
 
   const saveEdit = async (id: string) => {
@@ -1075,6 +846,7 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
     if (ok) {
       setRows(prev => prev.map(r => r.id === id ? { ...r, fecha: editForm.fecha, nota_venta: editForm.nota_venta || undefined, dni: editForm.dni || undefined, telefono: editForm.telefono || undefined, nombre_cliente: editForm.nombre_cliente, descripcion: editForm.descripcion, descuento: Number(editForm.descuento), responsable: editForm.responsable || undefined } : r));
       setEditingId(null);
+      setEditTipoResp('');
     }
   };
 
@@ -1126,7 +898,7 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
               <div style={{ position: 'relative' }}>
                 <label style={{ fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>
                   Buscar Cliente (cel / nombre / DNI) *
-                  {selectedCust && <button onClick={clearCust} style={{ marginLeft: '0.5rem', fontSize: '0.6rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 700 }}>✕ Cambiar</button>}
+                  {selectedCust && <button onClick={clearCust} style={{ marginLeft: '0.5rem', fontSize: '0.6rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><X size={10} /> Cambiar</button>}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Search size={12} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
@@ -1227,20 +999,30 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
                 <input type="number" min="0" step="0.01" value={form.descuento} onChange={e => setForm(p => ({ ...p, descuento: e.target.value }))} placeholder="0.00" style={inp} />
               </div>
               <div>
-                <label style={{ fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Responsable</label>
-                <select value={form.responsable} onChange={e => setForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
-                  {renderRespOptions()}
+                <label style={{ fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Tipo Responsable</label>
+                <select value={tipoResp} onChange={e => { setTipoResp(e.target.value); setForm(p => ({ ...p, responsable: '' })); }} style={inp}>
+                  <option value="">— Seleccionar —</option>
+                  {responsablesGrouped?.map(g => <option key={g.group} value={g.group}>{g.group}</option>)}
                 </select>
               </div>
+              {tipoResp && (
+                <div>
+                  <label style={{ fontSize: '0.6rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Responsable</label>
+                  <select value={form.responsable} onChange={e => setForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
+                    <option value="">— Seleccionar —</option>
+                    {responsablesGrouped?.find(g => g.group === tipoResp)?.items.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
             {saveError && (
               <div style={{ padding: '0.45rem 0.7rem', borderRadius: '7px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', color: '#ef4444', fontSize: '0.75rem', fontWeight: 600 }}>
-                ⚠️ {saveError}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={12} /> {saveError}</span>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              <button onClick={() => { setShowForm(false); clearCust(); setSaveError(null); }} style={{ padding: '0.4rem 0.9rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(0,0,0,.12)', background: 'transparent', color: '#888' }}>Cancelar</button>
+              <button onClick={() => { setShowForm(false); clearCust(); setSaveError(null); setTipoResp(''); }} style={{ padding: '0.4rem 0.9rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(0,0,0,.12)', background: 'transparent', color: '#888' }}>Cancelar</button>
               <button onClick={save} disabled={saving}
                 style={{ padding: '0.4rem 1.1rem', borderRadius: '7px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Guardando...' : 'Guardar'}
@@ -1269,12 +1051,21 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
                       <input value={editForm.nombre_cliente} onChange={e => setEditForm(p => ({ ...p, nombre_cliente: e.target.value }))} placeholder="Nombre cliente" style={inp} />
                       <input value={editForm.descripcion} onChange={e => setEditForm(p => ({ ...p, descripcion: e.target.value }))} placeholder="Descripción" style={inp} />
                       <input type="number" value={editForm.descuento} onChange={e => setEditForm(p => ({ ...p, descuento: e.target.value }))} placeholder="0.00" style={inp} />
-                      <select value={editForm.responsable} onChange={e => setEditForm(p => ({ ...p, responsable: e.target.value }))} style={inp}>
-                        {renderRespOptions()}
-                      </select>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <select value={editTipoResp} onChange={e => { setEditTipoResp(e.target.value); setEditForm(p => ({ ...p, responsable: '' })); }} style={{ ...inp, fontSize: '0.68rem' }}>
+                          <option value="">— Tipo —</option>
+                          {responsablesGrouped?.map(g => <option key={g.group} value={g.group}>{g.group}</option>)}
+                        </select>
+                        {editTipoResp && (
+                          <select value={editForm.responsable} onChange={e => setEditForm(p => ({ ...p, responsable: e.target.value }))} style={{ ...inp, fontSize: '0.68rem' }}>
+                            <option value="">— Quién —</option>
+                            {responsablesGrouped?.find(g => g.group === editTipoResp)?.items.map(r => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button onClick={() => saveEdit(r.id!)} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer' }}><Check size={11} /></button>
-                        <button onClick={() => setEditingId(null)} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: '1px solid #ccc', background: 'transparent', color: '#888', cursor: 'pointer' }}><X size={11} /></button>
+                        <button onClick={() => { setEditingId(null); setEditTipoResp(''); }} style={{ padding: '0.3rem 0.55rem', borderRadius: '5px', border: '1px solid #ccc', background: 'transparent', color: '#888', cursor: 'pointer' }}><X size={11} /></button>
                       </div>
                     </div>
                   </div>
@@ -1297,7 +1088,7 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
                         {r.responsable && <span style={{ fontSize: '0.62rem', fontWeight: 800, background: 'rgba(100,116,139,.1)', color: '#475569', borderRadius: '4px', padding: '0.1rem 0.45rem' }}>{r.responsable}</span>}
                         <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{r.fecha}</span>
                         <span style={{ fontSize: '1rem', fontWeight: 900, color: '#8b5cf6', minWidth: '70px', textAlign: 'right' }}>S/ {Number(r.descuento).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
-                        <span style={{ color: isExpanded ? '#8b5cf6' : '#94a3b8', fontSize: '0.7rem', transition: 'transform 0.2s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>▶</span>
+                        <span style={{ color: isExpanded ? '#8b5cf6' : '#94a3b8', transition: 'transform 0.2s', display: 'inline-flex', transform: isExpanded ? 'rotate(90deg)' : 'none' }}><ChevronRight size={12} /></span>
                       </div>
                     </div>
 
@@ -1530,6 +1321,224 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
   );
 }
 
+// ── Reporte Section ───────────────────────────────────────────────────────────
+
+const TICKET_COLS: { label: string; key: keyof ATCTicket | '_fecha' }[] = [
+  { label: 'FECHA',           key: 'fecha_atencion' },
+  { label: 'NTV',             key: 'ntv' },
+  { label: 'F.EMISION',       key: 'fecha_emision' },
+  { label: 'F.VENTA',         key: 'fecha_venta' },
+  { label: 'CEL.',            key: 'cliente_cel' },
+  { label: 'CLIENTE',         key: 'cliente_nom' },
+  { label: 'REGION',          key: 'region' },
+  { label: 'RESPONSABLE',     key: 'responsable' },
+  { label: 'MOTIVO',          key: 'asunto' },
+  { label: 'SOLICITUD',       key: 'solicitud' },
+  { label: 'DESCRIPCION',     key: 'descripcion' },
+  { label: 'SOLUCION',        key: 'solucion' },
+  { label: 'ESTADO',          key: 'estado' },
+  { label: 'ESTADO DEL PEDIDO', key: 'estado_pedido' },
+];
+
+const DESC_COLS: { label: string; key: keyof ATCDescuento }[] = [
+  { label: 'FECHA',             key: 'fecha' },
+  { label: 'NOTA DE VENTA',     key: 'nota_venta' },
+  { label: 'DNI',               key: 'dni' },
+  { label: 'TELEFONO',          key: 'telefono' },
+  { label: 'NOMBRE DEL CLIENTE',key: 'nombre_cliente' },
+  { label: 'DESCRIPCION',       key: 'descripcion' },
+  { label: 'DESCUENTO',         key: 'descuento' },
+  { label: 'RESPONSABLE',       key: 'responsable' },
+];
+
+function ticketToXLSXRow(t: ATCTicket) {
+  return {
+    'FECHA': t.fecha_atencion ?? '', 'NTV': t.ntv ?? '',
+    'F.EMISION': t.fecha_emision ?? '', 'F.VENTA': t.fecha_venta ?? '',
+    'CEL.': t.cliente_cel, 'CLIENTE': t.cliente_nom,
+    'REGION': t.region ?? '', 'RESPONSABLE': t.responsable ?? '',
+    'MOTIVO': t.asunto, 'SOLICITUD': t.solicitud ?? '',
+    'DESCRIPCION': t.descripcion, 'SOLUCION': t.solucion ?? '',
+    'ESTADO': t.estado, 'ESTADO DEL PEDIDO': t.estado_pedido ?? '',
+  };
+}
+
+function descToXLSXRow(d: ATCDescuento) {
+  return {
+    'FECHA': d.fecha, 'NOTA DE VENTA': d.nota_venta ?? '',
+    'DNI': d.dni ?? '', 'TELEFONO': d.telefono ?? '',
+    'NOMBRE DEL CLIENTE': d.nombre_cliente,
+    'DESCRIPCION': d.descripcion,
+    'DESCUENTO': d.descuento, 'RESPONSABLE': d.responsable ?? '',
+  };
+}
+
+function buildPrintTable(title: string, headers: string[], rows: string[][], accent: string) {
+  const ths = headers.map(h => `<th>${h}</th>`).join('');
+  const trs = rows.map(r =>
+    `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`
+  ).join('');
+  return `
+    <h2 style="font-size:13px;font-weight:900;color:${accent};margin:18px 0 8px;letter-spacing:.03em">${title}</h2>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>${ths}</tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+    </div>`;
+}
+
+function ReporteSection({ tickets }: { tickets: ATCTicket[] }) {
+  const [descuentos, setDescuentos] = useState<ATCDescuento[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getATCDescuentos().then(d => { setDescuentos(d); setLoading(false); });
+  }, []);
+
+  const exportXLSX = (which: 'tickets' | 'descuentos' | 'ambos') => {
+    const wb = XLSX.utils.book_new();
+    if (which !== 'descuentos')
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tickets.map(ticketToXLSXRow)), 'ATC Tickets');
+    if (which !== 'tickets')
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(descuentos.map(descToXLSXRow)), 'Descuentos');
+    const name = which === 'tickets' ? 'ATC_Tickets' : which === 'descuentos' ? 'ATC_Descuentos' : 'ATC_Reporte';
+    XLSX.writeFile(wb, `${name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const exportPDF = (which: 'tickets' | 'descuentos' | 'ambos') => {
+    const now = new Date().toLocaleString('es-PE', { dateStyle: 'long', timeStyle: 'short' });
+    let body = '';
+    if (which !== 'descuentos') {
+      const rows = tickets.map(t => TICKET_COLS.map(c => String((t as unknown as Record<string, unknown>)[c.key as string] ?? '')));
+      body += buildPrintTable('ATC Tickets', TICKET_COLS.map(c => c.label), rows, '#1a7fbd');
+    }
+    if (which !== 'tickets') {
+      const rows = descuentos.map(d => DESC_COLS.map(c => String((d as unknown as Record<string, unknown>)[c.key] ?? '')));
+      body += buildPrintTable('Descuentos ATC', DESC_COLS.map(c => c.label), rows, '#8b5cf6');
+    }
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<title>ATC Reporte</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#1a2e38;padding:24px 28px;font-size:11px}
+  .hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1a7fbd;padding-bottom:10px;margin-bottom:4px}
+  .hdr-brand{display:flex;align-items:center;gap:10px}
+  .hdr-logo{width:40px;height:40px;object-fit:contain;border-radius:8px}
+  .hdr-title{font-size:16px;font-weight:900;color:#1a2e38}.hdr-title span{color:#1a7fbd}
+  .hdr-date{font-size:10px;color:#6b8fa3;text-align:right}
+  table{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px}
+  thead tr{background:#1a7fbd;color:#fff}
+  thead th{padding:5px 6px;text-align:left;font-weight:800;font-size:8.5px;white-space:nowrap}
+  tbody tr:nth-child(even){background:#f8fafc}
+  tbody td{padding:4px 6px;border-bottom:1px solid #e8f0f4;white-space:nowrap}
+  @media print{body{padding:14px 18px}@page{size:A4 landscape;margin:12mm}}
+</style></head><body>
+<div class="hdr">
+  <div class="hdr-brand">
+    <img src="${atcLogo}" class="hdr-logo" alt="ATC"/>
+    <div><div class="hdr-title">LIVEX <span>ATC</span></div><div style="font-size:9px;color:#6b8fa3">Atención al Cliente</div></div>
+  </div>
+  <div class="hdr-date">Generado el ${now}</div>
+</div>
+${body}
+<script>window.onload=()=>window.print()</script>
+</body></html>`;
+    const win = window.open('', '_blank', 'width=1100,height=800');
+    if (win) { win.document.open(); win.document.write(html); win.document.close(); }
+  };
+
+  const thS: React.CSSProperties = { padding: '0.45rem 0.7rem', fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', background: '#1a7fbd', color: '#fff', textAlign: 'left', position: 'sticky', top: 0 };
+  const tdS: React.CSSProperties = { padding: '0.38rem 0.7rem', fontSize: '0.75rem', color: '#1a2e38', whiteSpace: 'nowrap', borderBottom: '1px solid rgba(26,127,189,.08)' };
+  const thSp: React.CSSProperties = { ...thS, background: '#8b5cf6' };
+  const tdSp: React.CSSProperties = { ...tdS };
+
+  const btnXlsx = (label: string, which: 'tickets' | 'descuentos' | 'ambos') => (
+    <button onClick={() => exportXLSX(which)} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.38rem 0.85rem', borderRadius: '7px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(34,197,94,.3)', background: 'rgba(34,197,94,.08)', color: '#16a34a' }}>
+      <Download size={13} /> {label}
+    </button>
+  );
+  const btnPdf = (label: string, which: 'tickets' | 'descuentos' | 'ambos') => (
+    <button onClick={() => exportPDF(which)} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.38rem 0.85rem', borderRadius: '7px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(239,68,68,.25)', background: 'rgba(239,68,68,.07)', color: '#ef4444' }}>
+      <Printer size={13} /> {label}
+    </button>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* ATC Tickets */}
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid rgba(26,127,189,.18)', boxShadow: '0 2px 12px rgba(26,127,189,.07)', overflow: 'hidden' }}>
+        <div style={{ padding: '0.85rem 1.2rem', borderBottom: '1px solid rgba(26,127,189,.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            <Tag size={15} color="#1a7fbd" />
+            <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1a2e38' }}>ATC Tickets</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(26,127,189,.1)', color: '#1a7fbd', borderRadius: '5px', padding: '0.1rem 0.5rem' }}>{tickets.length}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {btnXlsx('Excel', 'tickets')}
+            {btnPdf('PDF', 'tickets')}
+          </div>
+        </div>
+        <div style={{ overflowX: 'auto', maxHeight: '380px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>{TICKET_COLS.map(c => <th key={c.label} style={thS}>{c.label}</th>)}</tr>
+            </thead>
+            <tbody>
+              {tickets.map((t, i) => (
+                <tr key={t.id ?? i} style={{ background: i % 2 === 0 ? '#fff' : 'rgba(26,127,189,.03)' }}>
+                  {TICKET_COLS.map(c => <td key={c.label} style={tdS}>{String((t as unknown as Record<string, unknown>)[c.key as string] ?? '')}</td>)}
+                </tr>
+              ))}
+              {tickets.length === 0 && <tr><td colSpan={TICKET_COLS.length} style={{ ...tdS, textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>Sin registros</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Descuentos */}
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid rgba(139,92,246,.18)', boxShadow: '0 2px 12px rgba(139,92,246,.07)', overflow: 'hidden' }}>
+        <div style={{ padding: '0.85rem 1.2rem', borderBottom: '1px solid rgba(139,92,246,.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            <Percent size={15} color="#8b5cf6" />
+            <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#1a2e38' }}>Descuentos</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, background: 'rgba(139,92,246,.1)', color: '#8b5cf6', borderRadius: '5px', padding: '0.1rem 0.5rem' }}>{loading ? '…' : descuentos.length}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {btnXlsx('Excel', 'descuentos')}
+            {btnPdf('PDF', 'descuentos')}
+          </div>
+        </div>
+        <div style={{ overflowX: 'auto', maxHeight: '380px', overflowY: 'auto' }}>
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.82rem' }}>Cargando...</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>{DESC_COLS.map(c => <th key={c.label} style={thSp}>{c.label}</th>)}</tr>
+              </thead>
+              <tbody>
+                {descuentos.map((d, i) => (
+                  <tr key={d.id ?? i} style={{ background: i % 2 === 0 ? '#fff' : 'rgba(139,92,246,.03)' }}>
+                    {DESC_COLS.map(c => <td key={c.label} style={tdSp}>{String((d as unknown as Record<string, unknown>)[c.key] ?? '')}</td>)}
+                  </tr>
+                ))}
+                {descuentos.length === 0 && <tr><td colSpan={DESC_COLS.length} style={{ ...tdSp, textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>Sin registros</td></tr>}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Exportar ambos */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.65rem' }}>
+        {btnXlsx('Exportar todo (Excel)', 'ambos')}
+        {btnPdf('Exportar todo (PDF)', 'ambos')}
+      </div>
+    </div>
+  );
+}
+
 // ── PDF Export ────────────────────────────────────────────────────────────────
 
 const EMPRESA_LOGO: Record<string, string> = {
@@ -1559,6 +1568,8 @@ function printDescuentoPDF(r: ATCDescuento) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a2e38; background: #fff; padding: 32px 40px; }
   .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #8b5cf6; padding-bottom: 14px; margin-bottom: 20px; }
+  .brand-block { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: 52px; height: 52px; object-fit: contain; border-radius: 10px; }
   .brand { font-size: 18px; font-weight: 900; color: #1a2e38; letter-spacing: -0.03em; }
   .brand span { color: #8b5cf6; }
   .doc-title { text-align: right; }
@@ -1585,9 +1596,12 @@ function printDescuentoPDF(r: ATCDescuento) {
 <body>
 
 <div class="header">
-  <div>
-    <div class="brand">LIVEX <span>ATC</span></div>
-    <div style="font-size:10px;color:#6b8fa3;margin-top:2px">Atención al Cliente</div>
+  <div class="brand-block">
+    <img src="${atcLogo}" class="brand-logo" alt="ATC" />
+    <div>
+      <div class="brand">LIVEX <span>ATC</span></div>
+      <div style="font-size:10px;color:#6b8fa3;margin-top:2px">Atención al Cliente</div>
+    </div>
   </div>
   <div class="doc-title">
     <h2>Constancia de Descuento</h2>

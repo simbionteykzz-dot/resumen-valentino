@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogIn, Loader, Mail, Lock, Eye, EyeOff, TrendingUp, Zap } from 'lucide-react';
+import { LogIn, Loader, Mail, Lock, Eye, EyeOff, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -385,7 +385,7 @@ export default function LoginPage() {
                   borderRadius:'8px', color:'#f87171', fontSize:'.8rem', fontWeight:600,
                   display:'flex', alignItems:'center', gap:'.5rem',
                 }}>
-                  ⚠ {error}
+                  <AlertTriangle size={13} /> {error}
                 </div>
               )}
 

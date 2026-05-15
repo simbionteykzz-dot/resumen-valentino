@@ -128,6 +128,17 @@ export async function archivarTodasVentas(): Promise<boolean> {
   return !error;
 }
 
+export async function archivarPorRango(desde: string, hasta: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .update({ archived: true })
+    .gte('fecha', desde)
+    .lte('fecha', hasta)
+    .neq('archived', true);
+  if (error) console.error('[archivarPorRango]', error.message);
+  return !error;
+}
+
 export async function desarchivarTodasVentas(): Promise<boolean> {
   const { error } = await supabase
     .from('ventas')

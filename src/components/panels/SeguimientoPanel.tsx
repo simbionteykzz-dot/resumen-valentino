@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Clock, Phone, Trash2, CheckCircle, XCircle, MessageCircle } from 'lucide-react';
+import { UserCheck, Clock, Phone, Trash2, CheckCircle, XCircle, MessageCircle, Circle, Smartphone, FileText, Timer } from 'lucide-react';
 
 interface ClienteSeg {
   id: string; nombre: string; celular: string; producto: string; monto: number;
@@ -40,7 +40,11 @@ export default function SeguimientoPanel() {
   const pendientes = clientes.filter(c => c.estado === 'pendiente');
   const otros = clientes.filter(c => c.estado !== 'pendiente');
   const estadoColors: Record<string, string> = { pendiente: '250,204,21', confirmado: '0,230,150', perdido: '239,68,68' };
-  const estadoEmoji: Record<string, string> = { pendiente: '🟡', confirmado: '🟢', perdido: '🔴' };
+  const estadoIcon: Record<string, React.ReactNode> = {
+    pendiente: <Circle size={12} fill="#facc15" color="#facc15" />,
+    confirmado: <Circle size={12} fill="#10b981" color="#10b981" />,
+    perdido: <Circle size={12} fill="#ef4444" color="#ef4444" />,
+  };
 
   return (
     <div className="panel always" style={{ marginTop: '2rem' }}>
@@ -100,18 +104,22 @@ export default function SeguimientoPanel() {
                 border: `1.5px solid ${urgente ? 'rgba(239,68,68,0.25)' : 'rgba(250,204,21,0.2)'}`,
                 borderRadius: '12px', transition: 'all 0.2s',
               }}>
-                <span style={{ fontSize: '1rem' }}>{urgente ? '🔴' : '🟡'}</span>
+                <span style={{ fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
+                  {urgente
+                    ? <Circle size={12} fill="#ef4444" color="#ef4444" />
+                    : <Circle size={12} fill="#facc15" color="#facc15" />}
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text2)' }}>{c.nombre || 'Sin nombre'}</span>
-                    {c.celular && <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>📱 {c.celular}</span>}
+                    {c.celular && <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><Smartphone size={11} /> {c.celular}</span>}
                     {c.producto && <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.1rem 0.5rem', borderRadius: '50px', background: 'rgba(69,131,77,0.1)', border: '1px solid rgba(104,168,119,0.3)', color: 'var(--accent)' }}>{c.producto}</span>}
                     {c.monto > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#45834D' }}>S/{c.monto}</span>}
                   </div>
-                  {c.nota && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.2rem', fontStyle: 'italic' }}>📝 {c.nota}</div>}
+                  {c.nota && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.2rem', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><FileText size={11} /> {c.nota}</div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: urgente ? '#ef4444' : '#facc15', marginRight: '0.3rem' }}>⏱ {tiempoStr(c.timestamp)}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: urgente ? '#ef4444' : '#facc15', marginRight: '0.3rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><Timer size={11} /> {tiempoStr(c.timestamp)}</span>
                   {c.celular && (
                     <a href={`https://wa.me/51${c.celular}`} target="_blank" rel="noopener noreferrer" style={{ width: '1.8rem', height: '1.8rem', borderRadius: '6px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(104,168,119,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#45834D', textDecoration: 'none' }} title="WhatsApp">
                       <MessageCircle size={12} />
@@ -134,11 +142,15 @@ export default function SeguimientoPanel() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {otros.map(c => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.75rem', background: 'rgba(242,251,245,0.6)', border: '1px solid rgba(104,168,119,0.2)', borderRadius: '8px', opacity: 0.7 }}>
-                <span>{estadoEmoji[c.estado]}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>{estadoIcon[c.estado]}</span>
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text2)', flex: 1 }}>{c.nombre || 'Sin nombre'}</span>
                 {c.producto && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{c.producto}</span>}
                 {c.monto > 0 && <span style={{ fontSize: '0.72rem', fontWeight: 700, color: `rgb(${estadoColors[c.estado]})` }}>S/{c.monto}</span>}
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: `rgb(${estadoColors[c.estado]})` }}>{c.estado === 'confirmado' ? '✓ Confirmado' : '✗ Perdido'}</span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: `rgb(${estadoColors[c.estado]})`, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                  {c.estado === 'confirmado'
+                    ? <><CheckCircle size={12} /> Confirmado</>
+                    : <><XCircle size={12} /> Perdido</>}
+                </span>
                 <button onClick={() => removeCliente(c.id)} style={{ width: '1.5rem', height: '1.5rem', borderRadius: '5px', background: 'transparent', border: '1px solid rgba(104,168,119,0.3)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={10} /></button>
               </div>
             ))}

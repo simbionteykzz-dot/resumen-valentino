@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 
 export default function RankingPanel({ sales }: { sales: any[] }) {
   const ranking = useMemo(() => {
@@ -14,7 +14,12 @@ export default function RankingPanel({ sales }: { sales: any[] }) {
 
   if (sales.length === 0) return null;
   const max = ranking[0]?.[1].prendas || 1;
-  const medals = ['🥇','🥈','🥉'];
+  const rankIcon = (index: number) => {
+    if (index === 0) return <Medal size={16} color="#f59e0b" />;
+    if (index === 1) return <Medal size={16} color="#94a3b8" />;
+    if (index === 2) return <Award size={16} color="#b45309" />;
+    return <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted)' }}>#{index + 1}</span>;
+  };
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
@@ -25,7 +30,7 @@ export default function RankingPanel({ sales }: { sales: any[] }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {ranking.map(([name, d], i) => (
           <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', background: i === 0 ? 'linear-gradient(135deg,rgba(250,204,21,.08),rgba(250,204,21,.02))' : 'rgba(242,251,245,.7)', border: `1px solid ${i === 0 ? 'rgba(250,204,21,.25)' : 'rgba(104,168,119,.3)'}`, borderRadius: '10px' }}>
-            <span style={{ fontSize: '1.1rem', width: '1.5rem', textAlign: 'center', flexShrink: 0 }}>{i < 3 ? medals[i] : <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted)' }}>#{i+1}</span>}</span>
+            <span style={{ width: '1.5rem', textAlign: 'center', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{rankIcon(i)}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>

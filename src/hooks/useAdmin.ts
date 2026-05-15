@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB, archivarTodasVentas, desarchivarTodasVentas, getArchivedSalesAdmin, transferSalesByDate } from '../lib/supabase';
+import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB, archivarTodasVentas, archivarPorRango, desarchivarTodasVentas, getArchivedSalesAdmin, transferSalesByDate } from '../lib/supabase';
 import type { AdminSale, Profile, VendorStats } from '../types';
 import type { VentaDB } from '../lib/supabase';
 import { getCodigoProducto } from '../lib/data';
@@ -273,6 +273,16 @@ export function useAdmin() {
     return ok;
   };
 
+  const archivarRango = async (desde: string, hasta: string): Promise<boolean> => {
+    const ok = await archivarPorRango(desde, hasta);
+    if (ok) {
+      const archivadas = allSales.filter(s => s.fecha && s.fecha >= desde && s.fecha <= hasta);
+      setArchivedSales(prev => [...archivadas, ...prev]);
+      setAllSales(prev => prev.filter(s => !(s.fecha && s.fecha >= desde && s.fecha <= hasta)));
+    }
+    return ok;
+  };
+
   const desarchivarTodo = async (): Promise<boolean> => {
     const ok = await desarchivarTodasVentas();
     if (ok) {
@@ -341,7 +351,7 @@ export function useAdmin() {
     eliminatedSales,
     showArchived, setShowArchived,
     archivedSales, archiveLoading,
-    loadArchivedSales, archivarTodo, desarchivarTodo,
+    loadArchivedSales, archivarTodo, archivarRango, desarchivarTodo,
     transferDates,
   };
 }

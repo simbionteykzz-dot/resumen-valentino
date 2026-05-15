@@ -121,7 +121,7 @@ export default function OutputPanel({
             ? renderWAText(outputText)
             : (
               <div className="output-empty">
-                <div style={{ fontSize: '1.6rem', marginBottom: '0.4rem' }}>📋</div>
+                <div style={{ marginBottom: '0.4rem', display: 'flex', justifyContent: 'center' }}><ClipboardList size={26} /></div>
                 <div>El resumen aparecerá aquí una vez que completes los datos del pedido</div>
               </div>
             )

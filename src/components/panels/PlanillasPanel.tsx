@@ -10,6 +10,7 @@ import {
 
 interface Props {
   filteredSales: AdminSale[];
+  allSales: AdminSale[];
   dateFrom: string;
   dateTo: string;
   brandFilter: string;
@@ -46,7 +47,7 @@ function salesToDatos(sales: AdminSale[], getRegion: Props['getRegion'], getEsta
   }));
 }
 
-export default function PlanillasPanel({ filteredSales, dateFrom, dateTo, brandFilter, getRegion, getEstado }: Props) {
+export default function PlanillasPanel({ filteredSales, allSales, dateFrom, dateTo, brandFilter, getRegion, getEstado }: Props) {
   const [libros, setLibros] = useState<LibroPlanilla[]>([]);
   const [hojasPorLibro, setHojasPorLibro] = useState<Record<string, HojaPlanilla[]>>({});
   const [openLibros, setOpenLibros] = useState<Record<string, boolean>>({});
@@ -63,6 +64,8 @@ export default function PlanillasPanel({ filteredSales, dateFrom, dateTo, brandF
   const [addHojaLibroId, setAddHojaLibroId] = useState<string | null>(null);
   const [nuevaHojaNombre, setNuevaHojaNombre] = useState('');
   const [addingHoja, setAddingHoja] = useState(false);
+  const [hojaDesde, setHojaDesde] = useState('');
+  const [hojaHasta, setHojaHasta] = useState('');
 
   useEffect(() => {
     loadLibros();
@@ -114,13 +117,20 @@ export default function PlanillasPanel({ filteredSales, dateFrom, dateTo, brandF
   const handleAgregarHoja = async () => {
     if (!addHojaLibroId || !nuevaHojaNombre.trim()) return;
     setAddingHoja(true);
-    const datos = salesToDatos(filteredSales, getRegion, getEstado) as Record<string, unknown>[];
+    const desde = hojaDesde || dateFrom;
+    const hasta = hojaHasta || dateTo;
+    const salesEnRango = allSales.filter(s => {
+      if (!s.fecha) return false;
+      if (brandFilter !== 'todas' && (s.marcaLabel || 'OVER').toLowerCase() !== brandFilter.toLowerCase()) return false;
+      return s.fecha >= desde && s.fecha <= hasta;
+    });
+    const datos = salesToDatos(salesEnRango, getRegion, getEstado) as Record<string, unknown>[];
     const hoja = await createHoja(
       addHojaLibroId,
       nuevaHojaNombre.trim(),
       brandFilter === 'todas' ? 'Todas' : brandFilter.toUpperCase(),
-      dateFrom,
-      dateTo,
+      desde,
+      hasta,
       datos
     );
     if (hoja) {
@@ -224,7 +234,7 @@ export default function PlanillasPanel({ filteredSales, dateFrom, dateTo, brandF
                       : <ChevronDown size={14} style={{ color: S.muted, marginLeft: 'auto' }} />}
                   </button>
                   <button
-                    onClick={() => { setAddHojaLibroId(libro.id); setNuevaHojaNombre(defaultHojaNombre()); }}
+                    onClick={() => { setAddHojaLibroId(libro.id); setHojaDesde(dateFrom); setHojaHasta(dateTo); setNuevaHojaNombre(defaultHojaNombre()); }}
                     title={`Agregar hoja con los ${filteredSales.length} registros filtrados`}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.65rem', borderRadius: '6px', background: 'rgba(69,131,77,.1)', border: '1px solid rgba(69,131,77,.25)', color: S.accent, fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     <Plus size={11} /> Hoja ({filteredSales.length})
@@ -310,15 +320,43 @@ export default function PlanillasPanel({ filteredSales, dateFrom, dateTo, brandF
       {addHojaLibroId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
           onClick={e => { if (e.target === e.currentTarget) setAddHojaLibroId(null); }}>
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '1.75rem', width: '100%', maxWidth: '420px', border: '1px solid rgba(104,168,119,.3)' }}>
+          <div style={{ background: '#fff', borderRadius: '14px', padding: '1.75rem', width: '100%', maxWidth: '440px', border: '1px solid rgba(104,168,119,.3)' }}>
             <div style={{ fontWeight: 900, fontSize: '1rem', color: S.text2, marginBottom: '0.25rem' }}>Agregar Hoja</div>
-            <div style={{ fontSize: '0.75rem', color: S.muted, marginBottom: '0.85rem' }}>
-              Se guardarán los <strong>{filteredSales.length} registros</strong> filtrados actualmente
+            <div style={{ fontSize: '0.75rem', color: S.muted, marginBottom: '1rem' }}>
+              Elige el rango de fechas a archivar
             </div>
-            <div style={{ background: 'rgba(242,251,245,.8)', border: '1px solid rgba(104,168,119,.2)', borderRadius: '8px', padding: '0.6rem 0.85rem', marginBottom: '1rem', fontSize: '0.75rem', color: S.muted }}>
-              Empresa: <strong style={{ color: S.text }}>{brandFilter === 'todas' ? 'Todas' : brandFilter.toUpperCase()}</strong>
-              &nbsp;·&nbsp; Período: <strong style={{ color: S.text }}>{dateFrom}{dateTo !== dateFrom ? ` → ${dateTo}` : ''}</strong>
+
+            {/* Rango de fechas */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '0.85rem' }}>
+              <div>
+                <label style={{ fontSize: '0.62rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Desde</label>
+                <input type="date" value={hojaDesde} onChange={e => setHojaDesde(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem 0.7rem', border: '1px solid rgba(104,168,119,.4)', borderRadius: '8px', fontSize: '0.85rem', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.62rem', fontWeight: 800, color: S.muted, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Hasta</label>
+                <input type="date" value={hojaHasta} onChange={e => setHojaHasta(e.target.value)}
+                  style={{ width: '100%', padding: '0.5rem 0.7rem', border: '1px solid rgba(104,168,119,.4)', borderRadius: '8px', fontSize: '0.85rem', color: S.text2, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
             </div>
+
+            {/* Resumen */}
+            {(() => {
+              const desde = hojaDesde || dateFrom;
+              const hasta = hojaHasta || dateTo;
+              const count = allSales.filter(s => {
+                if (!s.fecha) return false;
+                if (brandFilter !== 'todas' && (s.marcaLabel || 'OVER').toLowerCase() !== brandFilter.toLowerCase()) return false;
+                return s.fecha >= desde && s.fecha <= hasta;
+              }).length;
+              return (
+                <div style={{ background: 'rgba(242,251,245,.8)', border: '1px solid rgba(104,168,119,.2)', borderRadius: '8px', padding: '0.55rem 0.85rem', marginBottom: '1rem', fontSize: '0.75rem', color: S.muted, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Empresa: <strong style={{ color: S.text }}>{brandFilter === 'todas' ? 'Todas' : brandFilter.toUpperCase()}</strong></span>
+                  <span style={{ fontWeight: 800, color: S.accent }}>{count} registros</span>
+                </div>
+              );
+            })()}
+
             <input
               autoFocus
               value={nuevaHojaNombre}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Trash2, Store, Bike, Package, BarChart3, Wrench, Radio, Megaphone, X, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Trash2, Store, Bike, Package, BarChart3, Wrench, Radio, Megaphone, X, HelpCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useSales } from '../hooks/useSales';
 import { useToast } from '../hooks/useToast';
@@ -172,7 +172,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
       const dup = sales.find(s => s.cel === clientData.celular);
       if (dup) {
         const ok = window.confirm(
-          `⚠️ Ya hay una venta registrada hoy para el celular ${clientData.celular}${dup.nom ? ` (${dup.nom})` : ''}.\n\n¿Registrar de todas formas?`,
+          `Advertencia: ya hay una venta registrada hoy para el celular ${clientData.celular}${dup.nom ? ` (${dup.nom})` : ''}.\n\n¿Registrar de todas formas?`,
         );
         if (!ok) return;
       }
@@ -319,10 +319,12 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
           <span style={{
             fontSize: '0.78rem', fontWeight: 600, marginLeft: 'auto',
             color: saleSource === 'live' ? '#16a34a' : '#9333ea',
+            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
           }}>
+            <CheckCircle2 size={13} />
             {saleSource === 'live'
-              ? '✓ Las ventas van a planilla LIVE'
-              : `✓ Las ventas van a planilla PUBLICIDAD${pubCode ? ` · ${pubCode}` : ''}`}
+              ? 'Las ventas van a planilla LIVE'
+              : `Las ventas van a planilla PUBLICIDAD${pubCode ? ` · ${pubCode}` : ''}`}
           </span>
         </div>
 
@@ -612,7 +614,10 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
 
       {toast && (
         <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
-          {toast.type === 'ok' ? '✓' : '⚠'} {toast.msg}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            {toast.type === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+            {toast.msg}
+          </span>
         </div>
       )}
     </>

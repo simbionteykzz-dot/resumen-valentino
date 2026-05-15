@@ -243,9 +243,9 @@ export default function MetasPanel({ profiles, vendorStats, dateFrom, dateTo }: 
                       borderRadius: '8px', padding: '0.25rem 0.5rem',
                       fontSize: '0.6rem', fontWeight: 800, color: '#fff',
                       letterSpacing: '0.04em', textTransform: 'uppercase',
-                      flexShrink: 0,
+                      flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
                     }}>
-                      ✓ META
+                      <CheckCircle size={11} /> META
                     </div>
                   )}
                 </div>
