@@ -1,6 +1,7 @@
 import { BarChart2, CheckCircle2, LogOut, MessageSquare, Percent, RefreshCw, Table2, Tag, XCircle } from 'lucide-react';
+import { ATC_GRADIENTS, ATC_PALETTE } from './theme';
 
-type ActiveSection = 'tickets' | 'descuentos' | 'reporte';
+type ActiveSection = 'tickets' | 'descuentos' | 'reporte' | 'metricas';
 
 interface Theme {
   borderSoft: string;
@@ -22,7 +23,6 @@ interface ATCHeaderProps {
   openCount: number;
   inProcessCount: number;
   resolvedToday: number;
-  onShowMetrics: () => void;
   onSyncSheets: () => void;
   syncingSheets: boolean;
   syncMsg: string | null;
@@ -40,7 +40,6 @@ export default function ATCHeader({
   openCount,
   inProcessCount,
   resolvedToday,
-  onShowMetrics,
   onSyncSheets,
   syncingSheets,
   syncMsg,
@@ -49,37 +48,58 @@ export default function ATCHeader({
   onSignOut,
   theme,
 }: ATCHeaderProps) {
+  const navBtn = (active: boolean, activeBg: string, activeColor = '#fff'): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.45rem',
+    padding: '0.5rem 1.05rem',
+    borderRadius: '10px',
+    fontSize: '0.78rem',
+    fontWeight: 800,
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all .16s ease',
+    background: active ? activeBg : 'rgba(255,255,255,.6)',
+    color: active ? activeColor : theme.muted,
+  });
+
   return (
-    <div style={{ background: '#ffffff', borderBottom: theme.borderSoft, padding: '0.9rem 1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.9rem', flexWrap: 'wrap' }}>
+    <div style={{ background: ATC_GRADIENTS.headerBg, borderBottom: '1px solid rgba(104,168,119,.2)', padding: '1rem 1.4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.9rem', flexWrap: 'wrap', position: 'sticky', top: 0, zIndex: 30, boxShadow: '0 4px 18px rgba(69,131,77,.08)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-        <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: theme.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: ATC_GRADIENTS.accentBtn, boxShadow: '0 4px 14px rgba(69,131,77,.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <MessageSquare size={16} color="#fff" />
         </div>
         <div>
-          <div style={{ fontWeight: 900, fontSize: '0.93rem', color: theme.text2, letterSpacing: '-0.01em' }}>
-            LIVEX <span style={{ color: theme.accent }}>ATC</span>
+          <div style={{ fontWeight: 900, fontSize: '0.93rem', color: theme.text2, letterSpacing: '0.02em' }}>
+            LIVEX <span style={{ color: theme.accent }}>ATC</span> Command Hub
           </div>
           <div style={{ fontSize: '0.68rem', color: theme.muted }}>{userName}</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.25rem', background: '#f1f5f9', borderRadius: '10px', padding: '0.2rem', border: '1px solid rgba(15,23,42,.08)' }}>
+      <div style={{ display: 'flex', gap: '0.28rem', borderRadius: '12px', padding: '0.22rem', border: 'none', background: 'rgba(242,251,245,.9)' }}>
         <button
           onClick={() => onSectionChange('tickets')}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.05rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .16s ease', background: activeSection === 'tickets' ? theme.accent : 'transparent', color: activeSection === 'tickets' ? '#fff' : theme.muted }}
+          style={navBtn(activeSection === 'tickets', ATC_GRADIENTS.accentBtn)}
         >
           <Tag size={14} /> ATC Tickets
-          <span style={{ fontSize: '0.62rem', fontWeight: 900, background: activeSection === 'tickets' ? 'rgba(255,255,255,.22)' : 'rgba(29,78,216,.12)', color: activeSection === 'tickets' ? '#fff' : theme.accent, borderRadius: '4px', padding: '0.05rem 0.38rem' }}>{ticketsCount}</span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 900, background: activeSection === 'tickets' ? 'rgba(255,255,255,.22)' : 'rgba(69,131,77,.12)', color: activeSection === 'tickets' ? '#fff' : '#45834D', borderRadius: '4px', padding: '0.05rem 0.38rem' }}>{ticketsCount}</span>
         </button>
         <button
           onClick={() => onSectionChange('descuentos')}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.05rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .16s ease', background: activeSection === 'descuentos' ? '#7c3aed' : 'transparent', color: activeSection === 'descuentos' ? '#fff' : theme.muted }}
+          style={navBtn(activeSection === 'descuentos', ATC_GRADIENTS.violetBtn)}
         >
           <Percent size={14} /> Descuentos
         </button>
         <button
+          onClick={() => onSectionChange('metricas')}
+          style={navBtn(activeSection === 'metricas', ATC_GRADIENTS.accentBtn)}
+        >
+          <BarChart2 size={14} /> Métricas
+        </button>
+        <button
           onClick={() => onSectionChange('reporte')}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 1.05rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 800, border: 'none', cursor: 'pointer', transition: 'all .16s ease', background: activeSection === 'reporte' ? '#d97706' : 'transparent', color: activeSection === 'reporte' ? '#fff' : theme.muted }}
+          style={navBtn(activeSection === 'reporte', ATC_GRADIENTS.accentBtn)}
         >
           <Table2 size={14} /> Tablas
         </button>
@@ -92,17 +112,14 @@ export default function ATCHeader({
             { label: 'En proceso', val: inProcessCount, color: theme.warning },
             { label: 'Resueltos hoy', val: resolvedToday, color: theme.success },
           ].map(k => (
-            <div key={k.label} style={{ background: `${k.color}10`, border: `1px solid ${k.color}30`, borderRadius: '8px', padding: '0.3rem 0.65rem', textAlign: 'center' }}>
+            <div key={k.label} style={{ background: 'rgba(255,255,255,.72)', border: 'none', borderRadius: 8, padding: '0.25rem 0.55rem', textAlign: 'center' }}>
               <div style={{ fontSize: '0.9rem', fontWeight: 900, color: k.color }}>{k.val}</div>
-              <div style={{ fontSize: '0.58rem', fontWeight: 700, color: k.color, opacity: 0.8 }}>{k.label}</div>
+              <div style={{ fontSize: '0.58rem', fontWeight: 700, color: theme.muted }}>{k.label}</div>
             </div>
           ))}
         </div>
-        <button onClick={onShowMetrics} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', border: theme.borderAccent, background: 'rgba(29,78,216,.08)', color: theme.accent }}>
-          <BarChart2 size={13} /> Métricas
-        </button>
         <div style={{ position: 'relative' }}>
-          <button onClick={onSyncSheets} disabled={syncingSheets} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: syncingSheets ? 'default' : 'pointer', border: '1px solid rgba(21,128,61,.22)', background: 'rgba(21,128,61,.08)', color: theme.success, opacity: syncingSheets ? 0.7 : 1 }}>
+          <button onClick={onSyncSheets} disabled={syncingSheets} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: syncingSheets ? 'default' : 'pointer', border: 'none', background: 'rgba(69,131,77,.1)', color: theme.accent, opacity: syncingSheets ? 0.7 : 1 }}>
             <RefreshCw size={13} style={{ animation: syncingSheets ? 'spin 1s linear infinite' : 'none' }} />
             {syncingSheets ? 'Sincronizando...' : 'Sync Sheets'}
           </button>
@@ -114,11 +131,11 @@ export default function ATCHeader({
           )}
         </div>
         {isAdmin && onBack && (
-          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', border: theme.borderAccent, background: theme.accentLight, color: theme.accent }}>
+          <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', border: 'none', background: 'rgba(30,111,160,0.1)', color: '#1e6fa0' }}>
             ← Admin
           </button>
         )}
-        <button onClick={onSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', border: '1px solid rgba(220,38,38,.22)', background: 'rgba(220,38,38,.08)', color: theme.danger }}>
+        <button onClick={onSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.48rem 0.95rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 800, cursor: 'pointer', border: 'none', background: 'rgba(184,48,48,0.1)', color: '#b83030' }}>
           <LogOut size={13} /> Salir
         </button>
       </div>

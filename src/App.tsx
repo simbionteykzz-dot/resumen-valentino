@@ -20,11 +20,19 @@ export default function App() {
 
   useEffect(() => {
     if (user?.id) getProfile(user.id).then(setProfile);
+    else setProfile(null);
   }, [user?.id]);
 
   useEffect(() => {
     if (user) getAllProfiles().then(setProfiles);
+    else setProfiles([]);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (profile?.role === 'atc' && appMode !== 'atc') {
+      setAppMode('atc');
+    }
+  }, [profile?.role, appMode]);
 
   const emailPrefix = user?.email?.split('@')[0] || 'USUARIO';
   const userName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
@@ -41,13 +49,8 @@ export default function App() {
 
   if (!user) return <LoginPage />;
 
-  // ATC user → siempre ve ATCPanel
-  if (profile?.role === 'atc' && appMode !== 'atc') {
-    setAppMode('atc');
-  }
-
-  // Admin en modo ATC
-  if (appMode === 'atc') {
+  // Admin en modo ATC / usuario ATC
+  if (appMode === 'atc' || profile?.role === 'atc') {
     return (
       <>
         <ATCPanel
@@ -75,7 +78,6 @@ export default function App() {
       <>
         <AdminDashboard
           adminName={userName}
-          profiles={[]}
           onSignOut={signOut}
           onSwitchToVendedor={() => setAppMode('vendedor')}
           onSwitchToATC={() => setAppMode('atc')}

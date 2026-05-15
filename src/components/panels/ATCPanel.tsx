@@ -17,6 +17,9 @@ import { searchZazuEnvios } from '../../lib/zazuSupabase';
 import type { ZazuEnvio } from '../../lib/zazuSupabase';
 import ATCHeader from './atc/ATCHeader';
 import ATCTicketsPage from './atc/pages/ATCTicketsPage';
+import ATCDiscountsPage from './atc/pages/ATCDiscountsPage';
+import ATCMetricsPage from './atc/pages/ATCMetricsPage';
+import { ATC_GRADIENTS, ATC_PALETTE } from './atc/theme';
 
 interface ATCPanelProps {
   userId?: string;
@@ -91,25 +94,25 @@ const ESTADO_PEDIDO_COLOR: Record<string, string> = {
 };
 
 const S = {
-  bg: '#eef2f7',
-  surface: '#ffffff',
-  border: '1px solid rgba(15,23,42,.12)',
-  borderSoft: '1px solid rgba(15,23,42,.08)',
-  borderAccent: '1px solid rgba(29,78,216,.22)',
-  accent: '#1d4ed8',
-  accentLight: 'rgba(29,78,216,0.1)',
-  success: '#15803d',
-  warning: '#b45309',
-  danger: '#dc2626',
-  muted: '#475569',
-  text: '#1e293b',
-  text2: '#0f172a',
-  shadow: '0 2px 8px rgba(15,23,42,.04)',
+  bg: ATC_PALETTE.shell,
+  surface: ATC_PALETTE.surface,
+  border: `1px solid ${ATC_PALETTE.border}`,
+  borderSoft: `1px solid ${ATC_PALETTE.border}`,
+  borderAccent: '1px solid rgba(69,131,77,.28)',
+  accent: ATC_PALETTE.accent,
+  accentLight: 'rgba(69,131,77,0.1)',
+  success: '#45834D',
+  warning: '#f59e0b',
+  danger: '#b83030',
+  muted: ATC_PALETTE.muted,
+  text: ATC_PALETTE.text,
+  text2: ATC_PALETTE.text2,
+  shadow: '0 8px 26px rgba(69,131,77,.1)',
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '0.42rem 0.65rem', border: S.borderSoft,
-  borderRadius: '8px', fontSize: '0.82rem', color: S.text2, background: '#fff',
+  borderRadius: '10px', fontSize: '0.82rem', color: S.text2, background: '#fff',
   outline: 'none', boxSizing: 'border-box',
 };
 const labelStyle: React.CSSProperties = {
@@ -118,10 +121,11 @@ const labelStyle: React.CSSProperties = {
 };
 
 const panelCard: React.CSSProperties = {
-  background: S.surface,
-  border: S.border,
-  borderRadius: '12px',
-  boxShadow: S.shadow,
+  background: 'rgba(255,255,255,.96)',
+  border: 'none',
+  borderRadius: '14px',
+  backdropFilter: 'none',
+  boxShadow: '0 2px 12px rgba(69,131,77,.08)',
 };
 
 export type TicketFormState = {
@@ -165,8 +169,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   const [ticketForm, setTicketForm] = useState<TicketFormState>(emptyForm());
   const [savingTicket, setSavingTicket] = useState(false);
   const [ticketError, setTicketError] = useState<string | null>(null);
-  const [showMetrics, setShowMetrics] = useState(false);
-  const [activeSection, setActiveSection] = useState<'tickets' | 'descuentos' | 'reporte'>('tickets');
+  const [activeSection, setActiveSection] = useState<'tickets' | 'descuentos' | 'reporte' | 'metricas'>('tickets');
 
   const [sheetsVentas, setSheetsVentas] = useState<SheetsVentaDB[]>([]);
   const [syncingSheets, setSyncingSheets] = useState(false);
@@ -275,8 +278,28 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   };
 
   const changeEstado = async (id: string, estado: ATCTicket['estado']) => {
-    const ok = await updateATCTicket(id, { estado });
-    if (ok) setAllTickets(prev => prev.map(t => t.id === id ? { ...t, estado } : t));
+    const current = allTickets.find(t => t.id === id);
+    if (!current) return;
+
+    const isReopening = (current.estado === 'cerrado' || current.estado === 'resuelto')
+      && (estado === 'abierto' || estado === 'en_proceso');
+
+    let patch: Partial<ATCTicket> = { estado };
+    if (isReopening) {
+      const reason = window.prompt('Motivo de reapertura (obligatorio):');
+      if (!reason || !reason.trim()) return;
+      const stamp = new Date().toLocaleString('es-PE');
+      const previousNotes = current.notas?.trim() ? `${current.notas.trim()}\n\n` : '';
+      patch = {
+        ...patch,
+        notas: `${previousNotes}[REAPERTURA ${stamp}] ${reason.trim()}`,
+      };
+    }
+
+    const ok = await updateATCTicket(id, patch);
+    if (ok) {
+      setAllTickets(prev => prev.map(t => (t.id === id ? { ...t, ...patch } : t)));
+    }
   };
 
   const changeEstadoPedido = async (id: string, estado_pedido: string) => {
@@ -297,6 +320,47 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   const removeTicket = async (id: string) => {
     const ok = await deleteATCTicket(id);
     if (ok) setAllTickets(prev => prev.filter(t => t.id !== id));
+  };
+
+  const bulkUpdateTickets = async (ticketIds: string[], fields: Partial<ATCTicket>) => {
+    const ids = ticketIds.filter(Boolean);
+    if (ids.length === 0) return;
+
+    const currentById = new Map(
+      allTickets
+        .filter(t => t.id)
+        .map(t => [String(t.id), t] as const),
+    );
+
+    const updates = await Promise.all(ids.map(async (id) => {
+      const ticket = currentById.get(id);
+      if (!ticket) return null;
+      const ok = await updateATCTicket(id, fields);
+      return ok ? { ...ticket, ...fields } : null;
+    }));
+
+    const updatedById = new Map(
+      updates
+        .filter((u): u is ATCTicket => Boolean(u?.id))
+        .map(u => [String(u.id), u] as const),
+    );
+
+    if (updatedById.size === 0) return;
+    setAllTickets(prev => prev.map(t => (t.id && updatedById.has(String(t.id)) ? updatedById.get(String(t.id))! : t)));
+  };
+
+  const bulkChangeEstado = async (ticketIds: string[], estado: ATCTicket['estado']) => {
+    await bulkUpdateTickets(ticketIds, { estado });
+  };
+
+  const applyTemplateToTicket = async (id: string, template: string) => {
+    const current = allTickets.find(t => t.id === id);
+    if (!current) return;
+    const next = current.solucion?.trim()
+      ? `${current.solucion.trim()}\n\n${template}`
+      : template;
+    const ok = await updateATCTicket(id, { solucion: next });
+    if (ok) setAllTickets(prev => prev.map(t => (t.id === id ? { ...t, solucion: next } : t)));
   };
 
   const customerTickets = allTickets.filter(t => t.cliente_cel === selectedCustomer?.cel);
@@ -322,7 +386,12 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: S.bg, color: S.text, fontFamily: 'League Spartan,Inter,system-ui,sans-serif' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: ATC_GRADIENTS.pageBg,
+      color: S.text,
+      fontFamily: 'League Spartan,Inter,system-ui,sans-serif',
+    }}>
 
       {/* Header */}
       <ATCHeader
@@ -333,7 +402,6 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
         openCount={openCount}
         inProcessCount={inProcessCount}
         resolvedToday={resolvedToday}
-        onShowMetrics={() => setShowMetrics(true)}
         onSyncSheets={handleSyncSheets}
         syncingSheets={syncingSheets}
         syncMsg={syncMsg}
@@ -353,13 +421,19 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
         }}
       />
 
-      {activeSection === 'reporte' ? (
+      {activeSection === 'metricas' ? (
         <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '1rem 1.2rem 1.4rem' }}>
-          <ReporteSection tickets={allTickets} />
+          <ATCMetricsPage tickets={allTickets} estados={ESTADOS} estadoColor={ESTADO_COLOR} motivos={MOTIVOS} responsables={RESPONSABLES} diasAbierto={diasAbierto} />
+        </div>
+      ) : activeSection === 'reporte' ? (
+        <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '1rem 1.2rem 1.4rem' }}>
+          <div style={{ background: 'rgba(255,255,255,.96)', borderRadius: '14px', padding: '1rem', boxShadow: '0 2px 12px rgba(69,131,77,.08)' }}>
+            <ReporteSection tickets={allTickets} />
+          </div>
         </div>
       ) : activeSection === 'descuentos' ? (
         <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '1rem 1.2rem 1.4rem' }}>
-          <DescuentosModal inline userId={userId} onClose={() => setActiveSection('tickets')} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />
+          <ATCDiscountsPage userId={userId} responsables={RESPONSABLES} responsablesGrouped={RESPONSABLES_DESCUENTOS} />
         </div>
       ) : (
         <ATCTicketsPage
@@ -382,7 +456,9 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
           loadingVentas={loadingVentas}
           customerVentas={customerVentas}
           totalSpent={totalSpent}
-          onNewTicket={() => { setTicketForm(emptyForm()); setShowTicketForm(true); }}
+          onNewTicket={(preset) => { setTicketForm({ ...emptyForm(), ...(preset ?? {}) }); setShowTicketForm(true); }}
+          currentUserName={userName}
+          responsables={RESPONSABLES}
           customerTab={customerTab}
           setCustomerTab={setCustomerTab}
           customerTickets={customerTickets}
@@ -407,6 +483,8 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
           onCancelSolucion={() => setEditingSolucion(null)}
           onSolucionChange={val => setEditingSolucion(prev => prev ? { ...prev, value: val } : null)}
           removeTicket={removeTicket}
+          onBulkEstado={bulkChangeEstado}
+          onBulkUpdate={bulkUpdateTickets}
           filteredTickets={filteredTickets}
           loadTickets={loadTickets}
           loadingTickets={loadingTickets}
@@ -414,15 +492,14 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
           setShowTicketForm={setShowTicketForm}
           ZazuTabComponent={ZazuTab}
           TicketListComponent={TicketList}
+          onApplyTemplate={applyTemplateToTicket}
         />
       )}
 
-      {showMetrics && <MetricsModal tickets={allTickets} onClose={() => setShowMetrics(false)} />}
-
       {/* ── Modal: Nuevo ticket ── */}
       {showTicketForm && selectedCustomer && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
-          <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '600px', padding: '1.5rem', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(42,68,51,0.2)', backdropFilter: 'blur(2px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
+          <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '16px', width: 'min(860px, calc(100vw - 2rem))', padding: '1.25rem', boxShadow: '0 16px 48px rgba(69,131,77,0.18)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.1rem' }}>
               <div style={{ fontSize: '0.92rem', fontWeight: 900, color: S.text2 }}>Nuevo ticket — {selectedCustomer.nom}</div>
               <button onClick={() => setShowTicketForm(false)} style={{ padding: '0.3rem', border: 'none', background: 'transparent', cursor: 'pointer', color: S.muted }}><X size={16} /></button>
@@ -439,7 +516,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                     const active = ticketForm.empresa === emp;
                     return (
                       <button key={emp} type="button" onClick={() => setTicketForm(p => ({ ...p, empresa: active ? '' : emp }))}
-                        style={{ flex: 1, padding: '0.45rem 0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', border: `1.5px solid ${active ? c : 'rgba(0,0,0,.1)'}`, background: active ? `${c}18` : 'transparent', color: active ? c : '#94a3b8', transition: 'all 0.15s', letterSpacing: '0.02em' }}>
+                        style={{ flex: 1, padding: '0.45rem 0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', border: `1.5px solid ${active ? c : 'rgba(104,168,119,.24)'}`, background: active ? `${c}14` : 'rgba(242,251,245,.8)', color: active ? c : S.muted, transition: 'all 0.15s', letterSpacing: '0.02em' }}>
                         {emp}
                       </button>
                     );
@@ -483,7 +560,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                     {(['LIMA', 'PROVINCIA'] as const).map(scope => (
                       <button key={scope} type="button"
                         onClick={() => setTicketForm(p => ({ ...p, region_scope: p.region_scope === scope ? '' : scope, region: '' }))}
-                        style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', border: `1.5px solid ${ticketForm.region_scope === scope ? S.accent : 'rgba(0,0,0,.1)'}`, background: ticketForm.region_scope === scope ? S.accentLight : 'transparent', color: ticketForm.region_scope === scope ? S.accent : '#94a3b8' }}>
+                        style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', border: `1.5px solid ${ticketForm.region_scope === scope ? S.accent : 'rgba(104,168,119,.24)'}`, background: ticketForm.region_scope === scope ? S.accentLight : 'rgba(242,251,245,.8)', color: ticketForm.region_scope === scope ? S.accent : S.muted }}>
                         {scope}
                       </button>
                     ))}
@@ -505,7 +582,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                     </select>
                   )}
                   {!ticketForm.region_scope && (
-                    <div style={{ ...inputStyle, color: '#94a3b8', lineHeight: '1.6' }}>Selecciona Lima o Provincia</div>
+                    <div style={{ ...inputStyle, color: S.muted, lineHeight: '1.6' }}>Selecciona Lima o Provincia</div>
                   )}
                 </div>
                 {field('Responsable',
@@ -550,7 +627,7 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                   {PRIORIDADES.map(p => (
                     <button key={p} onClick={() => setTicketForm(prev => ({ ...prev, prioridad: p }))}
-                      style={{ flex: 1, padding: '0.4rem', borderRadius: '7px', fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer', border: `1px solid ${ticketForm.prioridad === p ? PRIORIDAD_COLOR[p] : 'rgba(0,0,0,0.1)'}`, background: ticketForm.prioridad === p ? `${PRIORIDAD_COLOR[p]}18` : 'transparent', color: ticketForm.prioridad === p ? PRIORIDAD_COLOR[p] : '#888', textTransform: 'capitalize' }}>
+                      style={{ flex: 1, padding: '0.4rem', borderRadius: '7px', fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer', border: `1px solid ${ticketForm.prioridad === p ? PRIORIDAD_COLOR[p] : 'rgba(104,168,119,.24)'}`, background: ticketForm.prioridad === p ? `${PRIORIDAD_COLOR[p]}18` : 'rgba(242,251,245,.8)', color: ticketForm.prioridad === p ? PRIORIDAD_COLOR[p] : S.muted, textTransform: 'capitalize' }}>
                       {p}
                     </button>
                   ))}
@@ -581,9 +658,9 @@ export default function ATCPanel({ userId, userName, isAdmin, onBack, onSignOut 
               </div>
             )}
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button onClick={() => { setShowTicketForm(false); setTicketError(null); }} style={{ padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(0,0,0,0.12)', background: 'transparent', color: '#888' }}>Cancelar</button>
+              <button onClick={() => { setShowTicketForm(false); setTicketError(null); }} style={{ padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', border: '1px solid rgba(104,168,119,.28)', background: 'rgba(242,251,245,.9)', color: S.muted }}>Cancelar</button>
               <button onClick={submitTicket} disabled={savingTicket}
-                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700, cursor: savingTicket ? 'default' : 'pointer', border: 'none', background: 'linear-gradient(135deg,#1a7fbd,#155f8f)', color: '#fff', opacity: savingTicket ? 0.7 : 1 }}>
+                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700, cursor: savingTicket ? 'default' : 'pointer', border: 'none', background: ATC_GRADIENTS.accentBtn, color: '#fff', opacity: savingTicket ? 0.7 : 1 }}>
                 {savingTicket ? 'Creando...' : 'Crear ticket'}
               </button>
             </div>
@@ -703,6 +780,7 @@ const emptyDesc = (): DescForm => ({
 function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, inline }: {
   userId?: string; onClose: () => void; responsables: string[]; responsablesGrouped?: RespGroup[]; inline?: boolean;
 }) {
+  const isInline = Boolean(inline);
   const renderRespOptions = (withBlank = true) => responsablesGrouped ? (
     <>
       {withBlank && <option value="">— Seleccionar —</option>}
@@ -862,18 +940,35 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
   const inp: React.CSSProperties = { width: '100%', padding: '0.38rem 0.55rem', border: '1px solid rgba(139,92,246,.3)', borderRadius: '6px', fontSize: '0.78rem', color: '#1a2e38', background: '#fff', outline: 'none', boxSizing: 'border-box' };
 
   const panelContent = (
-    <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: inline ? '100%' : '1050px', maxHeight: inline ? 'none' : '92vh', display: 'flex', flexDirection: 'column', boxShadow: inline ? '0 2px 16px rgba(139,92,246,.1)' : '0 24px 80px rgba(0,0,0,0.2)', border: inline ? '1px solid rgba(139,92,246,.2)' : 'none' }}>
+    <div style={{
+      background: isInline ? 'transparent' : '#fff',
+      borderRadius: isInline ? '0' : '16px',
+      width: '100%',
+      maxWidth: isInline ? '100%' : '1050px',
+      maxHeight: isInline ? 'none' : '92vh',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: isInline ? 'none' : '0 24px 80px rgba(0,0,0,0.2)',
+      border: isInline ? 'none' : 'none',
+    }}>
 
         {/* Sticky header */}
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,92,246,.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{
+          padding: isInline ? '0.35rem 0 0.95rem' : '1rem 1.5rem',
+          borderBottom: isInline ? '1px solid rgba(148,163,184,.16)' : '1px solid rgba(139,92,246,.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Percent size={16} color="#8b5cf6" />
             <span style={{ fontSize: '0.92rem', fontWeight: 900, color: '#1a2e38' }}>Descuentos ATC</span>
             <span style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(139,92,246,.1)', color: '#8b5cf6', borderRadius: '5px', padding: '0.1rem 0.5rem' }}>{filtered.length}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <input value={filterNom} onChange={e => setFilterNom(e.target.value)} placeholder="Buscar cliente / cel / DNI..." style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: '#1a2e38', background: '#f8f5ff', outline: 'none', width: '210px' }} />
-            <select value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: '#1a2e38', background: '#fff', cursor: 'pointer' }}>
+            <input value={filterNom} onChange={e => setFilterNom(e.target.value)} placeholder="Buscar cliente / cel / DNI..." style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: isInline ? '#e2e8f0' : '#1a2e38', background: isInline ? 'rgba(15,23,42,.55)' : '#f8f5ff', outline: 'none', width: '210px' }} />
+            <select value={filterResp} onChange={e => setFilterResp(e.target.value)} style={{ padding: '0.35rem 0.65rem', border: '1px solid rgba(139,92,246,.25)', borderRadius: '7px', fontSize: '0.78rem', color: isInline ? '#e2e8f0' : '#1a2e38', background: isInline ? 'rgba(15,23,42,.55)' : '#fff', cursor: 'pointer' }}>
               <option value="">Todos los responsables</option>
               {renderRespOptions(false)}
             </select>
@@ -881,13 +976,22 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
               style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.9rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff' }}>
               <Plus size={13} /> Nuevo
             </button>
-            <button onClick={onClose} style={{ padding: '0.3rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}><X size={16} /></button>
+            {!isInline && (
+              <button onClick={onClose} style={{ padding: '0.3rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}><X size={16} /></button>
+            )}
           </div>
         </div>
 
         {/* Formulario nuevo */}
         {showForm && (
-          <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(139,92,246,.12)', background: 'rgba(139,92,246,.03)', flexShrink: 0 }}>
+          <div style={{
+            padding: isInline ? '1rem 0' : '1rem 1.5rem',
+            borderBottom: '1px solid rgba(139,92,246,.12)',
+            background: isInline ? 'rgba(15,23,42,.45)' : 'rgba(139,92,246,.03)',
+            borderRadius: isInline ? '12px' : '0',
+            border: isInline ? '1px solid rgba(148,163,184,.18)' : 'none',
+            flexShrink: 0,
+          }}>
 
             {/* Fila 1: Fecha + Buscador de cliente */}
             <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '0.6rem', marginBottom: '0.6rem' }}>
@@ -1145,7 +1249,7 @@ function DescuentosModal({ userId, onClose, responsables, responsablesGrouped, i
 
         {/* Footer total */}
         {filtered.length > 0 && (
-          <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid rgba(139,92,246,.12)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          <div style={{ padding: isInline ? '0.85rem 0.25rem 0' : '0.75rem 1.5rem', borderTop: '1px solid rgba(139,92,246,.12)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
             <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Total descuentos:</span>
             <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#8b5cf6' }}>S/ {totalDesc.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
           </div>
@@ -1175,7 +1279,8 @@ function getLast6Months(): { value: string; label: string }[] {
   return out;
 }
 
-function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () => void }) {
+function MetricsModal({ tickets, onClose, inline = false }: { tickets: ATCTicket[]; onClose: () => void; inline?: boolean }) {
+  const isInline = inline;
   const months = getLast6Months();
   const [month, setMonth] = useState(months[0].value);
   const filtered = tickets.filter(t => (t.created_at ?? '').startsWith(month));
@@ -1209,12 +1314,29 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
   const secStyle: React.CSSProperties = { background: 'rgba(26,127,189,.03)', border: '1px solid rgba(26,127,189,.12)', borderRadius: '10px', padding: '0.9rem 1rem' };
   const secTitle: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 800, color: '#3d6070', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.65rem' };
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
-      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+  const panelContent = (
+    <div style={{
+      background: isInline ? 'transparent' : '#fff',
+      borderRadius: isInline ? '0' : '16px',
+      width: '100%',
+      maxWidth: isInline ? '100%' : '980px',
+      overflow: 'hidden',
+      boxShadow: isInline ? 'none' : '0 24px 80px rgba(0,0,0,0.2)',
+      border: isInline ? 'none' : '1px solid rgba(26,127,189,.12)',
+    }}>
 
         {/* Header */}
-        <div style={{ padding: '1.1rem 1.5rem', borderBottom: '1px solid rgba(26,127,189,.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
+        <div style={{
+          padding: isInline ? '0.35rem 0 0.95rem' : '1.1rem 1.5rem',
+          borderBottom: '1px solid rgba(26,127,189,.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: isInline ? 'static' : 'sticky',
+          top: 0,
+          background: isInline ? 'transparent' : '#fff',
+          zIndex: 10,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <BarChart2 size={16} color="#1a7fbd" />
             <span style={{ fontSize: '0.92rem', fontWeight: 900, color: '#1a2e38' }}>Métricas ATC</span>
@@ -1224,14 +1346,16 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
               style={{ padding: '0.35rem 0.65rem', borderRadius: '7px', border: '1px solid rgba(26,127,189,.25)', fontSize: '0.78rem', color: '#1a2e38', background: '#fff', cursor: 'pointer' }}>
               {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
-            <button onClick={onClose} style={{ padding: '0.3rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}><X size={16} /></button>
+            {!isInline && (
+              <button onClick={onClose} style={{ padding: '0.3rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8' }}><X size={16} /></button>
+            )}
           </div>
         </div>
 
-        <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: isInline ? '1.1rem 0' : '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
           {/* KPI row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.55rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem' }}>
             {[
               { label: 'Total', val: filtered.length, color: '#1a7fbd' },
               { label: 'Abiertos', val: byEstado.abierto ?? 0, color: ESTADO_COLOR.abierto },
@@ -1247,7 +1371,7 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
           </div>
 
           {/* Por empresa + por responsable */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.75rem' }}>
             <div style={secStyle}>
               <div style={secTitle}>Por Empresa</div>
               {byEmpresa.length === 0
@@ -1284,7 +1408,7 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
                 {topMotivos.map(item => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a2e38', width: '170px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</div>
-                    <div style={{ flex: 1, height: '11px', background: 'rgba(26,127,189,.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, minWidth: '120px', height: '11px', background: 'rgba(26,127,189,.1)', borderRadius: '4px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${(item.count / maxMotivo) * 100}%`, background: 'linear-gradient(90deg,#1a7fbd,#38c8f5)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 900, color: '#1a7fbd', width: '22px', textAlign: 'right', flexShrink: 0 }}>{item.count}</div>
@@ -1317,6 +1441,13 @@ function MetricsModal({ tickets, onClose }: { tickets: ATCTicket[]; onClose: () 
 
         </div>
       </div>
+  );
+
+  if (inline) return panelContent;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
+      {panelContent}
     </div>
   );
 }
@@ -1796,6 +1927,8 @@ ${ticket.descripcion ? `
 
 interface TicketListProps {
   tickets: ATCTicket[];
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
   expandedTicket: string | null;
   editingNote: { id: string; value: string } | null;
   editingSolucion: { id: string; value: string } | null;
@@ -1811,11 +1944,12 @@ interface TicketListProps {
   onCancelSolucion: () => void;
   onSolucionChange: (val: string) => void;
   onDelete: (id: string) => void;
+  onApplyTemplate: (id: string, template: string) => void;
   emptyMsg: string;
   S: Record<string, string>;
 }
 
-function TicketList({ tickets, expandedTicket, editingNote, editingSolucion, onToggle, onChangeEstado, onChangeEstadoPedido, onEditNote, onSaveNote, onCancelNote, onNoteChange, onEditSolucion, onSaveSolucion, onCancelSolucion, onSolucionChange, onDelete, emptyMsg, S }: TicketListProps) {
+function TicketList({ tickets, selectedIds, onToggleSelect, expandedTicket, editingNote, editingSolucion, onToggle, onChangeEstado, onChangeEstadoPedido, onEditNote, onSaveNote, onCancelNote, onNoteChange, onEditSolucion, onSaveSolucion, onCancelSolucion, onSolucionChange, onDelete, onApplyTemplate, emptyMsg, S }: TicketListProps) {
   if (tickets.length === 0) return (
     <div style={{ padding: '2.5rem', textAlign: 'center', color: S.muted, fontSize: '0.82rem' }}>{emptyMsg}</div>
   );
@@ -1838,6 +1972,24 @@ function TicketList({ tickets, expandedTicket, editingNote, editingSolucion, onT
     </div>
   );
 
+  const SOLUCION_TEMPLATES: { key: string; label: string; text: string }[] = [
+    {
+      key: 'seguimiento',
+      label: 'Seguimiento',
+      text: 'Se contactó al cliente para seguimiento del caso. Se explicó estado actual y próximos pasos.',
+    },
+    {
+      key: 'envio',
+      label: 'Incidencia envío',
+      text: 'Se validó estado de envío con courier. Se coordinó regularización y nueva actualización al cliente.',
+    },
+    {
+      key: 'postventa',
+      label: 'Postventa',
+      text: 'Se realizó contacto postventa para confirmar conformidad y cierre de atención.',
+    },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {tickets.map((t, i) => {
@@ -1851,6 +2003,13 @@ function TicketList({ tickets, expandedTicket, editingNote, editingSolucion, onT
             {/* Fila compacta */}
             <div onClick={() => onToggle(t.id!)}
               style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.1rem', cursor: 'pointer', background: isExpanded ? 'rgba(26,127,189,.04)' : 'transparent', transition: 'background 0.15s' }}>
+              <input
+                type="checkbox"
+                checked={Boolean(t.id && selectedIds?.has(t.id))}
+                onChange={() => t.id && onToggleSelect?.(t.id)}
+                onClick={e => e.stopPropagation()}
+                style={{ width: '14px', height: '14px', accentColor: '#45834D', cursor: 'pointer' }}
+              />
               <div style={{ width: '4px', height: '40px', borderRadius: '2px', background: prioColor, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
@@ -1920,6 +2079,17 @@ function TicketList({ tickets, expandedTicket, editingNote, editingSolucion, onT
                     ? inlineTextarea(editingSolucion.value, onSolucionChange, () => onSaveSolucion(t.id!, editingSolucion.value), onCancelSolucion)
                     : clickableField(t.solucion, () => onEditSolucion(t.id!))
                   }
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                    {SOLUCION_TEMPLATES.map(tmp => (
+                      <button
+                        key={tmp.key}
+                        onClick={() => onApplyTemplate(t.id!, tmp.text)}
+                        style={{ padding: '0.22rem 0.55rem', borderRadius: '999px', fontSize: '0.64rem', fontWeight: 800, cursor: 'pointer', border: 'none', background: 'rgba(69,131,77,.12)', color: '#45834D' }}
+                      >
+                        + {tmp.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Notas internas */}

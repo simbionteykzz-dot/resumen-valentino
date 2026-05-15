@@ -3,14 +3,13 @@ import { useAdmin } from '../../hooks/useAdmin';
 import { LogOut, RefreshCw, Filter, Search, Download, X, BarChart3, ShoppingBag, DollarSign, Package, AlertTriangle, Pencil, FileDown, Trash2, RotateCcw, ChevronDown, ChevronUp, Archive, History, ArrowRightLeft, Headphones, ClipboardList, Target, CheckCircle2, XCircle, CircleOff, TriangleAlert, Medal } from 'lucide-react';
 import PlanillasPanel from './PlanillasPanel';
 import MetasPanel from './MetasPanel';
-import type { Profile, AdminSale, EditForm } from '../../types';
+import type { AdminSale, EditForm } from '../../types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getCodigoProducto } from '../../lib/data';
 
 interface AdminDashboardProps {
   adminName: string;
-  profiles: Profile[];
   onSignOut: () => void;
   onSwitchToVendedor: () => void;
   onSwitchToATC?: () => void;
@@ -107,69 +106,96 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const H = doc.internal.pageSize.getHeight();
     const mg = 14;
 
-    // ── Top accent stripe ──────────────────────────────────────────────
-    doc.setFillColor(18, 50, 30);
-    doc.rect(0, 0, W, 4, 'F');
+    const dark: [number, number, number] = [20, 32, 45];
+    const green: [number, number, number] = [69, 131, 77];
+    const blue: [number, number, number] = [30, 111, 160];
+    const muted: [number, number, number] = [92, 109, 126];
+    const border: [number, number, number] = [219, 229, 224];
 
-    // ── Header band ───────────────────────────────────────────────────
-    doc.setFillColor(22, 52, 33);
-    doc.rect(0, 4, W, 40, 'F');
+    const fmtMoney = (v: number) => `S/ ${v.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`;
+
+    // Background
+    doc.setFillColor(248, 251, 249);
+    doc.rect(0, 0, W, H, 'F');
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, W, 5, 'F');
+
+    // Header container
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(mg, 10, W - mg * 2, 32, 3, 3, 'F');
+    doc.setDrawColor(...border);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(mg, 10, W - mg * 2, 32, 3, 3, 'S');
+
+    // Brand block
+    doc.setFillColor(...green);
+    doc.roundedRect(mg + 2, 12, 36, 10, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LIVEX AGENCY', mg + 20, 18.6, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg, 16);
-
+    doc.setFontSize(12);
+    doc.setTextColor(...dark);
+    doc.text('Resumen de compras del cliente', mg + 42, 18);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120, 190, 145);
-    doc.text('Historial de Cliente', mg, 23);
+    doc.setTextColor(...muted);
+    doc.text('Historial comercial consolidado y estado de pagos', mg + 42, 23.2);
 
-    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text(historyClient.nom.toUpperCase(), mg, 31.5);
-
-    doc.setFontSize(7.5);
+    doc.setFontSize(10.5);
+    doc.setTextColor(...dark);
+    doc.text(historyClient.nom.toUpperCase(), mg + 2, 33.4);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 175, 135);
-    doc.text(historyClient.cel, mg, 38);
+    doc.setFontSize(8.2);
+    doc.setTextColor(...muted);
+    doc.text(`Contacto: ${historyClient.cel}`, mg + 2, 38.2);
 
-    doc.setFontSize(6.5);
-    doc.setTextColor(75, 130, 100);
-    doc.text(`Generado: ${new Date().toLocaleString('es-PE')}`, W - mg, 38, { align: 'right' });
+    const generatedLabel = `Generado: ${new Date().toLocaleString('es-PE')}`;
+    doc.setFillColor(244, 248, 246);
+    doc.roundedRect(W - mg - 62, 28.5, 60, 10.5, 2, 2, 'F');
+    doc.setDrawColor(...border);
+    doc.roundedRect(W - mg - 62, 28.5, 60, 10.5, 2, 2, 'S');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...muted);
+    doc.text(generatedLabel, W - mg - 60, 34.5);
 
-    // ── KPI boxes ─────────────────────────────────────────────────────
+    // KPIs
     const totalRevenue = clientHistory.reduce((a, s) => a + (Number(s.totalTotal) || 0), 0);
-    const totalDeuda   = clientHistory.reduce((a, s) => { const v = parseFloat(s.resta || '0'); return a + (isNaN(v) ? 0 : v); }, 0);
+    const totalDeuda = clientHistory.reduce((a, s) => {
+      const v = parseFloat(s.resta || '0');
+      return a + (isNaN(v) ? 0 : v);
+    }, 0);
     const kpis = [
-      { label: 'COMPRAS',   value: String(clientHistory.length),       rgb: [55, 120, 65]  as [number, number, number] },
-      { label: 'TOTAL S/',  value: `S/${totalRevenue.toLocaleString()}`, rgb: [25, 120, 170] as [number, number, number] },
-      { label: 'DEUDA S/',  value: `S/${totalDeuda.toFixed(0)}`,         rgb: totalDeuda > 0 ? [185, 55, 55] as [number, number, number] : [85, 140, 100] as [number, number, number] },
+      { label: 'Compras', value: String(clientHistory.length), rgb: green },
+      { label: 'Total facturado', value: fmtMoney(totalRevenue), rgb: blue },
+      { label: 'Deuda pendiente', value: fmtMoney(totalDeuda), rgb: totalDeuda > 0 ? ([184, 48, 48] as [number, number, number]) : green },
     ];
     const boxW = (W - mg * 2 - 8) / 3;
     kpis.forEach((k, i) => {
       const x = mg + i * (boxW + 4);
-      doc.setFillColor(232, 246, 237);
-      doc.roundedRect(x, 50, boxW, 24, 2.5, 2.5, 'F');
-      doc.setDrawColor(...k.rgb);
-      doc.setLineWidth(0.25);
-      doc.roundedRect(x, 50, boxW, 24, 2.5, 2.5, 'S');
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(x, 47, boxW, 22, 2.6, 2.6, 'F');
+      doc.setDrawColor(...border);
+      doc.roundedRect(x, 47, boxW, 22, 2.6, 2.6, 'S');
       doc.setFillColor(...k.rgb);
-      doc.roundedRect(x, 50, boxW, 3, 1.5, 1.5, 'F');
-      doc.setFontSize(5.5);
+      doc.roundedRect(x, 47, boxW, 3.2, 1.6, 1.6, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(...muted);
+      doc.text(k.label, x + 3, 58);
       doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11.5);
       doc.setTextColor(...k.rgb);
-      doc.text(k.label, x + boxW / 2, 59, { align: 'center' });
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(22, 52, 33);
-      doc.text(k.value, x + boxW / 2, 70, { align: 'center' });
+      doc.text(k.value, x + 3, 65.2);
     });
 
-    // ── Table ─────────────────────────────────────────────────────────
+    // Table
     autoTable(doc, {
-      startY: 82,
+      startY: 74,
       head: [['FECHA', 'COMBO', 'MARCA', 'VENDEDOR', 'TOTAL S/', 'ESTADO', 'DEBE']],
       body: clientHistory.map(s => {
         const estado = getEstado(s);
@@ -185,45 +211,47 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       }),
       theme: 'grid',
       styles: {
-        fontSize: 8,
+        fontSize: 7.8,
         cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
-        textColor: [38, 62, 48],
-        lineColor: [185, 215, 195],
+        textColor: [41, 56, 71],
+        lineColor: [219, 229, 224],
         lineWidth: 0.2,
       },
       headStyles: {
-        fillColor: [22, 52, 33],
-        textColor: [140, 210, 160],
+        fillColor: [20, 32, 45],
+        textColor: [236, 243, 239],
         fontStyle: 'bold',
-        fontSize: 7.5,
-        lineColor: [38, 85, 52],
+        fontSize: 7.4,
+        lineColor: [20, 32, 45],
         lineWidth: 0.3,
       },
-      alternateRowStyles: { fillColor: [240, 248, 243] },
-      bodyStyles: { fillColor: [248, 253, 250] },
+      alternateRowStyles: { fillColor: [246, 250, 248] },
+      bodyStyles: { fillColor: [255, 255, 255] },
       columnStyles: {
-        4: { textColor: [35, 115, 55], fontStyle: 'bold' },
+        4: { textColor: [30, 111, 160], fontStyle: 'bold' },
         5: { fontStyle: 'bold' },
-        6: { textColor: [175, 50, 50] },
+        6: { textColor: [184, 48, 48] },
       },
       didParseCell: (data) => {
         if (data.section !== 'body' || data.column.index !== 5) return;
         const v = String(data.cell.raw);
-        if (v === 'PAGO COMPLETO')    data.cell.styles.textColor = [32, 115, 50];
+        if (v === 'PAGO COMPLETO') data.cell.styles.textColor = [32, 115, 50];
         else if (v === 'CONTRA ENTREGA') data.cell.styles.textColor = [160, 95, 10];
-        else if (v === 'ANULADO')     data.cell.styles.textColor = [180, 48, 48];
+        else if (v === 'ANULADO') data.cell.styles.textColor = [180, 48, 48];
       },
       didDrawPage: (data) => {
         const totalPages = doc.getNumberOfPages();
-        doc.setFillColor(18, 50, 30);
-        doc.rect(0, H - 7, W, 7, 'F');
-        doc.setFontSize(6.5);
+        doc.setFillColor(245, 248, 246);
+        doc.rect(0, H - 9, W, 9, 'F');
+        doc.setDrawColor(...border);
+        doc.line(mg, H - 9, W - mg, H - 9);
+        doc.setFontSize(6.8);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 170, 130);
-        doc.text(`Livex Agency · ${historyClient.nom} · ${historyClient.cel}`, mg, H - 2.5);
-        doc.text(`Página ${data.pageNumber} de ${totalPages}`, W - mg, H - 2.5, { align: 'right' });
+        doc.setTextColor(...muted);
+        doc.text(`Livex Agency · Cliente: ${historyClient.nom}`, mg, H - 3.2);
+        doc.text(`Página ${data.pageNumber} de ${totalPages}`, W - mg, H - 3.2, { align: 'right' });
       },
-      margin: { top: 82, left: mg, right: mg, bottom: 10 },
+      margin: { top: 74, left: mg, right: mg, bottom: 12 },
     });
 
     doc.save(`cliente_${historyClient.cel}_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -234,161 +262,261 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
     const mg = 16;
+    const contentW = W - mg * 2;
     const estado = getEstado(s);
     const region = getRegion(s);
-    const estadoRgb: [number, number, number] =
-      estado === 'PAGO COMPLETO'  ? [35, 115, 55]  :
-      estado === 'CONTRA ENTREGA' ? [155, 95, 10]  :
-      estado === 'ANULADO'        ? [175, 48, 48]  : [90, 115, 100];
-    const dark: [number, number, number] = [17, 24, 39];
-    const muted: [number, number, number] = [107, 114, 128];
-    const border: [number, number, number] = [229, 231, 235];
-    const accent: [number, number, number] = [31, 41, 55];
 
-    doc.setFillColor(250, 250, 251);
+    const dark: [number, number, number] = [18, 28, 40];
+    const muted: [number, number, number] = [105, 122, 140];
+    const line: [number, number, number] = [224, 232, 240];
+    const primary: [number, number, number] = [46, 94, 137];
+    const success: [number, number, number] = [52, 126, 76];
+    const danger: [number, number, number] = [190, 62, 62];
+    const warn: [number, number, number] = [166, 108, 32];
+
+    const estadoColor: [number, number, number] =
+      estado === 'PAGO COMPLETO' ? success :
+      estado === 'CONTRA ENTREGA' ? warn :
+      estado === 'ANULADO' ? danger : muted;
+
+    // Premium but denser visual scaffold
+    doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, W, H, 'F');
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, W, 2.5, 'F');
+    doc.setFillColor(246, 249, 252);
+    doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'F');
+    doc.setDrawColor(...line);
+    doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'S');
 
     // Header
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, W, 28, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...dark);
+    doc.text('LIVEX AGENCY', mg, 12);
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text('LIVEX AGENCY', mg, 11);
+    doc.text('Comprobante de compra', mg, 20);
+
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.setTextColor(209, 213, 219);
-    doc.text('COMPROBANTE DE COMPRA', mg, 17);
-    doc.setFontSize(7.5);
-    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 11, { align: 'right' });
+    doc.setTextColor(...muted);
+    doc.text('Detalle de pedido y resumen de pago', mg, 25);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 12, { align: 'right' });
     doc.text(`${s.fecha ?? '—'}${s.hora ? ` · ${s.hora}` : ''}`, W - mg, 17, { align: 'right' });
 
-    // Status badge
-    const statusW = 62;
-    const statusX = W - mg - statusW;
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(statusX, 31, statusW, 10, 2.2, 2.2, 'F');
-    doc.setDrawColor(...estadoRgb);
-    doc.setLineWidth(0.35);
-    doc.roundedRect(statusX, 31, statusW, 10, 2.2, 2.2, 'S');
+    // Estado chip outline only
+    const chipW = 58;
+    const chipH = 8;
+    const chipX = W - mg - chipW;
+    const chipY = 21.5;
+    doc.setDrawColor(...estadoColor);
+    doc.setLineWidth(0.45);
+    doc.roundedRect(chipX, chipY, chipW, chipH, 2, 2, 'S');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.2);
-    doc.setTextColor(...estadoRgb);
-    doc.text(estado, statusX + statusW / 2, 37.3, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setTextColor(...estadoColor);
+    doc.text(estado, chipX + chipW / 2, chipY + 5.2, { align: 'center' });
 
-    let y = 40;
-    const contentW = W - mg * 2;
-
-    const section = (title: string) => {
-      doc.setDrawColor(...border);
-      doc.setLineWidth(0.3);
-      doc.line(mg, y, W - mg, y);
-      doc.setFillColor(245, 247, 250);
-      doc.roundedRect(mg, y + 2, contentW, 7, 1.5, 1.5, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.2);
-      doc.setTextColor(...accent);
-      doc.text(title, mg + 3, y + 6.8);
-      y += 13;
+    const money = (v?: string | number) => {
+      const n = typeof v === 'number' ? v : Number(v || 0);
+      return `S/ ${Number.isFinite(n) ? n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}`;
     };
 
-    const row = (label: string, value: string, valueColor?: [number, number, number]) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.3);
+    // quick KPI row to reduce empty look
+    const kpiY = 34.5;
+    const kpiGap = 4;
+    const kpiW = (contentW - kpiGap * 2) / 3;
+    const kpis = [
+      { label: 'TOTAL', value: money(s.totalTotal), color: success },
+      { label: 'PENDIENTE', value: s.resta && parseFloat(s.resta) > 0 ? money(s.resta) : 'S/ 0.00', color: s.resta && parseFloat(s.resta) > 0 ? danger : muted },
+      { label: 'REGIÓN', value: region, color: primary },
+    ];
+    kpis.forEach((k, i) => {
+      const x = mg + i * (kpiW + kpiGap);
+      doc.setFillColor(250, 252, 255);
+      doc.roundedRect(x, kpiY, kpiW, 11.5, 1.8, 1.8, 'F');
+      doc.setDrawColor(...line);
+      doc.roundedRect(x, kpiY, kpiW, 11.5, 1.8, 1.8, 'S');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.5);
       doc.setTextColor(...muted);
-      doc.text(label, mg, y);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...(valueColor ?? dark));
-      doc.text(value, mg + 44, y);
-      y += 6.5;
-    };
-
-    const rowHalf = (pairs: [string, string, ([number, number, number] | undefined)?][]) => {
-      const colW = contentW / pairs.length;
-      pairs.forEach(([label, value, color], i) => {
-        const x = mg + i * colW;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.3);
-        doc.setTextColor(...muted);
-        doc.text(label, x, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...(color ?? dark));
-        doc.text(value, x + 22, y);
-      });
-      y += 6.5;
-    };
-
-    section('DATOS DEL CLIENTE');
-    row('Nombre', s.nom || '—');
-    rowHalf([['Celular', s.cel || '—', [22, 100, 155]], ['DNI', s.dni || '—']]);
-    rowHalf([['Región', region], ['Marca', s.marcaLabel || 'OVER', [31, 41, 55]]]);
-
-    if (region === 'Provincia' && (s.sede || s.provincia || s.depto)) {
-      if (s.sede) {
-        const sedeLines = doc.splitTextToSize(s.sede, contentW - 46);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.3);
-        doc.setTextColor(...muted);
-        doc.text('Courier / Sede', mg, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...dark);
-        doc.text(sedeLines, mg + 46, y);
-        y += sedeLines.length * 5.6 + 1;
-      }
-      if (s.provincia || s.depto) rowHalf([['Departamento', s.provincia || '—'], ['Provincia', s.depto || '—']]);
-    } else if (region === 'Lima' && (s.distrito || s.ubicacion)) {
-      if (s.distrito) row('Distrito', s.distrito, [22, 100, 155]);
-      if (s.ubicacion) {
-        const ubLines = doc.splitTextToSize(s.ubicacion, contentW - 44);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.3);
-        doc.setTextColor(...muted);
-        doc.text('Ubicación', mg, y);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...dark);
-        doc.text(ubLines, mg + 44, y);
-        y += ubLines.length * 5.6 + 1;
-      }
-    }
-
-    y += 2;
-    section('DETALLE DEL PEDIDO');
-    if (s.detalle && s.detalle.trim()) {
-      const detalleLines = doc.splitTextToSize(s.detalle.trim(), contentW);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.2);
-      doc.setTextColor(...dark);
-      doc.text(detalleLines, mg, y);
-      y += detalleLines.length * 5.2 + 2;
-    } else {
-      const comboLines = doc.splitTextToSize(s.combo || 'Sin detalle', contentW - 44);
-      doc.setFont('helvetica', 'normal');
+      doc.text(k.label, x + 2.8, kpiY + 4);
       doc.setFontSize(8.3);
-      doc.setTextColor(...muted);
-      doc.text('Combo', mg, y);
+      doc.setTextColor(...k.color);
+      doc.text(k.value, x + 2.8, kpiY + 8.7);
+    });
+
+    // divider
+    doc.setDrawColor(...line);
+    doc.setLineWidth(0.35);
+    doc.line(mg, 31, W - mg, 31);
+
+    let y = 52;
+    const labelX = mg;
+    const valueX = mg + 34;
+    const rightLabelX = mg + contentW / 2 + 4;
+    const rightValueX = rightLabelX + 24;
+
+    const sectionTitle = (title: string) => {
       doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
       doc.setTextColor(...dark);
-      doc.text(comboLines, mg + 44, y);
-      y += comboLines.length * 5.6 + 1;
-    }
-    rowHalf([['Cantidad', `${s.qtyN ?? '—'} prendas`], ['Vendedor', s.vendorName || '—', [31, 41, 55]]]);
-    if (s.codigoPublicidad) row('Cod. Publicidad', s.codigoPublicidad, [80, 80, 148]);
+      doc.text(title, mg, y);
+      y += 2.2;
+      doc.setDrawColor(...line);
+      doc.line(mg, y + 1, W - mg, y + 1);
+      y += 7;
+    };
 
-    y += 2;
-    section('RESUMEN DE PAGO');
-    row('Método de pago', s.metodoPago || '—');
-    row('Total', `S/ ${s.totalTotal ?? 0}`, [35, 115, 55]);
-    if (s.separo) row('Separo / Adelanto', `S/ ${s.separo}`, [22, 100, 155]);
-    if (s.resta && parseFloat(s.resta) > 0) row('Saldo pendiente', `S/ ${s.resta}`, [175, 48, 48]);
+    const pair = (label: string, value: string, options?: { right?: boolean; color?: [number, number, number] }) => {
+      const isRight = options?.right ?? false;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...muted);
+      doc.text(label, isRight ? rightLabelX : labelX, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...(options?.color ?? dark));
+      doc.text(value || '—', isRight ? rightValueX : valueX, y);
+    };
 
-    // Footer
-    doc.setDrawColor(...border);
-    doc.setLineWidth(0.3);
-    doc.line(mg, H - 15, W - mg, H - 15);
+    // Right summary rail to avoid empty feel
+    const railX = W - mg - 58;
+    const railY = 54;
+    const railW = 58;
+    const railH = 112;
+    doc.setDrawColor(...line);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(railX, railY, railW, railH, 2, 2, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...muted);
+    doc.text('RESUMEN RÁPIDO', railX + 4, railY + 6);
+    doc.setDrawColor(...line);
+    doc.line(railX + 3, railY + 8, railX + railW - 3, railY + 8);
+
+    const quickRow = (label: string, value: string, rowY: number, color: [number, number, number]) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.8);
+      doc.setTextColor(...muted);
+      doc.text(label, railX + 4, rowY);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.4);
+      doc.setTextColor(...color);
+      doc.text(value, railX + 4, rowY + 5);
+    };
+    quickRow('Total', money(s.totalTotal), railY + 16, success);
+    quickRow('Separo', s.separo ? money(s.separo) : '—', railY + 33, primary);
+    quickRow('Pendiente', s.resta && parseFloat(s.resta) > 0 ? money(s.resta) : '—', railY + 50, s.resta && parseFloat(s.resta) > 0 ? danger : muted);
+    quickRow('Estado', estado, railY + 67, estadoColor);
+    quickRow('Región', region, railY + 84, primary);
+
+    doc.setDrawColor(...line);
+    doc.line(railX + 3, railY + 99, railX + railW - 3, railY + 99);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.6);
     doc.setTextColor(...muted);
-    doc.text('Documento interno de operaciones · Livex Agency', mg, H - 10);
-    doc.text(new Date().toLocaleString('es-PE'), W - mg, H - 10, { align: 'right' });
+    doc.text('Vendedor', railX + 4, railY + 105);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(...dark);
+    doc.text(s.vendorName || '—', railX + 4, railY + 110);
+
+    sectionTitle('DATOS DEL CLIENTE');
+    pair('Nombre', s.nom || '—');
+    y += 7;
+    pair('Celular', s.cel || '—', { color: primary });
+    pair('DNI', s.dni || '—', { right: true });
+    y += 7;
+    pair('Región', region);
+    pair('Marca', s.marcaLabel || 'OVER', { right: true });
+    y += 7;
+    if (region === 'Lima') {
+      if (s.distrito) {
+        pair('Distrito', s.distrito, { color: primary });
+        y += 7;
+      }
+      if (s.ubicacion) {
+        const lines = doc.splitTextToSize(s.ubicacion, contentW - 34);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...muted);
+        doc.text('Ubicación', labelX, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...dark);
+        doc.text(lines, valueX, y);
+        y += lines.length * 5 + 2;
+      }
+    } else {
+      if (s.sede) {
+        const lines = doc.splitTextToSize(s.sede, contentW - 34);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...muted);
+        doc.text('Courier/Sede', labelX, y);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...dark);
+        doc.text(lines, valueX, y);
+        y += lines.length * 5 + 2;
+      }
+      if (s.provincia || s.depto) {
+        pair('Departamento', s.provincia || '—');
+        pair('Provincia', s.depto || '—', { right: true });
+        y += 7;
+      }
+    }
+
+    y += 2;
+    const maxContentX = railX - 6;
+    doc.setDrawColor(...line);
+    doc.line(mg, y - 1, maxContentX, y - 1);
+    sectionTitle('DETALLE DEL PEDIDO');
+    const detalle = (s.detalle && s.detalle.trim()) ? s.detalle.trim() : (s.combo || 'Sin detalle');
+    const detalleLines = doc.splitTextToSize(detalle, maxContentX - mg - 2);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.6);
+    doc.setTextColor(...dark);
+    doc.text(detalleLines, mg + 1, y);
+    y += detalleLines.length * 4.9 + 3;
+
+    pair('Cantidad', `${s.qtyN ?? '—'} prendas`);
+    pair('Vendedor', s.vendorName || '—', { right: true });
+    y += 7;
+    if (s.codigoPublicidad) {
+      pair('Cod. Publicidad', s.codigoPublicidad, { color: [88, 92, 170] });
+      y += 7;
+    }
+
+    y += 2;
+    doc.setDrawColor(...line);
+    doc.line(mg, y - 1, maxContentX, y - 1);
+    sectionTitle('RESUMEN DE PAGO');
+    pair('Método de pago', s.metodoPago || '—');
+    y += 7;
+    pair('Total', `S/ ${s.totalTotal ?? 0}`, { color: success });
+    y += 7;
+    if (s.separo) {
+      pair('Separo / Adelanto', `S/ ${s.separo}`, { color: primary });
+      y += 7;
+    }
+    if (s.resta && parseFloat(s.resta) > 0) {
+      pair('Saldo pendiente', `S/ ${s.resta}`, { color: danger });
+      y += 7;
+    }
+
+    // Footer
+    doc.setDrawColor(...line);
+    doc.setLineWidth(0.35);
+    doc.line(mg, H - 14, W - mg, H - 14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.8);
+    doc.setTextColor(...muted);
+    doc.text('Livex Agency · Documento operativo', mg, H - 9);
+    doc.text(new Date().toLocaleString('es-PE'), W - mg, H - 9, { align: 'right' });
 
     doc.save(`comprobante_${s.cel ?? 'cliente'}_${s.fecha ?? 'sin-fecha'}.pdf`);
   };
