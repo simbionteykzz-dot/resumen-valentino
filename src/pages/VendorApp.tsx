@@ -602,10 +602,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
                 <X size={16} />
               </button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-              <FrasesVentaPanel products={products} />
-              <NegociacionPanel products={products} />
-            </div>
+            <FrasesVentaPanel products={products} vendedorName={vendedorName} />
             <RespuestasPanel />
             <SeguimientoPanel />
           </div>

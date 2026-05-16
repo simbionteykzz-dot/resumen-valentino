@@ -1,6 +1,73 @@
-import React, { useMemo, useState } from 'react';
-import { Sparkles, Copy, Check, RefreshCw, ShoppingBag, ArrowRight, Zap } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Sparkles, Copy, Check, RefreshCw, ShoppingBag, ArrowRight, Zap, MessageCircle } from 'lucide-react';
 import { POL_VARIANTES_OVERSHARK } from '../../lib/data';
+
+/* ── Saludos temporales de Sandro ── */
+const SALUDOS_TEMPORALES = [
+  { key: 'dia', label: 'Día', emoji: '☀️', saludo: 'Buenos días' },
+  { key: 'tarde', label: 'Tarde', emoji: '🌤️', saludo: 'Buenas tardes' },
+  { key: 'noche', label: 'Noche', emoji: '🌙', saludo: 'Buenas noches' },
+] as const;
+
+/* ── Mensajes rápidos exclusivos de Sandro ── */
+const MENSAJES_RAPIDOS_SANDRO: { categoria: string; mensajes: string[] }[] = [
+  {
+    categoria: '👋 Saludo / Catálogo',
+    mensajes: [
+      'Buenas noches, coméntame cómo puedo ayudarte.',
+      'Hola, qué tal? 😊 Hoy estamos cerrando pedidos y aún estás a tiempo. Si quieres asegurar tu promoción, pásame tus datos y lo dejamos listo.',
+    ],
+  },
+  {
+    categoria: '📦 Stock / Producto',
+    mensajes: [
+      'si contamos con el stock de su pedido✨',
+      'Si llegamos a la dirección ✨🚀',
+      'algodón 90%, gramaje 30/1, tipo de corte regular fit',
+      'algodón 85%, gramaje 24/1, tipo de corte slim fit',
+      'Claro que sí, estimado(a). Las tallas y colores están sujetos a disponibilidad del cliente.',
+      'No trabajamos con oversize por el momento.',
+      'No encoge y no decolora.',
+      'Solo trabajamos hasta la XL.',
+      'Trabajamos con tallas completas.',
+      'El dia de hoy no laboramos por feriado, esperamos su comprension. 😊',
+      'Claro que sí, envíos al nivel nacional.✈️🚢🚌',
+      'Recordemos que el rango de entrega es de 10:30am a 8pm.🕐',
+    ],
+  },
+  {
+    categoria: '💰 Precios / Pago',
+    mensajes: [
+      'La suma total sería S/113 (S/99 del producto + S/14 de delivery).',
+      'Para generar el pedido, debe abonar S/14 del delivery y al momento de la entrega pagar los S/99 restantes.',
+      'La suma seria 99+12 del envió por shalom = s/111',
+      'Puede separar como mínimo su pedido con 30 soles y al momento de acercarse a shalom cancelaria la diferencia para que se le brinde su clave de 4 dígitos.',
+      'Muy bien, quedo atento a la captura del yape 😊',
+    ],
+  },
+  {
+    categoria: '🚚 Entrega / Delivery',
+    mensajes: [
+      'El pedido se genera hoy y estaría saliendo a ruta mañana.',
+      'El Courier se comunicará con usted para coordinar el horario de entrega.',
+      'En este caso llegaría LUNES por que DOMINGOS Y FERIADOS no realizamos delivery.',
+      'El pedido llegara entre 24 a 72 horas como máximo.',
+    ],
+  },
+  {
+    categoria: '🏪 Recojo en Almacén',
+    mensajes: [
+      'No contamos con tienda física por el momento, solo con almacén en SJL Mangomarca, donde puede realizar el recojo de su pedido si lo desea.',
+    ],
+  },
+  {
+    categoria: '🎧 Soporte al Cliente',
+    mensajes: [
+      'Buenas tardes, por favor comunicarse al número 901 127 839 para recibir soporte en su compra.',
+      'Su caso ha sido elevado; se comunicarán con usted en unos minutos.',
+    ],
+  },
+];
 
 /* ── Frases por modelo ── */
 const FRASES_POR_PRODUCTO: Record<string, string[]> = {
@@ -136,9 +203,32 @@ function normalizeProductName(name: string): string | null {
   return Object.keys(POL_VARIANTES_OVERSHARK).find(k => k.toLowerCase() === tl) || null;
 }
 
-export default function FrasesVentaPanel({ products }: { products: any[] }) {
+export default function FrasesVentaPanel({ products, vendedorName }: { products: any[]; vendedorName?: string }) {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [copiedMsgKey, setCopiedMsgKey] = useState<string | null>(null);
+  const [copiedSaludo, setCopiedSaludo] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const isSandro = vendedorName?.toUpperCase() === 'SANDRO';
+
+  const handleCopyMsg = (text: string, key: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedMsgKey(key);
+      setTimeout(() => setCopiedMsgKey(null), 1500);
+    }).catch(() => {});
+  };
+
+  const handleCopySaludo = (s: typeof SALUDOS_TEMPORALES[number]) => {
+    const templates: Record<string, string> = {
+      dia:   `¡${s.saludo}! 😊 Soy Sandro de Overshark. Te acabo de compartir nuestro catálogo — dime qué modelos te llamaron la atención, tus tallas y colores, y si nos escribes desde Lima o provincia para ayudarte con tu pedido.`,
+      tarde: `¡${s.saludo}! 😊 Soy Sandro de Overshark. Te acabo de enviar el catálogo. Cuéntame qué modelos te gustaron, tus tallas y colores, y si estás en Lima o provincia para coordinar tu entrega.`,
+      noche: `¡${s.saludo}! 😊 Soy Sandro de Overshark. Te acabo de compartir nuestro catálogo — todavía estamos recibiendo pedidos. Indícame tus tallas y colores, y si estás en Lima o provincia, para dejarlo separado esta noche.`,
+    };
+    const text = templates[s.key];
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedSaludo(s.key);
+      setTimeout(() => setCopiedSaludo(null), 1500);
+    }).catch(() => {});
+  };
 
   const modelosEnPedido = useMemo(() => {
     const seen = new Set<string>();
@@ -191,7 +281,7 @@ export default function FrasesVentaPanel({ products }: { products: any[] }) {
     }).catch(() => {});
   };
 
-  if (products.length === 0) return null;
+  if (products.length === 0 && !isSandro) return null;
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
@@ -199,30 +289,33 @@ export default function FrasesVentaPanel({ products }: { products: any[] }) {
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
           <Sparkles size={20} /> Frases de Venta & Recomendaciones
         </h2>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setRefreshKey(k => k + 1)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '50px', padding: '0.5rem 1rem' }}
-        >
-          <RefreshCw size={14} /> Nuevas frases
-        </button>
+        {products.length > 0 && (
+          <button
+            className="btn btn-secondary"
+            onClick={() => setRefreshKey(k => k + 1)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '50px', padding: '0.5rem 1rem' }}
+          >
+            <RefreshCw size={14} /> Nuevas frases
+          </button>
+        )}
       </div>
 
-      <div style={{ marginBottom: '1.75rem' }}>
-        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <Zap size={13} /> Frases para convencer al cliente
+      {products.length > 0 && (<>
+        <div style={{ marginBottom: '1.75rem' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Zap size={13} /> Frases para convencer al cliente
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {frasesActuales.map((frase, i) => (
+              <div key={`${refreshKey}-${i}`} className="frase-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.06), rgba(224, 85, 0, 0.03))', border: '1px solid rgba(255, 107, 0, 0.12)', borderRadius: '10px', transition: 'all 0.2s ease', animation: 'fadeUp 0.3s ease', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}>
+                <span style={{ flex: 1, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.5 }}>{frase}</span>
+                <button onClick={() => handleCopy(frase, i)} style={{ flexShrink: 0, width: '2rem', height: '2rem', border: '1px solid rgba(255, 107, 0, 0.2)', borderRadius: '8px', background: 'transparent', color: copiedIdx === i ? 'var(--accent)' : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Copiar frase">
+                  {copiedIdx === i ? <Check size={13} /> : <Copy size={13} />}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {frasesActuales.map((frase, i) => (
-            <div key={`${refreshKey}-${i}`} className="frase-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.06), rgba(224, 85, 0, 0.03))', border: '1px solid rgba(255, 107, 0, 0.12)', borderRadius: '10px', transition: 'all 0.2s ease', animation: 'fadeUp 0.3s ease', animationDelay: `${i * 0.05}s`, animationFillMode: 'both' }}>
-              <span style={{ flex: 1, fontSize: '0.9rem', color: 'var(--text)', lineHeight: 1.5 }}>{frase}</span>
-              <button onClick={() => handleCopy(frase, i)} style={{ flexShrink: 0, width: '2rem', height: '2rem', border: '1px solid rgba(255, 107, 0, 0.2)', borderRadius: '8px', background: 'transparent', color: copiedIdx === i ? 'var(--accent)' : 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }} title="Copiar frase">
-                {copiedIdx === i ? <Check size={13} /> : <Copy size={13} />}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {recomendaciones.length > 0 && (
         <div>
@@ -245,6 +338,96 @@ export default function FrasesVentaPanel({ products }: { products: any[] }) {
                 <div style={{ fontSize: '0.7rem', color: 'var(--muted2)', marginTop: '0.35rem', fontStyle: 'italic' }}>Porque lleva {rec.desde}</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      </>)}
+
+      {isSandro && (
+        <div style={{ marginTop: products.length > 0 ? '1.75rem' : 0, borderTop: products.length > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none', paddingTop: products.length > 0 ? '1.5rem' : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+            <MessageCircle size={16} style={{ color: 'var(--info)' }} />
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)' }}>Frases Sandro</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {MENSAJES_RAPIDOS_SANDRO.map((grupo) => {
+              const esSaludo = grupo.categoria === '👋 Saludo / Catálogo';
+              return (
+                <div key={grupo.categoria}>
+                  <div style={{
+                    fontSize: '0.68rem', fontWeight: 800, color: 'var(--info)',
+                    textTransform: 'uppercase', letterSpacing: '0.08em',
+                    marginBottom: '0.6rem', opacity: 0.8,
+                  }}>
+                    {grupo.categoria}
+                  </div>
+
+                  {esSaludo && (
+                    <div style={{ marginBottom: '0.6rem', padding: '0.9rem 1rem', background: 'rgba(56,200,245,0.05)', border: '1px solid rgba(56,200,245,0.15)', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {SALUDOS_TEMPORALES.map(s => {
+                          const copied = copiedSaludo === s.key;
+                          return (
+                            <button
+                              key={s.key}
+                              onClick={() => handleCopySaludo(s)}
+                              style={{
+                                flex: 1, padding: '0.55rem 0.4rem',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem',
+                                background: copied ? 'rgba(56,200,245,0.15)' : 'rgba(56,200,245,0.06)',
+                                border: `1px solid ${copied ? 'rgba(56,200,245,0.45)' : 'rgba(56,200,245,0.15)'}`,
+                                borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <span style={{ fontSize: '1rem' }}>{s.emoji}</span>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: copied ? 'var(--info)' : 'var(--text2)' }}>
+                                {copied ? '¡Copiado!' : s.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: grupo.mensajes.length === 1 ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '0.5rem',
+                  }}>
+                    {grupo.mensajes.map((msg, mi) => {
+                      const key = `${grupo.categoria}-${mi}`;
+                      const copied = copiedMsgKey === key;
+                      return (
+                        <div key={key} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                          padding: '0.85rem 1rem',
+                          background: 'rgba(56, 200, 245, 0.04)',
+                          border: `1px solid ${copied ? 'rgba(56,200,245,0.4)' : 'rgba(56, 200, 245, 0.1)'}`,
+                          borderRadius: '10px', transition: 'border-color 0.2s ease',
+                        }}>
+                          <span style={{ flex: 1, fontSize: '0.875rem', color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{msg}</span>
+                          <button
+                            onClick={() => handleCopyMsg(msg, key)}
+                            style={{
+                              flexShrink: 0, width: '2rem', height: '2rem',
+                              border: '1px solid rgba(56, 200, 245, 0.2)', borderRadius: '8px',
+                              background: copied ? 'rgba(56,200,245,0.12)' : 'transparent',
+                              color: copied ? 'var(--info)' : 'var(--muted)',
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all 0.2s ease',
+                            }}
+                            title="Copiar mensaje"
+                          >
+                            {copied ? <Check size={13} /> : <Copy size={13} />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
