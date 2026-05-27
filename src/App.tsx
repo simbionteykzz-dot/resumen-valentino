@@ -4,7 +4,6 @@ import { useAuth } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import AdminDashboard from './components/panels/AdminDashboard';
 import VendorApp from './pages/VendorApp';
-import ATCPanel from './components/panels/ATCPanel';
 import { useToast } from './hooks/useToast';
 import { getProfile, getAllProfiles } from './lib/supabase';
 import type { Profile } from './types';
@@ -28,11 +27,12 @@ export default function App() {
     else setProfiles([]);
   }, [user?.id]);
 
-  useEffect(() => {
-    if (profile?.role === 'atc' && appMode !== 'atc') {
-      setAppMode('atc');
-    }
-  }, [profile?.role, appMode]);
+  // ATC temporalmente oculto
+  // useEffect(() => {
+  //   if (profile?.role === 'atc' && appMode !== 'atc') {
+  //     setAppMode('atc');
+  //   }
+  // }, [profile?.role, appMode]);
 
   const emailPrefix = user?.email?.split('@')[0] || 'USUARIO';
   const userName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
@@ -49,28 +49,8 @@ export default function App() {
 
   if (!user) return <LoginPage />;
 
-  // Admin en modo ATC / usuario ATC
-  if (appMode === 'atc' || profile?.role === 'atc') {
-    return (
-      <>
-        <ATCPanel
-          userId={user.id}
-          userName={userName}
-          isAdmin={profile?.role === 'admin'}
-          onBack={profile?.role === 'admin' ? () => setAppMode('admin') : undefined}
-          onSignOut={signOut}
-        />
-        {toast && (
-          <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              {toast.type === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
-              {toast.msg}
-            </span>
-          </div>
-        )}
-      </>
-    );
-  }
+  // ATC temporalmente oculto
+  // if (appMode === 'atc' || profile?.role === 'atc') { ... }
 
   // Admin en modo admin
   if (profile?.role === 'admin' && appMode === 'admin') {

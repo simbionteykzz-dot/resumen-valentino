@@ -20,6 +20,7 @@ import SeguimientoPanel from '../components/panels/SeguimientoPanel';
 import DudasCompraPanel from '../components/panels/DudasCompraPanel';
 import RiesgosPanel from '../components/panels/RiesgosPanel';
 import TabBar from '../components/ui/TabBar';
+import CatalogoGaleria from '../components/ui/CatalogoGaleria';
 import { BRANDS, applyBrandTheme } from '../lib/brands';
 import type { BrandKey } from '../lib/brands';
 import { calcularTotalPagar, calcularDebe } from '../lib/pricing';
@@ -185,6 +186,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
 
   return (
     <>
+      <CatalogoGaleria />
       <div className="wrap" style={{ maxWidth: '1140px', margin: '0 auto' }}>
         {profile?.role === 'admin' && (
           <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>

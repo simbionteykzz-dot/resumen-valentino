@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Tag, Shuffle, ChevronDown, Package } from 'lucide-react';
+import { Plus, X, Tag, Shuffle, ChevronDown, Package, ClipboardList, Check } from 'lucide-react';
 import {
   POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, MIX_PROMOS_DATA, PROMOS_GROUPS, TALLAS_SMLXL,
   POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, PRODUCT_NAME_TO_CP,
@@ -19,6 +19,20 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
   const [mixOpen, setMixOpen] = useState(true);
+  const [catalogCopied, setCatalogCopied] = useState(false);
+
+  const copyCatalog = () => {
+    const lines: string[] = [`📦 CATÁLOGO ${brandLabel.toUpperCase()}\n`];
+    Object.entries(VARIANTES).forEach(([name, cfg]) => {
+      const tallas = cfg.tallas.length > 0 ? cfg.tallas.join(' / ') : '—';
+      const colores = cfg.colores || '—';
+      lines.push(`🔹 ${name} (${tallas})\n   ${colores}`);
+    });
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCatalogCopied(true);
+      setTimeout(() => setCatalogCopied(false), 2000);
+    });
+  };
 
   const addProduct = () =>
     setProducts([...products, { id: Date.now(), name: "", size: "", qty: 1, colorLines: [], promoName: "" }]);
@@ -133,9 +147,20 @@ export default function ProductosPanel({ products, setProducts, customComboName,
             )}
           </div>
         </div>
-        <button className="btn btn-secondary prod-btn-add" onClick={addProduct}>
-          <Plus size={15} /> Añadir producto
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+          <button
+            className="btn btn-secondary"
+            onClick={copyCatalog}
+            title="Copiar catálogo completo para el cliente"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', padding: '0.45rem 0.8rem', transition: 'background 0.15s' }}
+          >
+            {catalogCopied ? <Check size={14} style={{ color: '#45834D' }} /> : <ClipboardList size={14} />}
+            {catalogCopied ? 'Copiado' : 'Todas las prendas'}
+          </button>
+          <button className="btn btn-secondary prod-btn-add" onClick={addProduct}>
+            <Plus size={15} /> Añadir producto
+          </button>
+        </div>
       </div>
 
       {/* ── Promo section ── */}
