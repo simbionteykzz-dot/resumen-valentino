@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB, archivarTodasVentas, archivarPorRango, desarchivarTodasVentas, getArchivedSalesAdmin, transferSalesByDate } from '../lib/supabase';
+import { supabase, getAllSalesAdmin, getAllProfiles, anularVentaDB, updateVentaDB, ventaFromDBRaw, softDeleteVenta, restoreVentaDB, archivarTodasVentas, archivarPorRango, desarchivarTodasVentas, getArchivedSalesAdmin, transferSalesByDate, getSheetsVentasAdmin } from '../lib/supabase';
 import type { AdminSale, Profile, VendorStats } from '../types';
-import type { VentaDB } from '../lib/supabase';
+import type { VentaDB, SheetsVentaDB } from '../lib/supabase';
 import { getCodigoProducto } from '../lib/data';
 
 const _now = new Date();
@@ -40,14 +40,41 @@ export function useAdmin() {
   const effectiveDateFrom = exactDate || (monthFilter ? `${monthFilter}-01` : dateFrom);
   const effectiveDateTo = exactDate || (monthFilter ? `${monthFilter}-31` : dateTo);
 
+  const sheetsToAdminSale = (r: SheetsVentaDB): AdminSale => ({
+    _dbId: r.id,
+    _fromSheets: true,
+    fecha: r.fecha ?? '',
+    vendorName: r.vendedor ?? '',
+    nom: r.nombre_cliente ?? '',
+    cel: r.celular ?? '',
+    dni: r.dni ?? '',
+    hora: '',
+    marcaLabel: r.empresa ?? 'OVERSHARK',
+    limaMark: r.lima_provincia?.toUpperCase() === 'LIMA' ? 'X' : '',
+    provMark: r.lima_provincia?.toUpperCase() !== 'LIMA' ? 'X' : '',
+    separo: r.sep ?? '',
+    resta: r.debe ?? '',
+    pagoCompletoTxt: '',
+    metodoPago: r.estado_pedido ?? '',
+    combo: r.cel ?? '',
+    qtyN: 0,
+    totalTotal: parseFloat(r.monto_total ?? '0') || 0,
+    codigoPublicidad: '',
+    detalle: '',
+  });
+
   const loadData = async () => {
     setLoading(true);
     const profs = await getAllProfiles();
     const profilesMap: Record<string, string> = {};
     profs.forEach(p => { if (p.id) profilesMap[p.id] = p.full_name ?? p.id; });
     profilesMapRef.current = profilesMap;
-    const sales = await getAllSalesAdmin(effectiveDateFrom, effectiveDateTo, profilesMap);
-    setAllSales(sales);
+    const [sales, sheetsRows] = await Promise.all([
+      getAllSalesAdmin(effectiveDateFrom, effectiveDateTo, profilesMap),
+      getSheetsVentasAdmin(effectiveDateFrom, effectiveDateTo),
+    ]);
+    const sheetsSales = sheetsRows.map(sheetsToAdminSale);
+    setAllSales([...sales, ...sheetsSales]);
     setProfiles(profs);
     setLoading(false);
     setPage(1);

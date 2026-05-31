@@ -86,6 +86,7 @@ export interface AdminSale extends Sale {
   fecha: string;
   _anulado?: boolean;
   _userId?: string;
+  _fromSheets?: boolean;
 }
 
 export interface VendorStats {

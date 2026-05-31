@@ -1543,35 +1543,43 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       {visible('COMBO') && <td style={{ ...td, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: S.muted }}>{s.combo || '—'}</td>}
                       <td style={{ ...td, padding: '0.3rem 0.5rem' }}>
                         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                          {s._dbId && (
-                            <button
-                              onClick={() => openEdit(s)}
-                              title="Editar venta"
-                              style={{ background: 'rgba(56,200,245,0.08)', border: '1px solid rgba(56,200,245,0.2)', borderRadius: '5px', color: '#38c8f5', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                              <Pencil size={10} /> Editar
-                            </button>
-                          )}
-                          {!isAnulado && s._dbId && (
-                            <button
-                              onClick={() => setConfirmModal({
-                                title: 'Anular venta',
-                                description: `¿Anular la venta de ${s.nom || 'este cliente'} (${s.cel || '—'})? La venta quedará marcada como anulada.`,
-                                confirmLabel: 'Anular',
-                                variant: 'warning',
-                                onConfirm: () => anularVenta(s._dbId!),
-                              })}
-                              title="Anular venta"
-                              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: '#ef4444', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                              <CircleOff size={12} /> Anular
-                            </button>
-                          )}
-                          {s._dbId && (
-                            <button
-                              onClick={() => eliminarVenta(s._dbId!)}
-                              title="Eliminar registro"
-                              style={{ background: 'rgba(120,53,15,0.08)', border: '1px solid rgba(120,53,15,0.2)', borderRadius: '5px', color: '#92400e', cursor: 'pointer', padding: '0.2rem 0.4rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem', whiteSpace: 'nowrap' }}>
-                              <Trash2 size={10} /> Eliminar
-                            </button>
+                          {s._fromSheets ? (
+                            <span style={{ fontSize: '0.6rem', fontWeight: 800, padding: '0.15rem 0.45rem', borderRadius: '4px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#818cf8', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                              SHEETS
+                            </span>
+                          ) : (
+                            <>
+                              {s._dbId && (
+                                <button
+                                  onClick={() => openEdit(s)}
+                                  title="Editar venta"
+                                  style={{ background: 'rgba(56,200,245,0.08)', border: '1px solid rgba(56,200,245,0.2)', borderRadius: '5px', color: '#38c8f5', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <Pencil size={10} /> Editar
+                                </button>
+                              )}
+                              {!isAnulado && s._dbId && (
+                                <button
+                                  onClick={() => setConfirmModal({
+                                    title: 'Anular venta',
+                                    description: `¿Anular la venta de ${s.nom || 'este cliente'} (${s.cel || '—'})? La venta quedará marcada como anulada.`,
+                                    confirmLabel: 'Anular',
+                                    variant: 'warning',
+                                    onConfirm: () => anularVenta(s._dbId!),
+                                  })}
+                                  title="Anular venta"
+                                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: '#ef4444', cursor: 'pointer', padding: '0.2rem 0.45rem', fontSize: '0.65rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                  <CircleOff size={12} /> Anular
+                                </button>
+                              )}
+                              {s._dbId && (
+                                <button
+                                  onClick={() => eliminarVenta(s._dbId!)}
+                                  title="Eliminar registro"
+                                  style={{ background: 'rgba(120,53,15,0.08)', border: '1px solid rgba(120,53,15,0.2)', borderRadius: '5px', color: '#92400e', cursor: 'pointer', padding: '0.2rem 0.4rem', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem', whiteSpace: 'nowrap' }}>
+                                  <Trash2 size={10} /> Eliminar
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

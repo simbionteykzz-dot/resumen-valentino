@@ -468,11 +468,14 @@ export interface SheetsVentaDB {
   fecha?: string;
   empresa?: string;
   vendedor?: string;
+  cel?: string;
   nombre_cliente?: string;
   celular?: string;
   dni?: string;
   lima_provincia?: string;
   monto_total?: string;
+  debe?: string;
+  sep?: string;
   estado_pedido?: string;
 }
 
@@ -499,6 +502,17 @@ export async function getCustomerSheetsVentas(celular: string): Promise<SheetsVe
     .select('*')
     .eq('celular', celular)
     .order('fecha', { ascending: false });
+  return (data ?? []) as SheetsVentaDB[];
+}
+
+export async function getSheetsVentasAdmin(dateFrom: string, dateTo: string): Promise<SheetsVentaDB[]> {
+  const { data, error } = await supabase
+    .from('sheets_ventas')
+    .select('*')
+    .gte('fecha', dateFrom)
+    .lte('fecha', dateTo)
+    .order('fecha', { ascending: false });
+  if (error) console.error('[getSheetsVentasAdmin]', error.message);
   return (data ?? []) as SheetsVentaDB[];
 }
 
