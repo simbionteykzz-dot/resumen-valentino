@@ -14,6 +14,7 @@ export interface CuentaData {
   tipo: string;
   pago: string;
   debe: string;
+  yape?: string;
 }
 
 export interface ColorLine {
@@ -44,6 +45,7 @@ export interface Sale {
   resta: string;
   pagoCompletoTxt: string;
   metodoPago: string;
+  codigoYape?: string;
   combo: string;
   qtyN: number;
   totalTotal: number;

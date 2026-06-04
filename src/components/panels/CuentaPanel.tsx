@@ -109,6 +109,24 @@ export default function CuentaPanel({ data, onChange, totalPagar }: {
         </div>
       </div>
 
+      {/* Código Yape */}
+      <div style={{
+        padding: '0.8rem 0.9rem', borderRadius: '10px', marginBottom: '0.75rem',
+        background: 'linear-gradient(135deg, rgba(138,43,226,0.07), rgba(138,43,226,0.02))',
+        border: '1.5px solid rgba(138,43,226,0.2)',
+      }}>
+        <div style={{ fontSize: '0.67rem', fontWeight: 800, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.45rem' }}>
+          Código Yape
+        </div>
+        <input
+          value={data.yape ?? ''}
+          onChange={e => onChange('yape', e.target.value)}
+          placeholder="Ej. 123456"
+          className="form-input"
+          style={{ marginBottom: 0, fontSize: '0.88rem' }}
+        />
+      </div>
+
       {/* Campos numéricos */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
 

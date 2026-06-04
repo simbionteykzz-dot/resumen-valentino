@@ -40,6 +40,7 @@ export function buildSale(params: {
     resta: isCompleto ? '' : cuentaData.debe,
     pagoCompletoTxt: isCompleto ? totalPagar.toString() : '',
     metodoPago: cuentaData.tipo === 'contra' ? 'Contra entrega' : 'Pago completo',
+    codigoYape: cuentaData.yape ?? '',
     combo: formatTipoComboSheet(products, customComboName, tab, VARIANTES_ACTIVOS, PRECIOS_ACTIVOS),
     qtyN: totalQty,
     totalTotal: totalPagar,

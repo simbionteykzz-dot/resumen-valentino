@@ -533,7 +533,7 @@ export default function PlanillaPanel({
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'hora', e)}>{cv(rk, 'hora', sale.hora ?? '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'etiq', e)}>{cv(rk, 'etiq', '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'for', e)}>{cv(rk, 'for', '')}</td>
-                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'sis', e)}>{cv(rk, 'sis', '')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'sis', e)}>{cv(rk, 'sis', (sale as any).codigoYape ?? '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'codPub', e)}>{cv(rk, 'codPub', sale.codigoPublicidad ?? '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'marca', e)}>{cv(rk, 'marca', sale.marcaLabel ?? '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'lima', e)}>{cv(rk, 'lima', sale.limaMark ?? '')}</td>

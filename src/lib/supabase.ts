@@ -23,6 +23,7 @@ export interface VentaDB {
   resta: string;
   pago_completo_txt: string;
   metodo_pago: string;
+  codigo_yape?: string;
   combo: string;
   qty_n: number;
   total_total: number;
@@ -55,6 +56,7 @@ export function ventaToDB(
     resta: sale.resta ?? '',
     pago_completo_txt: sale.pagoCompletoTxt ?? '',
     metodo_pago: sale.metodoPago ?? '',
+    codigo_yape: sale.codigoYape ?? '',
     combo: sale.combo ?? '',
     qty_n: sale.qtyN ?? 0,
     total_total: sale.totalTotal ?? 0,
@@ -174,6 +176,7 @@ export function ventaFromDBRaw(row: VentaDB): Sale {
     resta: row.resta,
     pagoCompletoTxt: row.pago_completo_txt,
     metodoPago: row.metodo_pago,
+    codigoYape: row.codigo_yape ?? '',
     combo: row.combo,
     qtyN: row.qty_n,
     totalTotal: row.total_total,
@@ -201,6 +204,7 @@ export function ventaFromDB(row: VentaDB & { anulado?: boolean }): Sale & { _anu
     resta: row.resta,
     pagoCompletoTxt: row.pago_completo_txt,
     metodoPago: row.metodo_pago,
+    codigoYape: row.codigo_yape ?? '',
     combo: row.combo,
     qtyN: row.qty_n,
     totalTotal: row.total_total,
