@@ -4,14 +4,6 @@ import { DISTRITOS } from '../../lib/data';
 import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazu, findNearestShalom, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
 
-async function sha256Hmac(message: string, secret: string) {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", keyMaterial, enc.encode(message));
-  return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 function FieldLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
@@ -69,14 +61,7 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const handleUpdateSedes = async () => {
     setUpdatingSedes(true);
     try {
-      const uuid = `web-${crypto.randomUUID()}`;
-      const time = Math.floor(Date.now() / 1000) + 30;
-      const raw = `${uuid}@${time}`;
-      const hash = await sha256Hmac(raw, '.Ov3rsku112024l4r43l.');
-      const authToken = `${raw}@${hash}`;
-      const res = await fetch('https://serviceswebapi.shalomcontrol.com/api/v1/web/agencias/listar', {
-        method: 'POST', body: new FormData(), headers: { 'Authorization': 'Bearer ' + authToken },
-      });
+      const res = await fetch('/api/shalom-agencias', { method: 'POST' });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         const mapped = json.data.map((a: any) => ({
