@@ -2,10 +2,10 @@ import React, { useState, useMemo } from 'react';
 import {
   Copy, Check, MessageSquare, Search,
   DollarSign, Clock, Palette, Award, Truck, Scale,
-  Ruler, CreditCard, ShieldCheck, HelpCircle, ThumbsDown, Zap,
+  Ruler, CreditCard, ShieldCheck, HelpCircle, ThumbsDown, Zap, Car,
 } from 'lucide-react';
 
-type Category = 'todas' | 'precio' | 'producto' | 'envio' | 'marca' | 'pago';
+type Category = 'todas' | 'precio' | 'producto' | 'envio' | 'marca' | 'pago' | 'indrive';
 
 interface Respuesta {
   titulo: string;
@@ -23,7 +23,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <DollarSign size={14} />,
     category: 'precio',
     color: '239,68,68',
-    respuesta: `¡Entiendo! Pero mirá — cada polo cuesta menos de S/20 en promo 🔥\n\nComparalo con cualquier tienda: misma calidad te sale S/50-70 por UNO. Acá te llevas 5 o más al mismo precio 💎\n\n¡Y te regalamos cadenita! Más barato imposible 🎁`,
+    respuesta: `¡Te entiendo! 😊 Pero mira, en esta promo cada polo te sale a menos de S/20 🔥\n\nEn tiendas, esta misma calidad premium te cuesta S/50-70 por uno solo. Acá te llevas 5 y te durarán muchísimo 💎\n\n¡Además te regalo una cadenita! Más a cuenta imposible 🎁`,
   },
   {
     titulo: 'Lo voy a pensar',
@@ -31,7 +31,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Clock size={14} />,
     category: 'precio',
     color: '250,204,21',
-    respuesta: `¡Claro, tómate tu tiempo! Pero te cuento que esta promo es por tiempo limitado ⏳\n\nHoy ya vendimos varios de estos modelos y el stock se está acabando. Si se agotan, el precio vuelve a S/45 cada uno 📈\n\n¿Te separo uno mientras decides? Sin compromiso 😉`,
+    respuesta: `¡Tómate tu tiempo, sin apuro! 😊 Solo te aviso chiquito que esta promo es por tiempo limitado ⏳\n\nMi stock se está moviendo rápido. Si se acaban, el precio vuelve a S/45 cada uno 📈\n\n¿Te separo tu pack sin compromiso para que no pierdas la promo? 😉`,
   },
   {
     titulo: 'En otro lado es más barato',
@@ -39,7 +39,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Scale size={14} />,
     category: 'precio',
     color: '168,85,247',
-    respuesta: `¡Compará calidad por calidad! 💎\n\nNuestros polos son tela premium, costura reforzada y colores que duran. Los "baratos" se deforman a la segunda lavada 🫠\n\nAdemás con nuestras promos te llevas 5–10 polos por S/99. ¡Eso no lo encuentras en ningún lado! 🔥`,
+    respuesta: `¡Tienes razón en comparar! 💎\n\nLo que te garantizo es que nuestros polos son tela premium, costura reforzada y no destiñen. A veces lo "barato" se deforma rápido 🫠\n\nAquí te llevas 5 polos de altísima calidad por S/99. ¡Te van a encantar! 🔥`,
   },
   {
     titulo: 'No me convence el color',
@@ -47,7 +47,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Palette size={14} />,
     category: 'producto',
     color: '56,200,245',
-    respuesta: `¡Tenemos más de 15 colores disponibles! 🌈\n\nAzul, negro, beige, cemento, vino, plomo, topo... ¡Seguro hay uno que te encanta!\n\n¿Qué colores usas más? Te ayudo a elegir la combinación perfecta 👕✨`,
+    respuesta: `¡No te preocupes! Tenemos más de 15 colores 🌈\n\nDesde los clásicos hasta colores en tendencia (cemento, vino, topo). ¡Seguro hay uno para ti!\n\n¿Qué colores usas más? Te ayudo a armar la combinación perfecta 👕✨`,
   },
   {
     titulo: '¿Qué tallas hay?',
@@ -55,7 +55,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Ruler size={14} />,
     category: 'producto',
     color: '34,197,94',
-    respuesta: `¡Tenemos todas las tallas! XS, S, M, L, XL y XXL 📏\n\nLa tela es elástica y se adapta muy bien al cuerpo, así que si estás entre dos tallas te recomiendo la más chica para un fit ceñido o la más grande para un look holgado 😊\n\n¿Cuál es tu talla habitual?`,
+    respuesta: `¡Manejamos todas las tallas! Desde XS hasta XXL 📏\n\nNuestra tela tiene buen rebote. Si te gusta pegadito, pide tu talla exacta; si prefieres holgado, pide una más 😊\n\n¿Qué talla usas normalmente?`,
   },
   {
     titulo: '¿Son de buena calidad?',
@@ -63,7 +63,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <ThumbsDown size={14} />,
     category: 'producto',
     color: '251,146,60',
-    respuesta: `¡100% garantizado! La tela es premium — suave, elástica y no se deforma ni destiñe con las lavadas 💎\n\nTenemos miles de clientes que vuelven a comprar justamente por eso. ¡La calidad habla sola! 🔥\n\nAdemás si en 7 días hay algún defecto de fábrica, lo cambiamos sin problema ✅`,
+    respuesta: `¡Te doy mi palabra de que sí! Tela premium que cede rico, no deforma ni destiñe 💎\n\nMiles de clientes nos vuelven a comprar por lo bien que dura 🔥\n\nY si algo no estuviera perfecto, te lo cambiamos sin costo ✅`,
   },
   {
     titulo: 'No conozco la marca',
@@ -71,7 +71,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Award size={14} />,
     category: 'marca',
     color: '0,230,150',
-    respuesta: `¡Overshark es una marca peruana con miles de clientes satisfechos! 🇵🇪\n\nTenemos +500 ventas solo esta semana. Calidad premium, tela que no se deforma y colores que no se destiñen 💯\n\nPregúntale a cualquiera que ya compró — ¡siempre vuelven! 🔥`,
+    respuesta: `Overshark es una marca 100% peruana con miles de clientes felices 🇵🇪\n\nEnviamos +500 pedidos por semana. Nuestra prioridad es dar calidad premium a precio justo 💯\n\n¡Pruébalos y verás que te vuelves cliente frecuente! 🔥`,
   },
   {
     titulo: '¿Son originales?',
@@ -79,7 +79,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <ShieldCheck size={14} />,
     category: 'marca',
     color: '99,102,241',
-    respuesta: `¡Claro que sí! Somos tienda oficial de Overshark 🏷️\n\nProducción propia, fabricados en Perú con estándares de calidad controlados. No somos revendedores ni imitaciones 💯\n\nCada prenda sale directamente de nuestra planta. ¡Garantía total! ✅`,
+    respuesta: `¡Totalmente! Somos la tienda oficial directa de Overshark 🏷️\n\nFabricamos en Perú cuidando cada detalle. Cero revendedores, por eso el súper precio y calidad 💯\n\n¡Garantía absoluta! ✅`,
   },
   {
     titulo: 'El envío es muy caro',
@@ -87,7 +87,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Truck size={14} />,
     category: 'envio',
     color: '255,107,0',
-    respuesta: `El envío es S/12–14, ¡pero incluye seguro y tracking en tiempo real! 📦\n\nAdemás piensa: te ahorras el pasaje, el tiempo y la molestia de ir a buscar. ¡Te llega a la puerta de tu casa! 🏠\n\nCon la cantidad que llevas, el envío sale prácticamente gratis por prenda 😎`,
+    respuesta: `El envío es de S/12 a S/14, pero incluye entrega 100% segura hasta tus manos 📦\n\nTe ahorras el pasaje y el tráfico. ¡Nosotros te lo llevamos! 🏠\n\nCon esta promo, el envío te sale por centavos cada polo 😎`,
   },
   {
     titulo: '¿Cuándo llega?',
@@ -95,7 +95,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Clock size={14} />,
     category: 'envio',
     color: '20,184,166',
-    respuesta: `¡Depende de tu ubicación! 📍\n\n📦 Lima: 1–2 días hábiles\n🚚 Provincias (Shalom): 3–5 días hábiles\n\nTe mandamos el código de rastreo apenas despachamos, así puedes seguir tu pedido en todo momento ✅`,
+    respuesta: `¡Llega rapidísimo! 📍\n\n📦 Lima: 1 a 2 días hábiles.\n🚚 Provincias: 3 a 5 días hábiles a nuestro courier Zazu.\n\nApenas despachemos te paso tu código de rastreo ✅`,
   },
   {
     titulo: '¿El pago es seguro?',
@@ -103,7 +103,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <CreditCard size={14} />,
     category: 'pago',
     color: '59,130,246',
-    respuesta: `¡Totalmente seguro! Aceptamos Yape, Plin, transferencia bancaria y pago contra entrega 💳\n\nCon contra entrega pagas cuando recibes el paquete — ¡así tienes cero riesgo! 🔒\n\nMiles de clientes ya compraron con nosotros sin ningún problema 😊`,
+    respuesta: `¡100% seguro! Aceptamos Yape, Plin y transferencia 💳\n\nEn Lima, tienes "Contra Entrega" para pagar el saldo al recibir. ¡Riesgo cero! 🔒\n\nMiles de clientes nos respaldan 😊`,
   },
   {
     titulo: '¿Se puede devolver?',
@@ -111,7 +111,7 @@ const RESPUESTAS: Respuesta[] = [
     icon: <HelpCircle size={14} />,
     category: 'pago',
     color: '236,72,153',
-    respuesta: `¡Sí! Si hay un defecto de fábrica hacemos el cambio en 7 días 🔄\n\nSolo necesitas el número de pedido y una foto del problema. ¡Súper fácil y sin complicaciones! 📸\n\nNuestro equipo de soporte responde el mismo día 💬`,
+    respuesta: `¡Por supuesto! Si hubiera algún defectito de fábrica, te hacemos el cambio rápido dentro de 7 días 🔄\n\nSolo envías foto y número de pedido, sin trabas ni problemas 📸\n\n¡Siempre tendrás nuestro soporte! 💬`,
   },
   {
     titulo: 'No tengo plata ahora',
@@ -119,7 +119,31 @@ const RESPUESTAS: Respuesta[] = [
     icon: <Zap size={14} />,
     category: 'pago',
     color: '234,179,8',
-    respuesta: `¡No hay problema! Te dejo separado con un pequeño adelanto y pagas el resto cuando llegue 😊\n\nO si prefieres, elige el paquete más pequeño para empezar — desde S/49 ya te llevas una buena cantidad 🛍️\n\n¿Cuánto podrías destinar hoy? Te armo una opción a tu medida 💪`,
+    respuesta: `¡Entiendo perfecto! Puedes separarlo con un adelanto chiquito y pagar el resto con calma 😊\n\nO podemos armar un pack desde S/49 🛍️\n\n¿Con cuánto te sentirías cómodo/a hoy? Yo te ayudo 💪`,
+  },
+  {
+    titulo: 'Envío por Indrive (separación)',
+    subtitulo: 'Entrega express Lima',
+    icon: <Car size={14} />,
+    category: 'indrive',
+    color: '251,191,36',
+    respuesta: `¡Claro que sí! Si quieres tus polos para hoy mismo, podemos coordinarlo por Indrive 🚗✨\n\nSolo te pido que canceles el total del pedido antes de despachar, ya que el envío lo cotizas y lo pagas tú directo en la app 📱\n\nEn cuanto confirmes el pago, te lo mandamos al toque 🔥 ¿Te parece bien?`,
+  },
+  {
+    titulo: 'Indrive — cliente pide precio de envío',
+    subtitulo: 'Consulta costo Indrive',
+    icon: <Car size={14} />,
+    category: 'indrive',
+    color: '251,191,36',
+    respuesta: `El envío por Indrive lo cotizas tú mismo desde la app, ya que el precio varía según tu dirección 📍\n\nGeneralmente sale entre S/8 y S/20 dentro de Lima, muy accesible para recibir hoy mismo 🙌\n\nNosotros preparamos tu pedido al instante en cuanto confirmes el pago 💛 ¿Seguimos?`,
+  },
+  {
+    titulo: 'Indrive — cliente duda del pago adelantado',
+    subtitulo: 'Objeción pago previo',
+    icon: <Car size={14} />,
+    category: 'indrive',
+    color: '251,191,36',
+    respuesta: `¡Te entiendo totalmente! 😊 La razón es sencilla: el delivery por Indrive sale de inmediato y necesitamos confirmar el pedido antes de enviarlo 📦\n\nPuedes pagarnos por Yape, Plin o transferencia — es rápido y seguro 🔒\n\nYa tenemos miles de clientes que confían en nosotros y siempre reciben su pedido perfecto ✅ ¡No te vas a arrepentir!`,
   },
 ];
 
@@ -130,6 +154,7 @@ const CATEGORIAS: { id: Category; label: string; icon: React.ReactNode }[] = [
   { id: 'envio',    label: 'Envío',    icon: <Truck size={12} /> },
   { id: 'marca',    label: 'Marca',    icon: <Award size={12} /> },
   { id: 'pago',     label: 'Pago',     icon: <CreditCard size={12} /> },
+  { id: 'indrive',  label: 'Indrive',  icon: <Car size={12} /> },
 ];
 
 export default function RespuestasPanel() {
