@@ -12,7 +12,6 @@ interface AdminDashboardProps {
   adminName: string;
   onSignOut: () => void;
   onSwitchToVendedor: () => void;
-  onSwitchToATC?: () => void;
 }
 
 
@@ -27,7 +26,7 @@ function saleToForm(s: AdminSale): EditForm {
   };
 }
 
-export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedor, onSwitchToATC }: AdminDashboardProps) {
+export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedor }: AdminDashboardProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm | null>(null);
@@ -44,7 +43,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
   } | null>(null);
 
   // ── Toggle de columnas ──
-  const ALL_COLS = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'] as const;
+  const ALL_COLS = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. YAPE', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'] as const;
   type ColName = typeof ALL_COLS[number];
   const [hiddenCols, setHiddenCols] = useState<Set<ColName>>(new Set(['HORA', 'DNI', 'SEPARO', 'COD. PROD', 'COD. PUBLICIDAD']));
   const [showColPicker, setShowColPicker] = useState(false);
@@ -554,12 +553,12 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     setEstadoFilter(prev => prev.includes(estado) ? prev.filter(e => e !== estado) : [...prev, estado]);
 
   const exportCSV = () => {
-    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGION', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'];
+    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGION', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. YAPE', 'COD. PROD', 'COD. PUBLICIDAD', 'MET. PAGO', 'COMBO'];
     const rows = filteredSales.map(s => [
       s.fecha ?? '', s.marcaLabel ?? 'OVER', s.vendorName ?? '',
       s.hora ?? '', getRegion(s), s.nom ?? '', s.cel ?? '', s.dni ?? '',
       s.totalTotal ?? 0, s.resta ?? '', s.separo ?? '',
-      getEstado(s), getCodigoProducto(s.detalle || '', s.combo || ''), s.codigoPublicidad ?? '', s.metodoPago ?? '', s.combo ?? '',
+      getEstado(s), (s as any).codigoYape ?? '', getCodigoProducto(s.detalle || '', s.combo || ''), s.codigoPublicidad ?? '', s.metodoPago ?? '', s.combo ?? '',
     ]);
     const csv = [headers, ...rows]
       .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
@@ -630,7 +629,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     });
 
     // ── Tabla ─────────────────────────────────────────────────────────
-    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. PUB.', 'MET. PAGO', 'COMBO'];
+    const headers = ['FECHA', 'EMPRESA', 'VENDEDOR', 'HORA', 'REGIÓN', 'CLIENTE', 'CELULAR', 'DNI', 'TOTAL S/', 'DEBE', 'SEPARO', 'ESTADO', 'COD. YAPE', 'COD. PUB.', 'MET. PAGO', 'COMBO'];
 
     const rows = filteredSales.map(s => [
       s.fecha ?? '',
@@ -645,6 +644,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       s.resta || '—',
       s.separo || '—',
       getEstado(s),
+      (s as any).codigoYape || '—',
       s.codigoPublicidad ?? '',
       s.metodoPago ?? '',
       (s.combo ?? '').substring(0, 35),
@@ -793,11 +793,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
           >
             <History size={13} /> {showArchived ? 'Ver activos' : 'Historial'}
           </button>
-          {onSwitchToATC && (
-            <button onClick={onSwitchToATC} style={{ ...btn('ghost'), border: '1px solid rgba(26,127,189,0.25)', color: '#1a7fbd', background: 'rgba(26,127,189,0.08)' }}>
-              <Headphones size={13} /> ATC
-            </button>
-          )}
+
           <button onClick={onSwitchToVendedor} style={{ ...btn('info'), border: '1px solid rgba(56,200,245,0.25)' }}>
             <ClipboardList size={13} /> Vista Vendedor
           </button>
@@ -1523,6 +1519,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
                       {visible('ESTADO') && <td style={td}>
                         <span style={{ background: estadoColor.bg, color: estadoColor.color, borderRadius: '4px', padding: '0.15rem 0.5rem', fontWeight: 700, fontSize: '0.65rem', whiteSpace: 'nowrap' }}>{estado}</span>
                       </td>}
+                      {visible('COD. YAPE') && <td style={{ ...td, color: '#a855f7', fontWeight: 700 }}>{(s as any).codigoYape || '—'}</td>}
                       {visible('COD. PROD') && <td style={td}>
                         {(() => {
                           const cp = getCodigoProducto(s.detalle || '', s.combo || '');
