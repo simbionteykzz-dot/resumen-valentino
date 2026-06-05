@@ -710,6 +710,55 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       margin: { top: headerH + 6, left: mg, right: mg, bottom: 10 },
     });
 
+    // ── Cuadro de recaudación manual (última página, al pie de la tabla) ──
+    const lastY: number = (doc as any).lastAutoTable?.finalY ?? headerH + 10;
+    const recY = lastY + 8;
+    const recH = 28;
+    const recW = 120;
+    const recX = W - mg - recW;
+
+    // Solo dibuja si cabe en la página, si no, agrega nueva página
+    const fits = recY + recH < H - 10;
+    if (!fits) doc.addPage();
+    const drawY = fits ? recY : headerH + 10;
+    const drawX = fits ? recX : W - mg - recW;
+
+    // Fondo y borde
+    doc.setFillColor(22, 52, 33);
+    doc.roundedRect(drawX, drawY, recW, recH, 3, 3, 'F');
+    doc.setDrawColor(69, 131, 77);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(drawX, drawY, recW, recH, 3, 3, 'S');
+
+    // Título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(120, 200, 145);
+    doc.text('RECAUDACIÓN DEL DÍA', drawX + 5, drawY + 6);
+
+    // Línea separadora
+    doc.setDrawColor(50, 90, 60);
+    doc.setLineWidth(0.3);
+    doc.line(drawX + 5, drawY + 8.5, drawX + recW - 5, drawY + 8.5);
+
+    // Etiquetas y líneas de escritura manual
+    const items = ['EFECTIVO  S/', 'YAPE  S/', 'TRANSFERENCIA  S/', 'TOTAL  S/'];
+    items.forEach((label, idx) => {
+      const iy = drawY + 13 + idx * 5.2;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.2);
+      doc.setTextColor(140, 200, 160);
+      doc.text(label, drawX + 5, iy);
+      // Línea punteada para escribir a mano
+      doc.setDrawColor(60, 110, 75);
+      doc.setLineWidth(0.25);
+      const lineStartX = drawX + 38;
+      const lineEndX = drawX + recW - 5;
+      for (let dx = lineStartX; dx < lineEndX; dx += 3) {
+        doc.line(dx, iy + 0.8, Math.min(dx + 1.5, lineEndX), iy + 0.8);
+      }
+    });
+
     doc.save(`livex_ventas_${dateFrom}_${dateTo}.pdf`);
   };
 
