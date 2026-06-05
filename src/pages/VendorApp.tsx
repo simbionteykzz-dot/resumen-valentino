@@ -19,6 +19,8 @@ import RankingPanel from '../components/panels/RankingPanel';
 import SeguimientoPanel from '../components/panels/SeguimientoPanel';
 import DudasCompraPanel from '../components/panels/DudasCompraPanel';
 import RiesgosPanel from '../components/panels/RiesgosPanel';
+import KPIHistorialPanel from '../components/panels/KPIHistorialPanel';
+import ReporteDiarioPanel from '../components/panels/ReporteDiarioPanel';
 import TabBar from '../components/ui/TabBar';
 import CatalogoGaleria from '../components/ui/CatalogoGaleria';
 import { BRANDS, applyBrandTheme } from '../lib/brands';
@@ -94,7 +96,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
     });
   }, [user?.id]);
 
-  const { sales, deletedSales, selectedDate, setSelectedDate, loadingSync, syncError, addSale, deleteSale, restoreSale } =
+  const { sales, deletedSales, selectedDate, setSelectedDate, loadingSync, syncError, addSale, deleteSale, restoreSale, hardDeleteSale, duplicateSale } =
     useSales(user?.id, showToast);
 
   const activeBrand = BRANDS[brand];
@@ -371,6 +373,8 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         {/* Sección de registro — siempre visible */}
         <div style={{ marginTop: '2rem' }}>
           <CierreCajaPanel sales={sales} />
+          <ReporteDiarioPanel sales={sales} />
+          <KPIHistorialPanel userId={user?.id} />
           <RankingPanel sales={sales} />
 
           {planillaMode === 'live' && (
@@ -379,7 +383,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
                 sales={sales} deletedSales={deletedSales}
                 selectedDate={selectedDate} onDateChange={setSelectedDate}
                 loadingSync={loadingSync} syncError={syncError}
-                onDeleteSale={deleteSale} onRestoreSale={restoreSale}
+                onDeleteSale={deleteSale} onRestoreSale={restoreSale} onHardDeleteSale={hardDeleteSale} onDuplicateSale={duplicateSale}
                 profiles={profiles}
                 currentUserName={vendedorName}
                 title="Live"
@@ -391,7 +395,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
                 sales={sales} deletedSales={deletedSales}
                 selectedDate={selectedDate} onDateChange={setSelectedDate}
                 loadingSync={loadingSync} syncError={syncError}
-                onDeleteSale={deleteSale} onRestoreSale={restoreSale}
+                onDeleteSale={deleteSale} onRestoreSale={restoreSale} onHardDeleteSale={hardDeleteSale} onDuplicateSale={duplicateSale}
                 profiles={profiles}
                 currentUserName={vendedorName}
                 title="Live"
@@ -408,7 +412,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
                 sales={sales} deletedSales={deletedSales}
                 selectedDate={selectedDate} onDateChange={setSelectedDate}
                 loadingSync={loadingSync} syncError={syncError}
-                onDeleteSale={deleteSale} onRestoreSale={restoreSale}
+                onDeleteSale={deleteSale} onRestoreSale={restoreSale} onHardDeleteSale={hardDeleteSale} onDuplicateSale={duplicateSale}
                 profiles={profiles}
                 currentUserName={vendedorName}
                 title="Publicidad"
@@ -420,7 +424,7 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
                 sales={sales} deletedSales={deletedSales}
                 selectedDate={selectedDate} onDateChange={setSelectedDate}
                 loadingSync={loadingSync} syncError={syncError}
-                onDeleteSale={deleteSale} onRestoreSale={restoreSale}
+                onDeleteSale={deleteSale} onRestoreSale={restoreSale} onHardDeleteSale={hardDeleteSale} onDuplicateSale={duplicateSale}
                 profiles={profiles}
                 currentUserName={vendedorName}
                 title="Publicidad"
