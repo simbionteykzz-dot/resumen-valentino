@@ -40,8 +40,8 @@ const MENSAJES_RAPIDOS_SANDRO: { categoria: string; mensajes: string[] }[] = [
     mensajes: [
       'La suma total sería S/113 (S/99 del producto + S/14 de delivery).',
       'Para generar el pedido, debe abonar S/14 del delivery y al momento de la entrega pagar los S/99 restantes.',
-      'La suma seria 99+12 del envió por shalom = s/111',
-      'Puede separar como mínimo su pedido con 30 soles y al momento de acercarse a shalom cancelaria la diferencia para que se le brinde su clave de 4 dígitos.',
+      'La suma seria 99+12 del envió por nuestro courier Zazu = s/111',
+      'Puede separar como mínimo su pedido con 30 soles y al momento de llegar a la agencia a nuestro courier Zazu cancelaria la diferencia para que se le brinde su clave de 4 dígitos.',
       'Muy bien, quedo atento a la captura del yape 😊',
     ],
   },

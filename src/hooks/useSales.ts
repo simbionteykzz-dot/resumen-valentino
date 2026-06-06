@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, ventaToDB, ventaFromDB, softDeleteVenta, restoreVenta } from '../lib/supabase';
+import { supabase, ventaToDB, ventaFromDB, softDeleteVenta, restoreVenta, hardDeleteVenta } from '../lib/supabase';
 import type { Sale } from '../types';
 
 export function useSales(
@@ -112,6 +112,29 @@ export function useSales(
     }
   };
 
+  const hardDeleteSale = async (dbId: string) => {
+    const ok = await hardDeleteVenta(dbId);
+    if (ok) {
+      setDeletedSales(prev => prev.filter((s: any) => s._dbId !== dbId));
+      onToast('Venta eliminada permanentemente', 'ok');
+    } else {
+      onToast('Error al eliminar permanentemente', 'err');
+    }
+  };
+  const duplicateSale = async (sale: any) => {
+    const now = new Date();
+    const hora = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const clone: Sale = {
+      ...sale,
+      _dbId: undefined,
+      hora,
+    };
+    delete (clone as any)._dbId;
+    delete (clone as any)._anulado;
+    await addSale(clone);
+    onToast('Venta duplicada', 'ok');
+  };
+
   return {
     sales,
     deletedSales,
@@ -122,5 +145,7 @@ export function useSales(
     addSale,
     deleteSale,
     restoreSale,
+    hardDeleteSale,
+    duplicateSale,
   };
 }

@@ -80,7 +80,7 @@ export interface ToastState {
 export interface Profile {
   id: string;
   full_name: string;
-  role: 'admin' | 'vendedor' | 'atc';
+  role: 'admin' | 'vendedor';
 }
 
 export interface AdminSale extends Sale {

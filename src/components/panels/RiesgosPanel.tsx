@@ -24,7 +24,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <ShoppingCart size={14} />,
     category: 'abandono',
     color: '234,179,8',
-    texto: `Hola 👋 dejaste tu pedido pendiente 🛒✨\nSi deseas, te ayudo a completarlo ahora mismo 💪\n\n¡Solo faltan unos minutos para asegurar el tuyo! 🔥`,
+    texto: `Paso por aquí rapidito porque vi que dejaste tu pedido pendiente 🛒✨\n¿Necesitas ayuda para completarlo? Avísame 💪\n\n¡Anímate que ya quedan poquitos! 🔥`,
   },
   {
     titulo: 'Seguimiento tras abandono',
@@ -32,7 +32,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <ShoppingCart size={14} />,
     category: 'abandono',
     color: '234,179,8',
-    texto: `Hola 👋 notamos que no terminaste tu pedido 😊\nEl modelo que elegiste todavía está disponible, pero el stock es limitado ⚠️🔥\n\n¿Quieres que te lo reserve ahora? Solo necesitas [MONTO] de adelanto 💵✅`,
+    texto: `Te escribo súper rápido porque noté que no llegaste a terminar tu pedido 😊\nEl modelo que elegiste sigue disponible, ¡pero el stock está volando! ⚠️🔥\n\n¿Deseas que lo separe con un pequeño abono de [MONTO]? 💵✅`,
   },
   {
     titulo: 'Abandono con descuento',
@@ -40,7 +40,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <ShoppingCart size={14} />,
     category: 'abandono',
     color: '234,179,8',
-    texto: `¡Hola! 😊 Vimos que te interesó nuestro producto pero no terminaste tu pedido 🛒\n\nQueremos ayudarte a concretarlo hoy 🎁 Escríbenos y te comentamos sobre opciones disponibles para ti 💪✨`,
+    texto: `¡Qué tal! 😊 Noté que te interesó nuestro producto pero quedó pendiente 🛒\n\nMe encantaría ayudarte a cerrarlo hoy mismo con una promo especial 🎁. Escríbeme y te cuento 💪✨`,
   },
 
   // ── DEVOLUCIÓN ────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <RefreshCw size={14} />,
     category: 'devolucion',
     color: '14,165,233',
-    texto: `Hola 👋 lamentamos el inconveniente 😔\nEnvíanos tu número de pedido 📋 y una foto del producto 📸 para ayudarte con una solución rápida ✅\n\n¡Estamos aquí para resolverlo contigo! 🙌`,
+    texto: `¡Uy, qué pena! 🥺 Te pido mil disculpas por el inconveniente.\nPor favor, pásame tu número de pedido 📋 y una fotito del producto 📸 para darte solución ahora mismo ✅\n\n¡Estoy aquí para resolverlo rápido contigo! 🙌`,
   },
   {
     titulo: 'Cambio de talla o color',
@@ -58,7 +58,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <RefreshCw size={14} />,
     category: 'devolucion',
     color: '14,165,233',
-    texto: `¡Hola! 😊 Lamentamos que el producto no era lo que esperabas 😔\nCuéntanos qué talla o color necesitas 👕 y verificamos si tenemos disponibilidad para hacerte el cambio sin costo adicional ✅\n\nTu satisfacción es lo más importante para nosotros 💙`,
+    texto: `Me apena mucho saber que no era lo que esperabas 😔\nCuéntame qué talla o color te quedaría mejor 👕 y reviso al toque el stock para el cambio sin costo extra ✅`,
   },
   {
     titulo: 'Producto con defecto',
@@ -66,7 +66,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <RefreshCw size={14} />,
     category: 'devolucion',
     color: '14,165,233',
-    texto: `Hola 👋 lamentamos mucho lo sucedido 😔\nPor favor envíanos una foto clara del defecto 📸 y tu número de pedido 📋\n\nInmediatamente gestionamos el cambio por un producto en perfecto estado 🔄✅ ¡Eso no debió pasar y lo solucionamos!`,
+    texto: `Lamento muchísimo esto que me cuentas 😔\nMándame una fotito del defecto 📸 y tu número de pedido 📋\n\nGestionaré el cambio inmediato por uno perfecto 🔄✅ ¡Lo solucionamos ya mismo!`,
   },
 
   // ── QUEJA ─────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <MessageSquareWarning size={14} />,
     category: 'queja',
     color: '168,85,247',
-    texto: `Entendemos tu molestia y queremos solucionarlo contigo 🙏\nPodemos ayudarte con un cambio por talla, color o modelo para que mantengas tu compra activa 🔄✨\n\n¡Dinos cuál es tu opción preferida y lo coordinamos al toque! 💪`,
+    texto: `Entiendo totalmente tu molestia y quiero solucionarlo ahora mismo 🙏\nTe propongo un cambio directo por talla, color o el modelo que gustes para que no pierdas tu compra 🔄✨\n\nDime qué opción prefieres y lo coordino al instante 💪`,
   },
   {
     titulo: 'Cliente insatisfecho',
@@ -84,7 +84,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <MessageSquareWarning size={14} />,
     category: 'queja',
     color: '168,85,247',
-    texto: `Hola 👋 lamentamos mucho que tu experiencia no haya sido la mejor 😔\nTu opinión es muy importante para nosotros y queremos mejorar 🙏\n\nCuéntanos qué pasó y buscamos juntos la mejor solución para ti ✅💙`,
+    texto: `De verdad lamento muchísimo que tu experiencia no haya sido excelente 😔\nTu opinión es valiosísima 🙏\n\nCuéntame un poco más qué pasó para buscar juntos una solución justa para ti ✅💙`,
   },
   {
     titulo: 'Queja en redes sociales',
@@ -92,7 +92,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <MessageSquareWarning size={14} />,
     category: 'queja',
     color: '168,85,247',
-    texto: `Hola 👋 vimos tu comentario y queremos ayudarte 🙏\nEscríbenos por este medio con tu número de pedido 📋 para revisar tu caso de forma personalizada y encontrar la solución más rápida posible ⚡✅\n\n¡Gracias por avisarnos! 💙`,
+    texto: `Vimos tu comentario y estoy aquí para ayudarte 🙏\nEnvíame tu número de pedido por aquí 📋 para revisar tu caso a fondo y darte una solución rápida ⚡✅\n\n¡Te agradezco por avisarnos! 💙`,
   },
 
   // ── RETRASO ───────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Truck size={14} />,
     category: 'retraso',
     color: '239,68,68',
-    texto: `Hola 👋 lamentamos la demora con tu pedido 😔\nYa estamos revisándolo con la agencia 🔍 y te daremos una actualización por este medio a la brevedad ⏰\n\n¡Gracias por tu paciencia! 🙏`,
+    texto: `Te pido muchísimas disculpas por la demora con tu pedido 😔\nYa mismo me comunico con la agencia para presionar la entrega 🔍 y te aviso de inmediato ⏰\n\n¡Agradezco de corazón tu paciencia! 🙏`,
   },
   {
     titulo: 'Retraso por alta demanda',
@@ -110,7 +110,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Truck size={14} />,
     category: 'retraso',
     color: '239,68,68',
-    texto: `¡Hola! 😊 Debido a la alta demanda de esta temporada 📦🔥 los tiempos de entrega se han extendido un poco más de lo habitual ⏳\n\nTu pedido está en camino y llegará pronto ✅ Te avisamos en cuanto tengamos el código de seguimiento 📲`,
+    texto: `Te escribo para contarte que por alta demanda 📦🔥, las agencias tienen ligeros retrasos ⏳\n\nTu pedido está asegurado y en camino ✅ Te paso el código de seguimiento en cuanto me lo envíen 📲`,
   },
   {
     titulo: 'Pedido en revisión',
@@ -118,7 +118,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Truck size={14} />,
     category: 'retraso',
     color: '239,68,68',
-    texto: `Hola 👋 hemos abierto una revisión con la agencia de envíos sobre tu pedido 🔍📋\nTe mantendremos informado/a de cada novedad por este medio 📲\n\nPedimos disculpas por los inconvenientes y gracias por tu paciencia 🙏💙`,
+    texto: `Te comento que abrimos un ticket de revisión con la agencia por tu pedido 🔍📋\nEstaré súper pendiente y te avisaré por aquí 📲\n\nLamento mucho el retraso y gracias mil por la paciencia 🙏💙`,
   },
 ];
 

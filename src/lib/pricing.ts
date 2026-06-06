@@ -3,7 +3,7 @@ import type { Product } from '../types';
 
 export type DeliveryTab = 'prov' | 'lima' | 'almacen';
 
-export const ENVIO_AEREO_EXTRA = 6;
+export const ENVIO_AEREO_EXTRA = 8;
 
 const _normDep = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();

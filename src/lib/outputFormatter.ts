@@ -169,6 +169,7 @@ export function buildOutputText(params: {
   const cuentaBlock = buildCuentaBlock(cuentaData, tab, clientData.depto);
   const productStr = getProductString(products, customComboName, VARIANTES_ACTIVOS);
   const boostersText = buildBoostersText(boosters, modelosEnPedido);
+  const operacionStr = cuentaData.yape ? `\n\n🧾 CÓDIGO DE OPERACIÓN: ${cuentaData.yape}` : '';
 
   const pubStr = clientData.codigoPublicidad?.trim()
     ? `\n📣 Código: ${clientData.codigoPublicidad.trim()}`
@@ -177,13 +178,13 @@ export function buildOutputText(params: {
   let t = '';
   if (tab === 'prov') {
     t = `➖${brandTag} — DATOS PROVINCIA 🚌🚌\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}\n🗣️Provincia: ${clientData.provincia}\n😎 Departamento: ${clientData.depto}\n📌SEDE de agencia: *(${clientData.sede || 'Shalom'})*${pubStr}` +
-      cuentaBlock + productStr + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Te enviarán tu voucher entre 48 a 72 horas máximo` + boostersText;
+      cuentaBlock + productStr + cadenitaStr + operacionStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Te enviarán tu voucher entre 48 a 72 horas máximo` + boostersText;
   } else if (tab === 'lima') {
     t = `➖${brandTag} — DATOS DELIVERY 🏍️🏍️\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}\n😎 Distrito: ${clientData.distrito}\n📌Ubicacion: ${clientData.ubicacion}${pubStr}` +
-      cuentaBlock + productStr + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Los pedidos salen al día siguiente entre las 11 AM y a lo largo de la tarde/noche del día` + boostersText;
+      cuentaBlock + productStr + cadenitaStr + operacionStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}\n\n⏰ Los pedidos salen al día siguiente entre las 11 AM y a lo largo de la tarde/noche del día` + boostersText;
   } else {
     t = `➖${brandTag} — RECOJO EN ALMACÉN 🏭🏭\n🫵🏻Nombre: ${clientData.nombre}\n📲 Celular: ${clientData.celular}\n💳Numero DNI : ${clientData.dni}${pubStr}` +
-      cuentaBlock + productStr + cadenitaStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}` + boostersText;
+      cuentaBlock + productStr + cadenitaStr + operacionStr + `\n\nVENDEDOR ${vendedorName.toUpperCase()}` + boostersText;
   }
   return t.replace(/\s+$/, '');
 }

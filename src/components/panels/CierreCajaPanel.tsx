@@ -101,16 +101,27 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
 export default function CierreCajaPanel({ sales }: { sales: any[] }) {
   const totalVentas = sales.length;
   const totalPrendas = sales.reduce((acc, s) => acc + (Number(s.qtyN) || 0), 0);
-  const totalSoles = sales.reduce((acc, s) => acc + (Number(s.totalTotal) || 0), 0);
+
+  // ── Dinero real ya cobrado ──────────────────────────────────────────────────
+  // Para contra entrega: lo que separó (adelanto)
+  // Para pago completo: el monto total pagado
+  const totalSeparos = sales.reduce((acc, s) => acc + (parseFloat(s.separo) || 0), 0);
+  const totalPagoCompleto = sales.reduce((acc, s) => acc + (parseFloat(s.pagoCompletoTxt) || 0), 0);
+  const totalRecaudado = totalSeparos + totalPagoCompleto; // plata que ya entró en caja
+
+  // ── Por cobrar: saldo pendiente en agencia / contra entrega ────────────────
+  const totalDeudas = sales.reduce((acc, s) => acc + (parseFloat(s.resta) || 0), 0);
+
+  // ── Total de ventas (valor bruto de todos los pedidos) ─────────────────────
+  const totalVentasBruto = sales.reduce((acc, s) => acc + (Number(s.totalTotal) || 0), 0);
+
   const enviosLima = sales.filter(s => s.limaMark).length;
   const enviosProv = sales.filter(s => s.provMark).length;
 
-  const totalSeparos = sales.reduce((acc, s) => acc + (parseFloat(s.separo) || 0), 0);
-  const totalDeudas = sales.reduce((acc, s) => acc + (parseFloat(s.resta) || 0), 0);
   const pagosCompletos = sales.filter(s => s.pagoCompletoTxt).length;
   const contraEntrega = sales.filter(s => s.separo || s.resta).length;
 
-  const promedioVenta = totalVentas > 0 ? totalSoles / totalVentas : 0;
+  const promedioVenta = totalVentas > 0 ? totalVentasBruto / totalVentas : 0;
   const promedioPrendas = totalVentas > 0 ? totalPrendas / totalVentas : 0;
 
   const solesStr = (n: number) =>
@@ -186,7 +197,7 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
             Total Recaudado
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', lineHeight: '1' }}>
-            {solesStr(totalSoles)}
+            {solesStr(totalRecaudado)}
           </div>
         </div>
       </div>
@@ -210,9 +221,17 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
         />
         <MetricCard
           c="45,100,55"
-          label="Total Recaudado"
-          value={solesStr(totalSoles)}
+          label="Ya Cobrado"
+          value={solesStr(totalRecaudado)}
+          sub="separos + pagos completos"
           icon={<DollarSign size={13} />}
+        />
+        <MetricCard
+          c="30,130,100"
+          label="Total Pedidos (Bruto)"
+          value={solesStr(totalVentasBruto)}
+          sub="valor total de todos los pedidos"
+          icon={<Package size={13} />}
         />
         <MetricCard
           c="30,111,160"
@@ -319,22 +338,24 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
       }}>
         <MetricCard
           c="20,140,190"
-          label="Total Separos"
+          label="Total Separos (Adelantos)"
           value={solesStr(totalSeparos)}
-          icon={<DollarSign size={13} />}
-        />
-        <MetricCard
-          c="180,120,10"
-          label="Por Cobrar"
-          value={solesStr(totalDeudas)}
+          sub="dinero recibido de CE"
           icon={<DollarSign size={13} />}
         />
         <MetricCard
           c="40,160,80"
-          label="Pago Completo"
-          value={String(pagosCompletos)}
-          sub={`de ${totalVentas} ventas`}
+          label="Pagos Completos"
+          value={solesStr(totalPagoCompleto)}
+          sub={`${pagosCompletos} ventas`}
           icon={<ArrowUpRight size={13} />}
+        />
+        <MetricCard
+          c="180,120,10"
+          label="Por Cobrar (Saldo)"
+          value={solesStr(totalDeudas)}
+          sub="pendiente en agencia / CE"
+          icon={<DollarSign size={13} />}
         />
         <MetricCard
           c="100,110,145"

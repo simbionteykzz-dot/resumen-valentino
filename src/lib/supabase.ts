@@ -252,6 +252,15 @@ export async function restoreVentaDB(id: string): Promise<boolean> {
   return !error;
 }
 
+export async function hardDeleteVenta(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ventas')
+    .delete()
+    .eq('id', id);
+  if (error) console.error('[hardDeleteVenta]', error.code, error.message);
+  return !error;
+}
+
 // ── Planillas ──────────────────────────────────────────────────────
 
 export interface LibroPlanilla {
@@ -343,35 +352,7 @@ export async function updateVentaUser(id: string, userId: string): Promise<boole
   return !error;
 }
 
-// ── ATC ────────────────────────────────────────────────────────────
 
-export interface ATCTicket {
-  id?: string;
-  created_at?: string;
-  updated_at?: string;
-  atc_user_id?: string;
-  cliente_cel: string;
-  cliente_nom: string;
-  asunto: string;
-  descripcion: string;
-  estado: 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado';
-  prioridad: 'baja' | 'normal' | 'alta' | 'urgente';
-  venta_id?: string;
-  notas?: string;
-  ntv?: string;
-  fecha_emision?: string;
-  fecha_venta?: string;
-  fecha_atencion?: string;
-  region?: string;
-  responsable?: string;
-  solicitud?: string;
-  solucion?: string;
-  estado_pedido?: string;
-  empresa?: string;
-  tipo?: string;
-  monto?: number;
-  fecha_cierre?: string;
-}
 
 export interface CustomerBasic {
   cel: string;
@@ -405,41 +386,7 @@ export async function getCustomerVentas(cel: string): Promise<(VentaDB & { anula
   return (data ?? []) as (VentaDB & { anulado?: boolean })[];
 }
 
-export async function getATCTickets(): Promise<ATCTicket[]> {
-  const { data, error } = await supabase
-    .from('atc_tickets')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error || !data) return [];
-  return data as ATCTicket[];
-}
 
-export async function createATCTicket(
-  ticket: Omit<ATCTicket, 'id' | 'created_at' | 'updated_at'>,
-  userId?: string,
-): Promise<ATCTicket | null> {
-  const { data, error } = await supabase
-    .from('atc_tickets')
-    .insert({ ...ticket, atc_user_id: userId })
-    .select()
-    .single();
-  if (error) { console.error('[createATCTicket]', error.message); return null; }
-  return data as ATCTicket;
-}
-
-export async function updateATCTicket(id: string, fields: Partial<ATCTicket>): Promise<boolean> {
-  const { error } = await supabase
-    .from('atc_tickets')
-    .update({ ...fields, updated_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) console.error('[updateATCTicket]', error.message);
-  return !error;
-}
-
-export async function deleteATCTicket(id: string): Promise<boolean> {
-  const { error } = await supabase.from('atc_tickets').delete().eq('id', id);
-  return !error;
-}
 
 // ── Metas de Vendedores ────────────────────────────────────────────
 
@@ -520,49 +467,4 @@ export async function getSheetsVentasAdmin(dateFrom: string, dateTo: string): Pr
   return (data ?? []) as SheetsVentaDB[];
 }
 
-// ── Descuentos ATC ─────────────────────────────────────────────────
 
-export interface ATCDescuento {
-  id?: string;
-  created_at?: string;
-  fecha: string;
-  nota_venta?: string;
-  dni?: string;
-  telefono?: string;
-  nombre_cliente: string;
-  descripcion: string;
-  descuento: number;
-  responsable?: string;
-  atc_user_id?: string;
-}
-
-export async function getATCDescuentos(): Promise<ATCDescuento[]> {
-  const { data, error } = await supabase
-    .from('atc_descuentos')
-    .select('*')
-    .order('fecha', { ascending: false });
-  if (error || !data) return [];
-  return data as ATCDescuento[];
-}
-
-export async function createATCDescuento(
-  descuento: Omit<ATCDescuento, 'id' | 'created_at'>,
-): Promise<ATCDescuento | null> {
-  const { data, error } = await supabase
-    .from('atc_descuentos')
-    .insert(descuento)
-    .select()
-    .single();
-  if (error) { console.error('[createATCDescuento]', error.message); return null; }
-  return data as ATCDescuento;
-}
-
-export async function deleteATCDescuento(id: string): Promise<boolean> {
-  const { error } = await supabase.from('atc_descuentos').delete().eq('id', id);
-  return !error;
-}
-
-export async function updateATCDescuento(id: string, fields: Partial<ATCDescuento>): Promise<boolean> {
-  const { error } = await supabase.from('atc_descuentos').update(fields).eq('id', id);
-  return !error;
-}

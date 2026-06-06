@@ -8,7 +8,7 @@ import { useToast } from './hooks/useToast';
 import { getProfile, getAllProfiles } from './lib/supabase';
 import type { Profile } from './types';
 
-type AppMode = 'admin' | 'vendedor' | 'atc';
+type AppMode = 'admin' | 'vendedor';
 
 export default function App() {
   const { user, loading, signOut } = useAuth();
@@ -27,12 +27,7 @@ export default function App() {
     else setProfiles([]);
   }, [user?.id]);
 
-  // ATC temporalmente oculto
-  // useEffect(() => {
-  //   if (profile?.role === 'atc' && appMode !== 'atc') {
-  //     setAppMode('atc');
-  //   }
-  // }, [profile?.role, appMode]);
+
 
   const emailPrefix = user?.email?.split('@')[0] || 'USUARIO';
   const userName = ((user?.user_metadata?.full_name || user?.user_metadata?.name || emailPrefix) as string).toUpperCase();
@@ -49,8 +44,7 @@ export default function App() {
 
   if (!user) return <LoginPage />;
 
-  // ATC temporalmente oculto
-  // if (appMode === 'atc' || profile?.role === 'atc') { ... }
+
 
   // Admin en modo admin
   if (profile?.role === 'admin' && appMode === 'admin') {
@@ -60,7 +54,6 @@ export default function App() {
           adminName={userName}
           onSignOut={signOut}
           onSwitchToVendedor={() => setAppMode('vendedor')}
-          onSwitchToATC={() => setAppMode('atc')}
         />
         {toast && (
           <div className={`toast ${toast.type}${toast.leaving ? ' leaving' : ''}`}>

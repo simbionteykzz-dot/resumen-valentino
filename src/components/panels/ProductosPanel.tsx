@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Tag, Shuffle, ChevronDown, Package, ClipboardList, Check } from 'lucide-react';
+import { Plus, X, Tag, Shuffle, ChevronDown, Package, ClipboardList, Check, Copy } from 'lucide-react';
 import {
   POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, MIX_PROMOS_DATA, PROMOS_GROUPS, TALLAS_SMLXL,
   POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, PRODUCT_NAME_TO_CP,
@@ -20,6 +20,17 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
   const [mixOpen, setMixOpen] = useState(true);
   const [catalogCopied, setCatalogCopied] = useState(false);
+  const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
+
+  const copyPromoText = (e: React.MouseEvent, pData: any) => {
+    e.stopPropagation();
+    const items = pData.list.map((i: any) => `• ${i.q}x ${i.n}`).join('\n');
+    const text = `🔥 *${pData.comboData}*\n${items}\n💵 *Por solo: S/ ${pData.price}*`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedPromo(pData.name);
+      setTimeout(() => setCopiedPromo(null), 1500);
+    });
+  };
 
   const copyCatalog = () => {
     const lines: string[] = [`📦 CATÁLOGO ${brandLabel.toUpperCase()}\n`];
@@ -246,14 +257,23 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                 {Object.entries(MIX_PROMOS_DATA).map(([k, v]) => {
                   const totalQty = v.list.reduce((a, i) => a + i.q, 0);
                   return (
-                    <button key={k} className="promo-mix-card" onClick={() => handlePromoLoad(k)}>
+                    <div key={k} className="promo-mix-card">
                       <div className="promo-mix-card-head">
                         <span className="promo-mix-name">{v.name}</span>
                         <span className="promo-mix-qty">{totalQty}×</span>
                       </div>
                       <span className="promo-mix-items">{promoItemsLabel(v.list)}</span>
                       <span className="promo-mix-price">{v.price > 0 ? `S/ ${v.price}` : '—'}</span>
-                    </button>
+                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.8rem' }}>
+                        <button className="btn btn-secondary" style={{ flex: 1, padding: '0.4rem 0', fontSize: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.3rem' }} onClick={() => handlePromoLoad(k)}>
+                          <Plus size={13} /> Añadir
+                        </button>
+                        <button className="btn btn-secondary" style={{ flex: 1, padding: '0.4rem 0', fontSize: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.3rem' }} onClick={(e) => copyPromoText(e, v)}>
+                          {copiedPromo === v.name ? <Check size={13} style={{ color: '#45834D' }} /> : <Copy size={13} />} 
+                          {copiedPromo === v.name ? 'Copiado' : 'Copiar'}
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>

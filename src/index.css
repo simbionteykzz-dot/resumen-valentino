@@ -121,6 +121,20 @@ html {
 }
 .btn-del-row:hover { color: var(--danger); background: var(--danger-soft); }
 
+.btn-dup-row {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted2);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-dup-row:hover { color: var(--info); background: var(--info-soft); }
+
 @media print {
   .col-del { display: none !important; }
 }

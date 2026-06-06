@@ -114,7 +114,7 @@ export const MIX_PROMOS_DATA: Record<string, {name: string, comboData: string, p
   "flash":    { name: "Promo Flash 5×95",      comboData: "PROMOCIÓN FLASH 5 X 95",      price: 95, list: [{n:"WAFFLE MANGA LARGA", q:1}, {n:"WAFFLE CAMISERO", q:2}, {n:"WAFFLE", q:2}] },
   // ── S/ 99 — 5 prendas ────────────────────────────────────────────────────
   "mix_5":    { name: "Promo Mix 5×99",        comboData: "PROMOCIÓN MIX 5 X 99",        price: 99, list: [{n:"WAFFLE", q:1}, {n:"CLASICO", q:1}, {n:"WAFFLE CAMISERO", q:1}, {n:"WAFFLE MANGA LARGA", q:1}, {n:"CAMISERO PIKE", q:1}] },
-  "wafflera": { name: "Promo Wafflera 5×99",   comboData: "PROMOCIÓN WAFFLERA 5 X 99",   price: 99, list: [{n:"WAFFLE MANGA LARGA", q:1}, {n:"WAFFLE CAMISERO", q:2}, {n:"WAFFLE", q:2}] },
+  "wafflera": { name: "Promo Wafflera 6×99",   comboData: "PROMOCIÓN WAFFLERA 6 X 99",   price: 99, list: [{n:"WAFFLE CAMISERO", q:1}, {n:"WAFFLE MANGA LARGA", q:2}, {n:"WAFFLE", q:3}] },
   // ── S/ 99 — 6 prendas ────────────────────────────────────────────────────
   "mixtura":  { name: "Promoción Mixtura 6×99",  comboData: "PROMOCIÓN MIXTURA 6 X 99",  price: 99, list: [{n:"WAFFLE", q:3}, {n:"CAMISERO PIKE", q:3}] },
   "bellaca":  { name: "Promoción Bellaca 6×99",  comboData: "PROMOCIÓN BELLACA 6 X 99",  price: 99, list: [{n:"CLASICO", q:3}, {n:"WAFFLE", q:1}, {n:"CAMISERO PIKE", q:1}, {n:"WAFFLE MANGA LARGA", q:1}] },

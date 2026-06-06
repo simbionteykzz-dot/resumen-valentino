@@ -1,203 +1,159 @@
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown, AlertTriangle } from 'lucide-react';
+import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown, AlertTriangle, Copy } from 'lucide-react';
 import type { Profile } from '../../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function drawCierreCajaPage(pdf: any, sales: any[], pageW: number, pageH: number) {
-  const M = 10;
-  const GAP = 3.5;
-
+  /* ── DATA ─────────────────────────────────────────────────────────────────── */
   const totalVentas    = sales.length;
   const totalPrendas   = sales.reduce((a, v) => a + (Number(v.qtyN) || 0), 0);
-  const totalSoles     = sales.reduce((a, v) => a + (Number(v.totalTotal) || 0), 0);
+  const totalSeparos   = sales.reduce((a, v) => a + (parseFloat(v.separo) || 0), 0);
+  const totalPagoComp  = sales.reduce((a, v) => a + (parseFloat(v.pagoCompletoTxt) || 0), 0);
+  const totalRecaudado = totalSeparos + totalPagoComp;
+  const totalDeudas    = sales.reduce((a, v) => a + (parseFloat(v.resta) || 0), 0);
+  const totalBruto     = sales.reduce((a, v) => a + (Number(v.totalTotal) || 0), 0);
   const enviosLima     = sales.filter(v => v.limaMark).length;
   const enviosProv     = sales.filter(v => v.provMark).length;
-  const totalSeparos   = sales.reduce((a, v) => a + (parseFloat(v.separo) || 0), 0);
-  const totalDeudas    = sales.reduce((a, v) => a + (parseFloat(v.resta)  || 0), 0);
   const pagosCompletos = sales.filter(v => v.pagoCompletoTxt).length;
   const contraEntrega  = sales.filter(v => v.separo || v.resta).length;
-  const promedioVenta   = totalVentas > 0 ? totalSoles   / totalVentas : 0;
+  const promedioVenta  = totalVentas > 0 ? totalBruto / totalVentas : 0;
   const promedioPrendas = totalVentas > 0 ? totalPrendas / totalVentas : 0;
+  const S = (n: number) => n % 1 === 0 ? `S/ ${n}` : `S/ ${n.toFixed(2)}`;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const solesStr = (n: number) => n % 1 === 0 ? `S/ ${Math.round(n)}` : `S/ ${n.toFixed(2)}`;
+  /* ── CANVAS ───────────────────────────────────────────────────────────────── */
+  // Full white
+  pdf.setFillColor(255, 255, 255);
+  pdf.rect(0, 0, pageW, pageH, 'F');
 
-  const CW4 = (pageW - 2 * M - 3 * GAP) / 4;
-  const CW2 = (pageW - 2 * M - GAP) / 2;
-  const xs4 = [M, M + CW4 + GAP, M + 2 * (CW4 + GAP), M + 3 * (CW4 + GAP)];
-  const xs2 = [M, M + CW2 + GAP];
+  const M = 14; // margin
 
-  type RGB = [number, number, number];
+  /* ── HEADER ──────────────────────────────────────────────────────────────── */
+  // Green accent line (2mm only — almost zero ink)
+  pdf.setFillColor(42, 115, 65);
+  pdf.rect(0, 0, pageW, 2, 'F');
 
-  // ── Card: filled bg + subtle border + full-width TOP accent bar ────────────
-  const card = (
-    x: number, y: number, w: number, h: number,
-    bg: RGB, accent: RGB,
-    label: string, value: string, sub?: string,
-  ) => {
-    // fill
-    pdf.setFillColor(...bg);
-    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'F');
-    // border
-    pdf.setDrawColor(accent[0], accent[1], accent[2]);
-    pdf.setLineWidth(0.2);
-    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'S');
-    // top accent bar (full width, 3mm)
-    pdf.setFillColor(...accent);
-    pdf.roundedRect(x, y, w, 3, 1.5, 1.5, 'F');
-    // label (below accent bar)
-    pdf.setFontSize(5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(80, 100, 90);
-    pdf.text(label.toUpperCase(), x + 5, y + 9.5);
-    // value
-    const longVal = value.length > 9;
-    const valueSize = h <= 32 ? (longVal ? 14 : 17) : sub ? (longVal ? 15 : 18) : (longVal ? 16 : 21);
-    pdf.setFontSize(valueSize);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...accent);
-    pdf.text(value, x + 5, y + h - (sub ? 9 : 5.5));
-    // sub
-    if (sub) {
-      pdf.setFontSize(6);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(110, 130, 120);
-      pdf.text(sub, x + 5, y + h - 3.5);
-    }
-  };
-
-  // ── Section label: colored dot + text + line ───────────────────────────────
-  const sectionLabel = (label: string, y: number, color: RGB = [69, 131, 77]) => {
-    pdf.setFillColor(...color);
-    pdf.circle(M + 1.8, y - 1.8, 1.8, 'F');
-    pdf.setFontSize(6.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...color);
-    pdf.text(label, M + 5.5, y);
-    const tw = pdf.getTextWidth(label);
-    pdf.setDrawColor(180, 210, 195);
-    pdf.setLineWidth(0.25);
-    pdf.line(M + 5.5 + tw + 3, y - 1.5, pageW - M, y - 1.5);
-  };
-
-  // ── TOP STRIPE (full page, 4mm dark green) ─────────────────────────────────
-  pdf.setFillColor(18, 50, 30);
-  pdf.rect(0, 0, pageW, 4, 'F');
-
-  // ── HEADER BAND (dark green panel) ─────────────────────────────────────────
-  const HY = 6, HH = 28;
-  pdf.setFillColor(22, 52, 33);
-  pdf.roundedRect(M, HY, pageW - 2 * M, HH, 3, 3, 'F');
-  pdf.setDrawColor(50, 100, 65);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(M, HY, pageW - 2 * M, HH, 3, 3, 'S');
-
-  // title + subtitle (left side)
-  pdf.setFontSize(15);
+  // Title — large, black
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(255, 255, 255);
-  pdf.text('CIERRE DE CAJA', M + 7, HY + 11);
-  pdf.setFontSize(7.5);
+  pdf.setFontSize(17);
+  pdf.setTextColor(20, 25, 22);
+  pdf.text('CIERRE DE CAJA', M, 13);
+
+  // Brand + date — small, muted
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(120, 185, 145);
-  const dateStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  pdf.text(`${totalVentas} ventas registradas  ·  ${dateStr}`, M + 7, HY + 20);
+  pdf.setFontSize(6.5);
+  pdf.setTextColor(140, 150, 144);
+  pdf.text('OVERSHARK · LIVEX AGENCY   ·   ' + dateStr.toUpperCase(), M, 18.5);
 
-  // right side: LIVEX + total recaudado highlight box
-  const rhW = 72, rhX = pageW - M - rhW, rhY = HY + 3;
-  pdf.setFillColor(55, 110, 70);
-  pdf.roundedRect(rhX, rhY, rhW, HH - 6, 2.5, 2.5, 'F');
-  pdf.setFontSize(5.5);
+  // Hero metric — right side
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(140, 215, 165);
-  pdf.text('TOTAL RECAUDADO', rhX + rhW / 2, rhY + 6, { align: 'center' });
-  pdf.setFontSize(15);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(255, 255, 255);
-  pdf.text(solesStr(totalSoles), rhX + rhW / 2, rhY + 15.5, { align: 'center' });
-  pdf.setFontSize(6);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(140, 215, 165);
-  pdf.text('LIVEX AGENCY', rhX + rhW / 2, rhY + HH - 9, { align: 'center' });
+  pdf.setFontSize(7);
+  pdf.setTextColor(42, 115, 65);
+  pdf.text('YA COBRADO', pageW - M, 10, { align: 'right' });
+  pdf.setFontSize(20);
+  pdf.setTextColor(20, 25, 22);
+  pdf.text(S(totalRecaudado), pageW - M, 19, { align: 'right' });
 
-  // ── SECTION 1: Métricas principales ────────────────────────────────────────
-  const Y1 = HY + HH + 8;
-  sectionLabel('METRICAS PRINCIPALES', Y1 - 2);
-  const H1 = 46;
+  // Separator line
+  pdf.setDrawColor(220, 225, 222);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, 23, pageW - M, 23);
 
-  card(xs4[0], Y1, CW4, H1, [228, 246, 233], [55, 120, 65],  'Ventas Registradas', String(totalVentas));
-  card(xs4[1], Y1, CW4, H1, [220, 240, 228], [35, 90, 48],   'Prendas Totales',    String(totalPrendas));
-  card(xs4[2], Y1, CW4, H1, [220, 237, 250], [25, 100, 155], 'Promedio por Venta', solesStr(promedioVenta));
+  /* ── LAYOUT: 3 columns ───────────────────────────────────────────────────── */
+  const GAP = 8;
+  const COL = (pageW - 2 * M - 2 * GAP) / 3;
+  const C = [M, M + COL + GAP, M + 2 * (COL + GAP)];
 
-  // Envíos card (two sub-rows inside)
-  {
-    const x = xs4[3], y = Y1, w = CW4, h = H1;
-    pdf.setFillColor(252, 246, 225);
-    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'F');
-    pdf.setDrawColor(155, 115, 8);
-    pdf.setLineWidth(0.2);
-    pdf.roundedRect(x, y, w, h, 2.5, 2.5, 'S');
-    // top accent
-    pdf.setFillColor(155, 115, 8);
-    pdf.roundedRect(x, y, w, 3, 1.5, 1.5, 'F');
+  /* row helper: label left, value right, dotted fill between */
+  let Y = 29;
+  const ROW_H = 7; // 7mm per row — very compact
+
+  const row = (x: number, w: number, label: string, value: string, valColor: [number,number,number] = [20,25,22]) => {
     // label
-    pdf.setFontSize(5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(80, 100, 90);
-    pdf.text('ENVIOS POR ZONAS', x + 5, y + 9.5);
-    // Lima row
-    const ry1 = y + 13;
-    pdf.setFillColor(210, 232, 248);
-    pdf.roundedRect(x + 3.5, ry1, w - 7, 12, 1.5, 1.5, 'F');
-    pdf.setFontSize(7.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(25, 100, 150);
-    pdf.text('Lima', x + 7, ry1 + 8);
-    pdf.setFontSize(13);
-    pdf.text(String(enviosLima), x + w - 6.5, ry1 + 8, { align: 'right' });
-    // Prov row
-    const ry2 = ry1 + 15;
-    pdf.setFillColor(255, 242, 212);
-    pdf.roundedRect(x + 3.5, ry2, w - 7, 12, 1.5, 1.5, 'F');
-    pdf.setFontSize(7.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(150, 110, 8);
-    pdf.text('Provincia', x + 7, ry2 + 8);
-    pdf.setFontSize(13);
-    pdf.text(String(enviosProv), x + w - 6.5, ry2 + 8, { align: 'right' });
-  }
-
-  // ── SECTION 2: Detalle de pagos ─────────────────────────────────────────────
-  const Y2 = Y1 + H1 + 9;
-  sectionLabel('DETALLE DE PAGOS', Y2 - 2, [20, 120, 170]);
-  const H2 = 38;
-
-  card(xs4[0], Y2, CW4, H2, [220, 244, 252], [15, 128, 180],  'Total Separos',    solesStr(totalSeparos));
-  card(xs4[1], Y2, CW4, H2, [252, 243, 220], [170, 110, 8],   'Por Cobrar',       solesStr(totalDeudas));
-  card(xs4[2], Y2, CW4, H2, [224, 248, 230], [35, 150, 72],   'Pago Completo',    String(pagosCompletos), `de ${totalVentas} ventas`);
-  card(xs4[3], Y2, CW4, H2, [236, 238, 246], [90, 100, 138],  'Contra Entrega',   String(contraEntrega),  'ventas con saldo');
-
-  // ── SECTION 3: Promedios ────────────────────────────────────────────────────
-  const Y3 = Y2 + H2 + 9;
-  sectionLabel('PROMEDIOS', Y3 - 2, [45, 100, 55]);
-  const H3 = 32;
-
-  card(xs2[0], Y3, CW2, H3, [228, 246, 233], [55, 120, 65],  'Promedio de Venta (S/)', solesStr(promedioVenta));
-  card(xs2[1], Y3, CW2, H3, [220, 237, 250], [25, 100, 155], 'Prendas por Venta',      promedioPrendas.toFixed(1));
-
-  // ── FOOTER ──────────────────────────────────────────────────────────────────
-  const yF = Y3 + H3 + 6;
-  if (yF < pageH - 6) {
-    pdf.setFillColor(18, 50, 30);
-    pdf.rect(0, pageH - 7, pageW, 7, 'F');
-    pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(100, 170, 130);
-    pdf.text('LIVEX AGENCY — Sistema de Gestion de Ventas', M, pageH - 2.5);
-    pdf.text(new Date().toLocaleString('es-PE'), pageW - M, pageH - 2.5, { align: 'right' });
-  }
+    pdf.setFontSize(6);
+    pdf.setTextColor(130, 138, 133);
+    pdf.text(label, x, Y);
+    // value — right-aligned within column
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(...valColor);
+    pdf.text(value, x + w, Y, { align: 'right' });
+    // hairline separator below row
+    pdf.setDrawColor(238, 241, 239);
+    pdf.setLineWidth(0.2);
+    pdf.line(x, Y + 1.5, x + w, Y + 1.5);
+    Y += ROW_H;
+  };
+
+  /* section title helper */
+  const colTitle = (x: number, label: string, accent: [number,number,number] = [42, 115, 65]) => {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(6);
+    pdf.setTextColor(...accent);
+    pdf.text(label.toUpperCase(), x, Y);
+    Y += 4;
+  };
+
+  /* ── COL 1: OPERACIONES ─────────────────────────────────────────────────── */
+  let savedY = Y;
+
+  colTitle(C[0], 'Operaciones del día');
+  row(C[0], COL, 'Ventas registradas',  String(totalVentas),             [22, 100, 55]);
+  row(C[0], COL, 'Prendas totales',     String(totalPrendas),            [22, 100, 55]);
+  row(C[0], COL, 'Promedio por venta',  S(promedioVenta),                [22, 100, 55]);
+  row(C[0], COL, 'Prendas por venta',   promedioPrendas.toFixed(1),      [22, 100, 55]);
+  row(C[0], COL, 'Total bruto pedidos', S(totalBruto),                   [22, 100, 55]);
+
+  /* ── COL 2: FINANZAS ────────────────────────────────────────────────────── */
+  const col2StartY = savedY;
+  Y = col2StartY;
+
+  colTitle(C[1], 'Finanzas · cobros', [20, 95, 160]);
+  row(C[1], COL, 'Ya cobrado (real)',   S(totalRecaudado),  [22, 100, 55]);
+  row(C[1], COL, 'Por cobrar — saldo', S(totalDeudas),     [180, 90, 15]);
+  row(C[1], COL, 'Separos recibidos',  S(totalSeparos),    [20, 95, 160]);
+  row(C[1], COL, 'Pagos completos',    S(totalPagoComp),   [20, 95, 160]);
+
+  /* ── COL 3: ENVÍOS Y MÉTODOS ────────────────────────────────────────────── */
+  const col3StartY = savedY;
+  Y = col3StartY;
+
+  colTitle(C[2], 'Envíos · métodos', [130, 80, 15]);
+  row(C[2], COL, 'Envíos Lima',      String(enviosLima),    [20, 95, 160]);
+  row(C[2], COL, 'Envíos Provincia', String(enviosProv),    [130, 80, 15]);
+  row(C[2], COL, 'Pago completo',    String(pagosCompletos), [22, 100, 55]);
+  row(C[2], COL, 'Contra entrega',   String(contraEntrega), [130, 80, 15]);
+
+  /* ── THIN COLUMN DIVIDERS ───────────────────────────────────────────────── */
+  const maxY = Math.max(savedY + 5 * ROW_H + 10, 65);
+  pdf.setDrawColor(230, 234, 231);
+  pdf.setLineWidth(0.3);
+  pdf.line(C[1] - GAP / 2, 24, C[1] - GAP / 2, maxY);
+  pdf.line(C[2] - GAP / 2, 24, C[2] - GAP / 2, maxY);
+
+  /* ── BOTTOM CLOSE LINE ──────────────────────────────────────────────────── */
+  pdf.setDrawColor(220, 225, 222);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, maxY + 2, pageW - M, maxY + 2);
+
+  /* ── FOOTER ─────────────────────────────────────────────────────────────── */
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(5);
+  pdf.setTextColor(190, 196, 193);
+  pdf.text('OVERSHARK · LIVEX AGENCY — Sistema de Gestion de Ventas', M, pageH - 4);
+  pdf.text(now.toLocaleString('es-PE'), pageW - M, pageH - 4, { align: 'right' });
 }
+
+
+
+
+
+
+
 
 const abrevMetodo = (m: string) => {
   if (!m) return 'I.T';
@@ -217,6 +173,8 @@ interface PlanillaPanelProps {
   syncError: string | null;
   onDeleteSale?: (index: number) => void;
   onRestoreSale?: (dbId: string) => void;
+  onHardDeleteSale?: (dbId: string) => void;
+  onDuplicateSale?: (sale: any) => void;
   profiles?: Profile[];
   /** Nombre del usuario autenticado — se fija en la celda VENDEDOR sin permitir edición */
   currentUserName?: string;
@@ -236,7 +194,7 @@ interface PlanillaPanelProps {
 
 export default function PlanillaPanel({
   sales, deletedSales = [], selectedDate, onDateChange,
-  loadingSync, syncError, onDeleteSale, onRestoreSale, profiles = [],
+  loadingSync, syncError, onDeleteSale, onRestoreSale, onHardDeleteSale, onDuplicateSale, profiles = [],
   currentUserName, title, sourceFilter, exportId = 'sales-sheet-export', forcedBrand,
 }: PlanillaPanelProps) {
   const [collapsed, setCollapsed] = useState(true);
@@ -543,10 +501,19 @@ export default function PlanillaPanel({
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'pago', e)}>{cv(rk, 'pago', sale.pagoCompletoTxt ?? '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'combo', e)}>{cv(rk, 'combo', sale.combo ?? '')}</td>
                   <td className="col-del">
-                    {onDeleteSale && !blankMode && (
-                      <button className="btn-del-row" onClick={() => onDeleteSale(sales.indexOf(sale))} title="Eliminar venta">
-                        <Trash2 size={13} />
-                      </button>
+                    {!blankMode && (
+                      <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
+                        {onDuplicateSale && (
+                          <button className="btn-dup-row" onClick={() => onDuplicateSale(sale)} title="Duplicar venta">
+                            <Copy size={12} />
+                          </button>
+                        )}
+                        {onDeleteSale && (
+                          <button className="btn-del-row" onClick={() => onDeleteSale(sales.indexOf(sale))} title="Eliminar venta">
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -642,6 +609,24 @@ export default function PlanillaPanel({
                       }}
                     >
                       <RotateCcw size={12} /> Restaurar
+                    </button>
+                  )}
+                  {onHardDeleteSale && sale._dbId && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`¿Eliminar PERMANENTEMENTE la venta de ${sale.nom || sale.cel || 'este cliente'}? Esta acción NO se puede deshacer.`)) {
+                          onHardDeleteSale(sale._dbId);
+                        }
+                      }}
+                      title="Eliminar permanentemente de la base de datos"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.3rem',
+                        background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '6px', color: '#dc2626', cursor: 'pointer',
+                        padding: '0.3rem 0.65rem', fontSize: '0.78rem', fontWeight: 700,
+                      }}
+                    >
+                      <Trash2 size={12} /> Eliminar definitivo
                     </button>
                   )}
                 </div>

@@ -24,7 +24,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <MessageCircle size={14} />,
     category: 'inicio',
     color: '59,130,246',
-    texto: `Hola 👋😊\n¿Qué colores 🎨 y tallas 📏 deseas? 👕✨\n¿Tu envío es para Lima 📍 o provincia 🚚?\n\nSi es Lima 🏠, separas con 14 soles 💵 y pagas el resto en casa 🚪✅\n\nSi es provincia 📦, separas con 30 o 40 soles 💰 y el saldo lo pagas en la agencia 🏢📍`,
+    texto: `¡Hola! Qué gusto saludarte 😊👋\n¿Qué colores 🎨 y tallas 📏 deseas llevar? 👕✨\n¿Tu envío es para Lima 📍 o provincia 🚚?\n\n🏠 Lima: Separas con S/14 💵 y pagas el resto Contra Entrega 🚪✅\n📦 Provincia: Separas con S/30 o S/40 💰 y el saldo lo cancelas en la agencia a nuestro courier Zazu 🏢📍`,
   },
   {
     titulo: 'Saludo rápido',
@@ -32,7 +32,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <MessageCircle size={14} />,
     category: 'inicio',
     color: '59,130,246',
-    texto: `¡Hola! Bienvenido/a 😊👋\nEstamos para ayudarte. ¿Qué modelo y color te interesa? 👕✨\nCuéntame y te armo tu pedido al toque 🔥`,
+    texto: `¡Hola! Qué lindo tenerte por aquí 😊👋\n¿Qué modelo y color te gustaría llevar hoy? 👕✨\nAvísame y te armo tu pedido al toque 🔥`,
   },
   {
     titulo: 'Solicitar datos de envío',
@@ -40,7 +40,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <UserCheck size={14} />,
     category: 'inicio',
     color: '99,102,241',
-    texto: `¡Perfecto! Para procesar tu pedido necesito estos datos 📋:\n\n👤 Nombre completo\n📱 Celular de contacto\n🏠 Dirección exacta (si es Lima) / Agencia Shalom más cercana (si es provincia)\n🪪 DNI\n📦 Confirma tu pedido: colores y tallas\n\n¡Con eso ya te lo preparo! 💪✅`,
+    texto: `¡Perfecto! Para preparar tu pedido, ayúdame con estos datos 📋:\n\n👤 Nombre completo\n📱 Celular\n🏠 Dirección (Lima) / Agencia a nuestro courier Zazu (Provincia)\n🪪 DNI\n📦 Confírmame tus colores y tallas\n\n¡Con eso lo dejo listo! 💪✅`,
   },
   {
     titulo: 'Pregunta disponibilidad',
@@ -48,7 +48,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <HelpCircle size={14} />,
     category: 'inicio',
     color: '20,184,166',
-    texto: `¡Claro! Déjame verificar el stock disponible para ese color y talla 🔍\nDame un momento... ✨\n\n¿Tienes alguna segunda opción de color por si acaso? Así te confirmo más rápido 😊`,
+    texto: `¡Claro! Déjame verificar al toque el stock para ese color y talla 🔍\nDame un segundito... ✨\n\n¿Tienes alguna segunda opción por si acaso? Así te confirmo súper rápido 😊`,
   },
 
   // ── SEPARACIÓN ───────────────────────────────────────────────────────
@@ -58,15 +58,15 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Banknote size={14} />,
     category: 'separacion',
     color: '34,197,94',
-    texto: `🚚 Si eres de Lima: abonas 14 soles para separar tu pedido 🔒 y lo demás lo pagas cuando llegue a tu casa 🏡`,
+    texto: `🚚 Para Lima tenemos Contra Entrega. Solo separas tu pedido con S/14 🔒 y la diferencia la pagas tranquilamente al recibirlo en casa 🏡✨`,
   },
   {
     titulo: 'Separación Provincia',
-    descripcion: '30-40 soles de adelanto, resto en agencia',
+    descripcion: '30-40 soles de adelanto, resto a courier Zazu',
     icon: <Banknote size={14} />,
     category: 'separacion',
     color: '251,146,60',
-    texto: `🏢 Si tu envío es a provincia: separas con 30 o 40 soles 🔒 y el resto lo pagas cuando tu pedido esté en la agencia 📦💰`,
+    texto: `🏢 Para provincia es súper fácil: separas tu pedido con S/30 o S/40 🔒 y el saldo recién lo cancelas al recoger tu paquete en la agencia a nuestro courier Zazu 📦💰`,
   },
   {
     titulo: 'Instrucciones de pago Yape/Plin',
@@ -74,7 +74,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Banknote size={14} />,
     category: 'separacion',
     color: '168,85,247',
-    texto: `¡Genial! Para separar tu pedido yapéame o plíneme al número que te acabo de dar 💚\n\nUna vez realizado, mándame el comprobante por aquí 📸 y confirmo tu reserva al instante ✅\n\n¡Ya casi es tuyo! 🛍️🔥`,
+    texto: `¡Súper! Para separar tu pedido, yapéame o plinéame al número de arriba 💚\n\nLuego mándame la fotito del comprobante por aquí 📸 y dejo confirmada tu reserva al instante ✅🛍️`,
   },
   {
     titulo: 'Pago completo',
@@ -82,7 +82,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Banknote size={14} />,
     category: 'separacion',
     color: '14,165,233',
-    texto: `¡Muchas gracias por tu pago completo! 🙌💚\nTu pedido queda confirmado y lo preparamos de inmediato 📦✨\n\nMándame tu comprobante de pago por aquí para registrarlo 📸✅`,
+    texto: `¡Muchísimas gracias por tu pago! 🙌💚\nTu pedido ya está confirmadísimo y pasamos a prepararlo 📦✨\n\nPor favor envíame la foto del comprobante para registrarlo 📸✅`,
   },
 
   // ── SEGUIMIENTO ──────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <PackageSearch size={14} />,
     category: 'seguimiento',
     color: '234,179,8',
-    texto: `¡Tu pedido ya fue enviado! 🚀📦\nTu código de seguimiento es: [CÓDIGO]\n\nPuedes rastrearlo en la web o app de Shalom 🔍\nCualquier consulta, aquí estamos 😊✅`,
+    texto: `¡Tu pedido ya está en camino! 🚀📦\nTu código de seguimiento oficial es: [CÓDIGO]\n\nPuedes ver por dónde va desde nuestra página de seguimiento 🔍 Cualquier cosita me avisas 😊✅`,
   },
   {
     titulo: 'Tiempo de entrega Lima',
@@ -100,15 +100,15 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Clock size={14} />,
     category: 'seguimiento',
     color: '34,197,94',
-    texto: `Tu pedido llegará en 1 a 2 días hábiles 🏠⏰\nTe avisamos cuando el repartidor esté en camino 📲\n\n¡Cualquier duda, aquí estamos! 😊`,
+    texto: `Tu pedido estará llegando en 1 a 2 días hábiles 🏠⏰\nTe avisaremos apenas el repartidor esté saliendo hacia tu dirección 📲`,
   },
   {
     titulo: 'Tiempo de entrega Provincia',
-    descripcion: '3-5 días hábiles en agencia Shalom',
+    descripcion: '3-5 días hábiles a courier Zazu',
     icon: <MapPin size={14} />,
     category: 'seguimiento',
     color: '251,146,60',
-    texto: `Tu pedido llegará en 3 a 5 días hábiles a tu agencia Shalom más cercana 📦🚚\n\nRecuerda llevar tu DNI cuando vayas a recogerlo 🪪✅\nTe mandamos el código de seguimiento en cuanto se despache 📲`,
+    texto: `Tu pedido tomará de 3 a 5 días hábiles en llegar a la agencia a nuestro courier Zazu 📦🚚\n\nRecuerda llevar tu DNI físico al recogerlo 🪪✅ Apenas salga el paquete, te paso el código 📲`,
   },
   {
     titulo: 'Consulta de seguimiento',
@@ -116,7 +116,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <PackageSearch size={14} />,
     category: 'seguimiento',
     color: '99,102,241',
-    texto: `¡Hola! Te comento el estado de tu pedido 📦🔍\n\nTu código de seguimiento es: [CÓDIGO]\nPuedes rastrearlo aquí: www.shalom.com.pe 🌐\n\nSi necesitas ayuda extra, escríbenos y lo verificamos juntos 😊✅`,
+    texto: `¡Claro que sí! 📦🔍\nEl código de seguimiento de tu pedido es: [CÓDIGO]\n\nPuedes rastrearlo tú mismo con el link que te enviaré 🌐 Si necesitas que lo revisemos juntos, avísame 😊✅`,
   },
 
   // ── CIERRE ───────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <ShoppingBag size={14} />,
     category: 'cierre',
     color: '239,68,68',
-    texto: `Tu pedido ya está en proceso 📦✨. Cualquier duda, escríbenos por este medio y te ayudamos al momento.`,
+    texto: `¡Todo listo! Tu pedido ya está en proceso de armado 📦✨. Cualquier duda extra, escríbeme con total confianza.`,
   },
   {
     titulo: 'Urgencia / Stock limitado',
@@ -134,7 +134,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <AlertCircle size={14} />,
     category: 'cierre',
     color: '239,68,68',
-    texto: `⚡ Esta promo es por tiempo muy limitado y el stock se está agotando rápido 🔥\n\n¡Muchos clientes están viendo los mismos modelos que tú ahora mismo!\n\n¿Te lo separo ya? Solo necesitas [MONTO] de adelanto y aseguras el tuyo 💪✅`,
+    texto: `Te aviso rapidito que esta promo es por tiempo súper limitado y el stock está volando 🔥\n\n¿Deseas que lo separe de una vez? Con un abono de [MONTO] aseguras los tuyos 💪✅`,
   },
   {
     titulo: 'Color o talla agotada',
@@ -142,7 +142,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <AlertCircle size={14} />,
     category: 'cierre',
     color: '168,85,247',
-    texto: `¡Hola! 😅 El color/talla exacto que pediste está agotado por el momento.\n\nPero tenemos estas alternativas disponibles: [OPCIONES] 👕\n\n¿Te animas con alguna de estas? ¡Igual queda genial! ✨`,
+    texto: `¡Uy! 😅 Te cuento que el color/talla exacto que elegiste se acaba de agotar.\n\nPero tengo estas alternativas súper hermosas: [OPCIONES] 👕\n¿Te animas con alguna de estas? ✨`,
   },
   {
     titulo: 'Post-venta / Satisfacción',
@@ -150,7 +150,7 @@ const PLANTILLAS: Plantilla[] = [
     icon: <Sparkles size={14} />,
     category: 'cierre',
     color: '20,184,166',
-    texto: `¡Hola! 😊 Solo queríamos saber cómo llegó tu pedido y si todo estuvo perfecto 📦✨\n\nSi tienes alguna consulta o necesitas algo más, aquí estamos para ayudarte 🙌\n\n¡Gracias por tu confianza! 💚`,
+    texto: `¡Hola! 😊 Solo quería saber qué tal te pareció tu compra, ¿llegó todo perfecto? 📦✨\n\nMil gracias por confiar en nosotros, ¡estoy para ayudarte en lo que necesites! 💚`,
   },
 ];
 
