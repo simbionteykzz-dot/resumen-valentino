@@ -23,7 +23,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [catalogCopied, setCatalogCopied] = useState(false);
   const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
   // Combo builder: lista de { name, qty }
-  const [comboItems, setComboItems] = useState<{ name: string; qty: number; size: string; colorLines: { color: string; qty: number }[]; colorInput: string }[]>([]);
+  const [comboItems, setComboItems] = useState<{ name: string; qty: number; size: string; mixedSizes: boolean; colorLines: { color: string; qty: number; size?: string }[]; colorInput: string }[]>([]);
   const [comboName, setComboName] = useState('');
   const [comboPrice, setComboPrice] = useState('');
 
@@ -329,7 +329,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                   key={name}
                   className="prod-color-chip"
                   style={{ fontSize: '0.72rem', padding: '0.28rem 0.6rem', borderRadius: '20px' }}
-                  onClick={() => setComboItems(prev => [...prev, { name, qty: 1, size: '', colorLines: [], colorInput: '' }])}
+                  onClick={() => setComboItems(prev => [...prev, { name, qty: 1, size: '', mixedSizes: false, colorLines: [], colorInput: '' }])}
                 >
                   {name}
                 </button>
@@ -352,6 +352,18 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                 const updateColorQtyInItem = (color: string, delta: number) => updateItem({
                   colorLines: item.colorLines.map(cl => cl.color === color ? { ...cl, qty: Math.max(1, cl.qty + delta) } : cl),
                 });
+                const updateColorSizeInItem = (color: string, size: string) => updateItem({
+                  colorLines: item.colorLines.map(cl => cl.color === color ? { ...cl, size: cl.size === size ? undefined : size } : cl),
+                });
+                const toggleMixedSizesInItem = () => {
+                  const turningOff = item.mixedSizes;
+                  updateItem({
+                    mixedSizes: !item.mixedSizes,
+                    colorLines: turningOff
+                      ? item.colorLines.map(cl => ({ ...cl, size: undefined }))
+                      : item.colorLines,
+                  });
+                };
                 return (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'var(--surface2)', borderRadius: '8px', padding: '0.5rem 0.6rem' }}>
                     {/* Fila nombre + qty + quitar */}
@@ -366,16 +378,50 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                       />
                       <button className="pc-btn-rm" onClick={() => setComboItems(prev => prev.filter((_, idx) => idx !== i))}><X size={12} /></button>
                     </div>
-                    {/* Talla global */}
+                    {/* Talla global + switch tallas mixtas */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '0.63rem', color: 'var(--muted)', fontWeight: 600, minWidth: '34px' }}>Talla</span>
-                      <button className="prod-size-btn" aria-pressed={item.size === ''} onClick={() => updateItem({ size: '' })} style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}>—</button>
-                      {tallas.map((t: string) => (
-                        <button key={t} className="prod-size-btn" aria-pressed={item.size === t}
-                          onClick={() => updateItem({ size: item.size === t ? '' : t })}
-                          style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}
-                        >{t}</button>
-                      ))}
+                      {!item.mixedSizes && (<>
+                        <button className="prod-size-btn" aria-pressed={item.size === ''} onClick={() => updateItem({ size: '' })} style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}>—</button>
+                        {tallas.map((t: string) => (
+                          <button key={t} className="prod-size-btn" aria-pressed={item.size === t}
+                            onClick={() => updateItem({ size: item.size === t ? '' : t })}
+                            style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}
+                          >{t}</button>
+                        ))}
+                      </>)}
+                      {item.mixedSizes && (
+                        <span style={{ fontSize: '0.63rem', color: 'var(--muted)', fontStyle: 'italic' }}>Elige la talla en cada color ↓</span>
+                      )}
+                      {item.colorLines.length > 0 && (
+                        <button
+                          onClick={toggleMixedSizesInItem}
+                          title={item.mixedSizes ? 'Una talla para todos' : 'Talla individual por color'}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '0.3rem',
+                            fontSize: '0.63rem', fontWeight: 700,
+                            background: item.mixedSizes ? 'rgba(99,102,241,0.12)' : 'var(--surface3)',
+                            color: item.mixedSizes ? '#6366f1' : 'var(--muted)',
+                            border: `1px solid ${item.mixedSizes ? 'rgba(99,102,241,0.3)' : 'var(--border)'}`,
+                            borderRadius: '20px', padding: '0.18rem 0.55rem', cursor: 'pointer',
+                            marginLeft: 'auto',
+                          }}
+                        >
+                          <span style={{
+                            display: 'inline-block', width: '22px', height: '12px', borderRadius: '6px',
+                            background: item.mixedSizes ? '#6366f1' : 'var(--border)',
+                            position: 'relative', transition: 'background 0.15s', flexShrink: 0,
+                          }}>
+                            <span style={{
+                              position: 'absolute', top: '2px',
+                              left: item.mixedSizes ? '12px' : '2px',
+                              width: '8px', height: '8px', borderRadius: '50%',
+                              background: '#fff', transition: 'left 0.15s',
+                            }} />
+                          </span>
+                          Tallas mixtas
+                        </button>
+                      )}
                     </div>
                     {/* Chips de colores disponibles */}
                     {colorList.length > 0 && (
@@ -407,14 +453,27 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                     {item.colorLines.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.2rem' }}>
                         {item.colorLines.map(cl => (
-                          <div key={cl.color} className="pc-color-line" style={{ gap: '0.4rem' }}>
-                            <span className="pc-color-name" style={{ flex: 1 }}>{cl.color}</span>
-                            <div className="qty-stepper" style={{ height: '1.8rem' }}>
-                              <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, -1)}>−</button>
-                              <input value={cl.qty} readOnly style={{ height: '1.8rem', width: '1.8rem' }} />
-                              <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, 1)}>+</button>
+                          <div key={cl.color} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <div className="pc-color-line" style={{ gap: '0.4rem' }}>
+                              <span className="pc-color-name" style={{ flex: 1 }}>{cl.color}</span>
+                              <div className="qty-stepper" style={{ height: '1.8rem' }}>
+                                <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, -1)}>−</button>
+                                <input value={cl.qty} readOnly style={{ height: '1.8rem', width: '1.8rem' }} />
+                                <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, 1)}>+</button>
+                              </div>
+                              <button className="pc-color-rm" onClick={() => removeColorFromItem(cl.color)}><X size={11} /></button>
                             </div>
-                            <button className="pc-color-rm" onClick={() => removeColorFromItem(cl.color)}><X size={11} /></button>
+                            {item.mixedSizes && (
+                              <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap', paddingLeft: '0.5rem' }}>
+                                {tallas.map((t: string) => (
+                                  <button key={t} className="prod-size-btn"
+                                    aria-pressed={cl.size === t}
+                                    onClick={() => updateColorSizeInItem(cl.color, t)}
+                                    style={{ minWidth: '26px', padding: '0.15rem 0.35rem', fontSize: '0.65rem' }}
+                                  >{t}</button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -425,7 +484,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               <button
                 className="btn btn-secondary"
                 style={{ alignSelf: 'flex-start', fontSize: '0.78rem', padding: '0.35rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                onClick={() => setComboItems(prev => [...prev, { name: '', qty: 1, size: '', colorLines: [], colorInput: '' }])}
+                onClick={() => setComboItems(prev => [...prev, { name: '', qty: 1, size: '', mixedSizes: false, colorLines: [], colorInput: '' }])}
               >
                 <Plus size={12} /> Añadir producto
               </button>
@@ -468,7 +527,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                       return {
                         id: ts + i, name: it.name, size: it.size || '', qty: totalQtyItem,
                         colorLines: it.colorLines.length > 0
-                          ? it.colorLines.map(cl => ({ color: cl.color, qty: cl.qty, size: it.size || undefined }))
+                          ? it.colorLines.map(cl => ({ color: cl.color, qty: cl.qty, size: it.mixedSizes ? (cl.size || undefined) : (it.size || undefined) }))
                           : [],
                         promoName: nameLabel, promoPricePerUnit: pricePerUnit,
                         promoInstance: String(ts),
