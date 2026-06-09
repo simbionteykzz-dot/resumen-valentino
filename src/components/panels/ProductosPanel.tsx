@@ -19,8 +19,13 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
   const [mixOpen, setMixOpen] = useState(true);
+  const [comboOpen, setComboOpen] = useState(false);
   const [catalogCopied, setCatalogCopied] = useState(false);
   const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
+  // Combo builder: lista de { name, qty }
+  const [comboItems, setComboItems] = useState<{ name: string; qty: number }[]>([]);
+  const [comboName, setComboName] = useState('');
+  const [comboPrice, setComboPrice] = useState('');
 
   const copyPromoText = (e: React.MouseEvent, pData: any) => {
     e.stopPropagation();
@@ -302,18 +307,112 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         )}
       </div>
 
-      {/* ── Manual promo + combo ── */}
-      <div className="manual-promo-box">
-        <div className="prod-section-lbl">Promo Manual / Combo personalizado</div>
-        <div className="manual-promo-row">
-          <input placeholder="Nombre promo..." className="form-input" style={{ flex: '1', minWidth: '110px' }} value={newPromoName} onChange={e => setNewPromoName(e.target.value)} />
-          <input placeholder="Cant" type="number" min="1" className="form-input" style={{ width: '62px' }} value={newPromoQty} onChange={e => setNewPromoQty(e.target.value)} />
-          <input placeholder="S/ Total" className="form-input" style={{ width: '80px' }} value={newPromoPrice} onChange={e => setNewPromoPrice(e.target.value)} />
-          <button className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={handleAddManualPromo}>+ Añadir</button>
-          <div className="manual-promo-divider" />
-          <input placeholder="Nombre combo final..." className="form-input" style={{ flex: '1.5', minWidth: '140px' }} value={customComboName} onChange={e => setCustomComboName(e.target.value)} />
-          <input placeholder="Total S/" className="form-input" style={{ width: '80px' }} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
-        </div>
+      {/* ── Crear Combo ── */}
+      <div className="promo-block" style={{ marginTop: '0.6rem' }}>
+        <button
+          className="promo-block-header promo-block-header--toggle"
+          onClick={() => setComboOpen(v => !v)}
+          style={{ width: '100%' }}
+        >
+          <Plus size={13} />
+          <span>Crear Combo personalizado</span>
+          <ChevronDown size={13} className={`promo-mix-chevron${comboOpen ? ' promo-mix-chevron--open' : ''}`} />
+        </button>
+
+        {comboOpen && (
+          <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+
+            {/* Selector de productos del catálogo */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {comboItems.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    list={listId}
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    placeholder="Producto del catálogo..."
+                    value={item.name}
+                    onChange={e => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, name: e.target.value } : it))}
+                  />
+                  <div className="qty-stepper" style={{ height: '2rem' }}>
+                    <button className="qty-btn" onClick={() => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, qty: Math.max(1, it.qty - 1) } : it))}>−</button>
+                    <input value={item.qty} readOnly style={{ height: '2rem', width: '2rem' }} />
+                    <button className="qty-btn" onClick={() => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, qty: it.qty + 1 } : it))}>+</button>
+                  </div>
+                  <button className="pc-btn-rm" onClick={() => setComboItems(prev => prev.filter((_, idx) => idx !== i))}><X size={12} /></button>
+                </div>
+              ))}
+              <button
+                className="btn btn-secondary"
+                style={{ alignSelf: 'flex-start', fontSize: '0.78rem', padding: '0.35rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                onClick={() => setComboItems(prev => [...prev, { name: '', qty: 1 }])}
+              >
+                <Plus size={12} /> Añadir producto
+              </button>
+            </div>
+
+            {/* Nombre y precio del combo */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <input
+                className="form-input"
+                style={{ flex: 1, minWidth: '140px' }}
+                placeholder="Nombre del combo..."
+                value={comboName}
+                onChange={e => setComboName(e.target.value)}
+              />
+              <input
+                className="form-input"
+                style={{ width: '90px' }}
+                placeholder="S/ precio"
+                value={comboPrice}
+                onChange={e => setComboPrice(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                style={{ flexShrink: 0, padding: '0.4rem 1rem', fontSize: '0.82rem' }}
+                onClick={() => {
+                  const validItems = comboItems.filter(it => it.name.trim());
+                  if (validItems.length === 0) return;
+                  const pVal = parseFloat(comboPrice);
+                  const totalQty = validItems.reduce((a, it) => a + it.qty, 0);
+                  const pricePerUnit = (!isNaN(pVal) && pVal > 0 && totalQty > 0) ? pVal / totalQty : 0;
+                  const nameLabel = comboName.trim() || validItems.map(it => `${it.qty}× ${it.name}`).join(' + ');
+                  const ts = Date.now();
+                  setProducts((prev: any[]) => [
+                    ...prev,
+                    ...validItems.map((it, i) => ({
+                      id: ts + i, name: it.name, size: '', qty: it.qty,
+                      colorLines: [], promoName: nameLabel, promoPricePerUnit: pricePerUnit,
+                      promoInstance: String(ts),
+                    })),
+                  ]);
+                  setCustomComboName((prev: string) => prev ? prev + ' + ' + nameLabel : nameLabel);
+                  if (!isNaN(pVal) && pVal > 0) setPromoPrice((prev: any) => (isNaN(parseFloat(prev)) ? 0 : parseFloat(prev)) + pVal);
+                  setComboItems([]);
+                  setComboName('');
+                  setComboPrice('');
+                  setComboOpen(false);
+                }}
+              >
+                Cargar combo
+              </button>
+            </div>
+
+            {/* Nombre combo final editable */}
+            <div style={{ display: 'flex', gap: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.6rem' }}>
+              <input placeholder="Nombre combo final (editable)..." className="form-input" style={{ flex: 1 }} value={customComboName} onChange={e => setCustomComboName(e.target.value)} />
+              <input placeholder="Total S/" className="form-input" style={{ width: '80px' }} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* Siempre visible: editar combo final si ya hay algo */}
+        {!comboOpen && (customComboName || promoPrice) && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem' }}>
+            <input placeholder="Nombre combo final..." className="form-input" style={{ flex: 1 }} value={customComboName} onChange={e => setCustomComboName(e.target.value)} />
+            <input placeholder="Total S/" className="form-input" style={{ width: '80px' }} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
+          </div>
+        )}
       </div>
 
       {/* ── Product list ── */}
