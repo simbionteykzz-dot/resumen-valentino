@@ -18,12 +18,12 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [newPromoQty, setNewPromoQty] = useState("1");
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
-  const [mixOpen, setMixOpen] = useState(true);
+  const [mixOpen, setMixOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [catalogCopied, setCatalogCopied] = useState(false);
   const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
   // Combo builder: lista de { name, qty }
-  const [comboItems, setComboItems] = useState<{ name: string; qty: number }[]>([]);
+  const [comboItems, setComboItems] = useState<{ name: string; qty: number; size: string; colorLines: { color: string; qty: number }[]; colorInput: string }[]>([]);
   const [comboName, setComboName] = useState('');
   const [comboPrice, setComboPrice] = useState('');
 
@@ -322,30 +322,110 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         {comboOpen && (
           <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
 
-            {/* Selector de productos del catálogo */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {comboItems.map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                  <input
-                    list={listId}
-                    className="form-input"
-                    style={{ flex: 1 }}
-                    placeholder="Producto del catálogo..."
-                    value={item.name}
-                    onChange={e => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, name: e.target.value } : it))}
-                  />
-                  <div className="qty-stepper" style={{ height: '2rem' }}>
-                    <button className="qty-btn" onClick={() => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, qty: Math.max(1, it.qty - 1) } : it))}>−</button>
-                    <input value={item.qty} readOnly style={{ height: '2rem', width: '2rem' }} />
-                    <button className="qty-btn" onClick={() => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, qty: it.qty + 1 } : it))}>+</button>
-                  </div>
-                  <button className="pc-btn-rm" onClick={() => setComboItems(prev => prev.filter((_, idx) => idx !== i))}><X size={12} /></button>
-                </div>
+            {/* Botones rápidos del catálogo */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+              {CATALOGO.map(name => (
+                <button
+                  key={name}
+                  className="prod-color-chip"
+                  style={{ fontSize: '0.72rem', padding: '0.28rem 0.6rem', borderRadius: '20px' }}
+                  onClick={() => setComboItems(prev => [...prev, { name, qty: 1, size: '', colorLines: [], colorInput: '' }])}
+                >
+                  {name}
+                </button>
               ))}
+            </div>
+
+            {/* Selector de productos del catálogo */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {comboItems.map((item, i) => {
+                const cfgKey = normalizePolName(item.name);
+                const cfg = cfgKey ? VARIANTES[cfgKey] : null;
+                const tallas = cfg?.tallas || (isBravos ? ['S', 'M', 'L'] : TALLAS_SMLXL);
+                const colorList = cfg?.colores ? cfg.colores.split(',').map((c: string) => c.trim()) : [];
+                const updateItem = (patch: any) => setComboItems(prev => prev.map((it, idx) => idx === i ? { ...it, ...patch } : it));
+                const addColorToItem = (color: string) => {
+                  if (item.colorLines.find(cl => cl.color === color)) return;
+                  updateItem({ colorLines: [...item.colorLines, { color, qty: 1 }] });
+                };
+                const removeColorFromItem = (color: string) => updateItem({ colorLines: item.colorLines.filter(cl => cl.color !== color) });
+                const updateColorQtyInItem = (color: string, delta: number) => updateItem({
+                  colorLines: item.colorLines.map(cl => cl.color === color ? { ...cl, qty: Math.max(1, cl.qty + delta) } : cl),
+                });
+                return (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'var(--surface2)', borderRadius: '8px', padding: '0.5rem 0.6rem' }}>
+                    {/* Fila nombre + qty + quitar */}
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <input
+                        list={listId}
+                        className="form-input"
+                        style={{ flex: 1 }}
+                        placeholder="Producto del catálogo..."
+                        value={item.name}
+                        onChange={e => updateItem({ name: e.target.value, size: '', colorLines: [], colorInput: '' })}
+                      />
+                      <button className="pc-btn-rm" onClick={() => setComboItems(prev => prev.filter((_, idx) => idx !== i))}><X size={12} /></button>
+                    </div>
+                    {/* Talla global */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.63rem', color: 'var(--muted)', fontWeight: 600, minWidth: '34px' }}>Talla</span>
+                      <button className="prod-size-btn" aria-pressed={item.size === ''} onClick={() => updateItem({ size: '' })} style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}>—</button>
+                      {tallas.map((t: string) => (
+                        <button key={t} className="prod-size-btn" aria-pressed={item.size === t}
+                          onClick={() => updateItem({ size: item.size === t ? '' : t })}
+                          style={{ minWidth: '26px', padding: '0.18rem 0.4rem', fontSize: '0.68rem' }}
+                        >{t}</button>
+                      ))}
+                    </div>
+                    {/* Chips de colores disponibles */}
+                    {colorList.length > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.63rem', color: 'var(--muted)', fontWeight: 600, minWidth: '34px' }}>Color</span>
+                        {colorList.map((c: string) => (
+                          <button key={c} className="prod-color-chip"
+                            style={{ fontSize: '0.68rem', padding: '0.2rem 0.5rem' }}
+                            onClick={() => addColorToItem(c)}
+                          >{c}</button>
+                        ))}
+                      </div>
+                    )}
+                    {/* Input color libre */}
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <input
+                        className="form-input"
+                        style={{ flex: 1, maxWidth: '150px', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                        placeholder="Color libre..."
+                        value={item.colorInput}
+                        onChange={e => updateItem({ colorInput: e.target.value })}
+                        onKeyDown={e => { if (e.key === 'Enter' && item.colorInput.trim()) { addColorToItem(item.colorInput.trim()); updateItem({ colorInput: '' }); } }}
+                      />
+                      <button className="btn btn-secondary" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
+                        onClick={() => { if (item.colorInput.trim()) { addColorToItem(item.colorInput.trim()); updateItem({ colorInput: '' }); } }}
+                      >+ Color</button>
+                    </div>
+                    {/* Colores seleccionados con qty */}
+                    {item.colorLines.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.2rem' }}>
+                        {item.colorLines.map(cl => (
+                          <div key={cl.color} className="pc-color-line" style={{ gap: '0.4rem' }}>
+                            <span className="pc-color-name" style={{ flex: 1 }}>{cl.color}</span>
+                            <div className="qty-stepper" style={{ height: '1.8rem' }}>
+                              <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, -1)}>−</button>
+                              <input value={cl.qty} readOnly style={{ height: '1.8rem', width: '1.8rem' }} />
+                              <button className="qty-btn" onClick={() => updateColorQtyInItem(cl.color, 1)}>+</button>
+                            </div>
+                            <button className="pc-color-rm" onClick={() => removeColorFromItem(cl.color)}><X size={11} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <button
                 className="btn btn-secondary"
                 style={{ alignSelf: 'flex-start', fontSize: '0.78rem', padding: '0.35rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                onClick={() => setComboItems(prev => [...prev, { name: '', qty: 1 }])}
+                onClick={() => setComboItems(prev => [...prev, { name: '', qty: 1, size: '', colorLines: [], colorInput: '' }])}
               >
                 <Plus size={12} /> Añadir producto
               </button>
@@ -374,17 +454,26 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                   const validItems = comboItems.filter(it => it.name.trim());
                   if (validItems.length === 0) return;
                   const pVal = parseFloat(comboPrice);
-                  const totalQty = validItems.reduce((a, it) => a + it.qty, 0);
+                  const totalQty = validItems.reduce((a, it) =>
+                    a + (it.colorLines.length > 0 ? it.colorLines.reduce((s, cl) => s + cl.qty, 0) : it.qty), 0);
                   const pricePerUnit = (!isNaN(pVal) && pVal > 0 && totalQty > 0) ? pVal / totalQty : 0;
                   const nameLabel = comboName.trim() || validItems.map(it => `${it.qty}× ${it.name}`).join(' + ');
                   const ts = Date.now();
                   setProducts((prev: any[]) => [
                     ...prev,
-                    ...validItems.map((it, i) => ({
-                      id: ts + i, name: it.name, size: '', qty: it.qty,
-                      colorLines: [], promoName: nameLabel, promoPricePerUnit: pricePerUnit,
-                      promoInstance: String(ts),
-                    })),
+                    ...validItems.map((it, i) => {
+                      const totalQtyItem = it.colorLines.length > 0
+                        ? it.colorLines.reduce((a, cl) => a + cl.qty, 0)
+                        : it.qty;
+                      return {
+                        id: ts + i, name: it.name, size: it.size || '', qty: totalQtyItem,
+                        colorLines: it.colorLines.length > 0
+                          ? it.colorLines.map(cl => ({ color: cl.color, qty: cl.qty, size: it.size || undefined }))
+                          : [],
+                        promoName: nameLabel, promoPricePerUnit: pricePerUnit,
+                        promoInstance: String(ts),
+                      };
+                    }),
                   ]);
                   setCustomComboName((prev: string) => prev ? prev + ' + ' + nameLabel : nameLabel);
                   if (!isNaN(pVal) && pVal > 0) setPromoPrice((prev: any) => (isNaN(parseFloat(prev)) ? 0 : parseFloat(prev)) + pVal);
@@ -392,6 +481,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                   setComboName('');
                   setComboPrice('');
                   setComboOpen(false);
+
                 }}
               >
                 Cargar combo
@@ -416,7 +506,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
       </div>
 
       {/* ── Product list ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.6rem' }}>
         {products.length === 0 && (
           <div className="prod-empty">
             <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}><Package size={32} /></div>

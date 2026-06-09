@@ -125,18 +125,22 @@ export default function PlanillasPanel({ filteredSales, allSales, dateFrom, date
       return s.fecha >= desde && s.fecha <= hasta;
     });
     const datos = salesToDatos(salesEnRango, getRegion, getEstado) as Record<string, unknown>[];
-    const hoja = await createHoja(
-      addHojaLibroId,
-      nuevaHojaNombre.trim(),
-      brandFilter === 'todas' ? 'Todas' : brandFilter.toUpperCase(),
-      desde,
-      hasta,
-      datos
-    );
-    if (hoja) {
+    const ROWS_PER_SHEET = 40;
+    const marca = brandFilter === 'todas' ? 'Todas' : brandFilter.toUpperCase();
+    const nombreBase = nuevaHojaNombre.trim();
+    const chunks: Record<string, unknown>[][] = [];
+    for (let i = 0; i < Math.max(datos.length, 1); i += ROWS_PER_SHEET)
+      chunks.push(datos.slice(i, i + ROWS_PER_SHEET));
+    const nuevasHojas: HojaPlanilla[] = [];
+    for (let ci = 0; ci < chunks.length; ci++) {
+      const nombre = chunks.length > 1 ? `${nombreBase} (${ci + 1})` : nombreBase;
+      const hoja = await createHoja(addHojaLibroId, nombre, marca, desde, hasta, chunks[ci]);
+      if (hoja) nuevasHojas.push(hoja);
+    }
+    if (nuevasHojas.length > 0) {
       setHojasPorLibro(prev => ({
         ...prev,
-        [addHojaLibroId]: [...(prev[addHojaLibroId] || []), hoja],
+        [addHojaLibroId]: [...(prev[addHojaLibroId] || []), ...nuevasHojas],
       }));
     }
     setNuevaHojaNombre('');
@@ -164,13 +168,27 @@ export default function PlanillasPanel({ filteredSales, allSales, dateFrom, date
     }
     if (hojas.length === 0) { setSaving(null); return; }
 
+    const ROWS_PER_SHEET = 40;
     const wb = XLSX.utils.book_new();
+    const usedNames = new Set<string>();
     hojas.forEach(hoja => {
-      const ws = XLSX.utils.json_to_sheet(hoja.datos as Record<string, unknown>[]);
-      // Auto column widths
-      const cols = Object.keys(hoja.datos[0] || {}).map(k => ({ wch: Math.max(k.length, 12) }));
-      ws['!cols'] = cols;
-      XLSX.utils.book_append_sheet(wb, ws, hoja.nombre.substring(0, 31));
+      const datos = hoja.datos as Record<string, unknown>[];
+      const chunks: Record<string, unknown>[][] = [];
+      for (let i = 0; i < Math.max(datos.length, 1); i += ROWS_PER_SHEET)
+        chunks.push(datos.slice(i, i + ROWS_PER_SHEET));
+      chunks.forEach((chunk, ci) => {
+        const rawName = chunks.length > 1
+          ? `${hoja.nombre} (${ci + 1})`.substring(0, 31)
+          : hoja.nombre.substring(0, 31);
+        let sheetName = rawName;
+        let suffix = 2;
+        while (usedNames.has(sheetName)) sheetName = `${rawName.substring(0, 28)} _${suffix++}`;
+        usedNames.add(sheetName);
+        const ws = XLSX.utils.json_to_sheet(chunk);
+        const cols = Object.keys(chunk[0] || datos[0] || {}).map(k => ({ wch: Math.max(k.length, 12) }));
+        ws['!cols'] = cols;
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      });
     });
     XLSX.writeFile(wb, `${libro.nombre}.xlsx`);
     setSaving(null);

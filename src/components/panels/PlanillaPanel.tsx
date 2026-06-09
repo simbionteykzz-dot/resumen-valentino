@@ -243,23 +243,60 @@ export default function PlanillaPanel({
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const m = 5;
+      const ROWS_PER_PAGE = 40;
 
       const targetPlanilla = document.getElementById(exportId);
       if (targetPlanilla) {
-        const clone = targetPlanilla.cloneNode(true) as HTMLElement;
-        clone.classList.add('print-mode');
-        Object.assign(clone.style, {
-          position: 'fixed', left: '-9999px', top: '0',
-          width: '1200px', background: '#fff', padding: '0', margin: '0 auto',
-        });
-        document.body.appendChild(clone);
-        await new Promise(resolve => setTimeout(resolve, 50));
-        const canvas = await html2canvas(clone, {
-          backgroundColor: '#ffffff', scale: 3, useCORS: true,
-          logging: false, width: 1200, windowWidth: 1200,
-        });
-        clone.remove();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', m, m, pageW - m * 2, pageH - m * 2);
+        const sourceTable = targetPlanilla.querySelector('table.sales-sheet');
+        const thead = sourceTable?.querySelector('thead');
+        const allRows = Array.from(sourceTable?.querySelectorAll('tbody tr') ?? []);
+        const chunks: Element[][] = [];
+        for (let i = 0; i < Math.max(allRows.length, 1); i += ROWS_PER_PAGE)
+          chunks.push(allRows.slice(i, i + ROWS_PER_PAGE));
+
+        for (let ci = 0; ci < chunks.length; ci++) {
+          if (ci > 0) pdf.addPage();
+          const wrapper = document.createElement('div');
+          wrapper.classList.add('print-mode');
+          Object.assign(wrapper.style, {
+            position: 'fixed', left: '-9999px', top: '0',
+            width: '1200px', background: '#fff', padding: '0', margin: '0 auto',
+          });
+          const table = document.createElement('table');
+          table.className = 'sales-sheet';
+          if (thead) table.appendChild(thead.cloneNode(true));
+          const tbody = document.createElement('tbody');
+          chunks[ci].forEach(tr => tbody.appendChild(tr.cloneNode(true)));
+          // Rellenar con filas vacías para que todos los chunks tengan 40 filas
+          const filledCount = chunks[ci].length;
+          const startN = ci * ROWS_PER_PAGE + filledCount + 1;
+          for (let r = filledCount; r < ROWS_PER_PAGE; r++) {
+            const emptyTr = document.createElement('tr');
+            const numTd = document.createElement('td');
+            numTd.className = 'col-n';
+            numTd.textContent = String(startN + (r - filledCount));
+            emptyTr.appendChild(numTd);
+            for (let c = 1; c < 18; c++) {
+              const td = document.createElement('td');
+              if (c === 17) td.className = 'col-del';
+              emptyTr.appendChild(td);
+            }
+            tbody.appendChild(emptyTr);
+          }
+          table.appendChild(tbody);
+          const sheetWrap = document.createElement('div');
+          sheetWrap.className = 'sheet-wrap';
+          sheetWrap.appendChild(table);
+          wrapper.appendChild(sheetWrap);
+          document.body.appendChild(wrapper);
+          await new Promise(resolve => setTimeout(resolve, 50));
+          const canvas = await html2canvas(wrapper, {
+            backgroundColor: '#ffffff', scale: 3, useCORS: true,
+            logging: false, width: 1200, windowWidth: 1200,
+          });
+          wrapper.remove();
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', m, m, pageW - m * 2, pageH - m * 2);
+        }
       }
 
       // Siempre incluir cierre de caja como página 2
