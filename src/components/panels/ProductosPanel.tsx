@@ -124,8 +124,18 @@ export default function ProductosPanel({ products, setProducts, customComboName,
       } : p));
 
   const toggleMixedSizes = (id: number) =>
-    setProducts(products.map((p: any) =>
-      p.id === id ? { ...p, mixedSizes: !p.mixedSizes } : p));
+    setProducts(products.map((p: any) => {
+      if (p.id !== id) return p;
+      const turningOff = p.mixedSizes;
+      return {
+        ...p,
+        mixedSizes: !p.mixedSizes,
+        // Al desactivar, limpia las tallas individuales de cada color
+        colorLines: turningOff
+          ? p.colorLines.map((cl: any) => ({ ...cl, size: undefined }))
+          : p.colorLines,
+      };
+    }));
 
   const getColorInput = (id: number) => colorInputs[id] ?? '';
   const setColorInput = (id: number, val: string) => setColorInputs(prev => ({ ...prev, [id]: val }));

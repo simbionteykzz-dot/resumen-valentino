@@ -87,9 +87,9 @@ export function getProductString(
         } else {
           productLines.push(`- ${p.name}${sizePart}`);
         }
-        p.colorLines.forEach(cl => {
+        p.colorLines.forEach((cl: any) => {
           let sub = '  - ' + cl.color.toUpperCase();
-          if (cl.size) sub += ` talla ${cl.size}`;
+          if ((p as any).mixedSizes && cl.size) sub += ` talla ${cl.size}`;
           if (cl.qty !== 1) sub += ` × ${cl.qty}`;
           subs.push(sub);
         });
