@@ -171,6 +171,13 @@ export const BRV_PROMOS_DATA: Record<string, { name: string; comboData: string; 
   "bratz_3_99":   { name: "Bratz 3×99",          comboData: "PANTALON BRATZ 3 X 99",   price: 99, list: [{ n: "PANTALON BRATZ",   q: 3 }] },
   "opra_3_99":    { name: "Opra 3×99",           comboData: "PANTALON OPRA 3 X 99",    price: 99, list: [{ n: "PANTALON OPRA",    q: 3 }] },
   "clasicos_regalo": { name: "Clásicos de Regalo", comboData: "CLASICOS DE REGALO",   price: 0,  list: [{ n: "CLASICOS DE REGALO", q: 1 }] },
+  // ── Promo 50 Mil Seguidores ──────────────────────────────────────────────
+  "50mil_neru":   { name: "50Mil — Conjunto Neru",  comboData: "PROMO 50MIL SEGUIDORES — CONJUNTO NERU (POLERA NERU + PANTALON BRATZ)",   price: 0, list: [{ n: "POLERA NERU", q: 1 }, { n: "PANTALON BRATZ", q: 1 }] },
+  "50mil_boxy":   { name: "50Mil — Conjunto Boxy",  comboData: "PROMO 50MIL SEGUIDORES — CONJUNTO BOXY (POLERA BOXYFIT + PANTALON BRATZ)", price: 0, list: [{ n: "POLERA BOXYFIT", q: 1 }, { n: "PANTALON BRATZ", q: 1 }] },
+  // ── Promo Boxyfit ────────────────────────────────────────────────────────
+  "boxyfit_2_99": { name: "Promo Boxyfit 2 Conjuntos×99", comboData: "PROMO BOXYFIT — 2 CONJUNTOS BOXYFIT X 99 SOLES", price: 99, list: [{ n: "POLERA BOXYFIT", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
+  // ── Promo Neru ───────────────────────────────────────────────────────────
+  "neru_2_119":   { name: "Promo Neru 2 Conjuntos×119",   comboData: "PROMO NERU — 2 CONJUNTOS NERU X 119 SOLES",   price: 119, list: [{ n: "POLERA NERU", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
 };
 
 // ────────────────────────────────────────────────────────────────────────────
