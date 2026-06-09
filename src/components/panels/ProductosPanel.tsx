@@ -117,6 +117,16 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         ...p, colorLines: p.colorLines.map((c: any) => c.color === color ? { ...c, qty: Math.max(1, c.qty + delta) } : c),
       } : p));
 
+  const updateColorSize = (id: number, color: string, size: string) =>
+    setProducts(products.map((p: any) =>
+      p.id === id ? {
+        ...p, colorLines: p.colorLines.map((c: any) => c.color === color ? { ...c, size } : c),
+      } : p));
+
+  const toggleMixedSizes = (id: number) =>
+    setProducts(products.map((p: any) =>
+      p.id === id ? { ...p, mixedSizes: !p.mixedSizes } : p));
+
   const getColorInput = (id: number) => colorInputs[id] ?? '';
   const setColorInput = (id: number, val: string) => setColorInputs(prev => ({ ...prev, [id]: val }));
   const handleAddColorManual = (id: number) => {
@@ -325,14 +335,51 @@ export default function ProductosPanel({ products, setProducts, customComboName,
                 <button className="pc-btn-rm" onClick={() => removeProduct(p.id)} title="Quitar"><X size={13} /></button>
               </div>
               <div className="pc-row pc-controls-row">
-                <div>
-                  <div className="pc-lbl">Talla</div>
-                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                    <button className="prod-size-btn" aria-pressed={p.size === ""} onClick={() => updateProduct(p.id, 'size', "")}>—</button>
-                    {tallas.map((t: string) => (
-                      <button key={t} className="prod-size-btn" aria-pressed={p.size === t} onClick={() => updateProduct(p.id, 'size', t)}>{t}</button>
-                    ))}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.3rem' }}>
+                    <span className="pc-lbl" style={{ margin: 0 }}>Talla</span>
+                    {hasColorLines && (
+                      <button
+                        onClick={() => toggleMixedSizes(p.id)}
+                        title={p.mixedSizes ? 'Una talla para todos' : 'Talla individual por color'}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.3rem',
+                          fontSize: '0.63rem', fontWeight: 700,
+                          padding: '0.15rem 0.5rem', borderRadius: '20px', cursor: 'pointer', border: 'none',
+                          background: p.mixedSizes ? 'rgba(124,58,237,0.15)' : 'var(--surface2)',
+                          color: p.mixedSizes ? 'rgb(124,58,237)' : 'var(--muted)',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <span style={{
+                          width: '22px', height: '12px', borderRadius: '6px',
+                          background: p.mixedSizes ? 'rgb(124,58,237)' : 'var(--border)',
+                          position: 'relative', display: 'inline-block', flexShrink: 0, transition: 'background 0.15s',
+                        }}>
+                          <span style={{
+                            position: 'absolute', top: '2px',
+                            left: p.mixedSizes ? '12px' : '2px',
+                            width: '8px', height: '8px', borderRadius: '50%',
+                            background: '#fff', transition: 'left 0.15s',
+                          }} />
+                        </span>
+                        Tallas mixtas
+                      </button>
+                    )}
                   </div>
+                  {!p.mixedSizes && (
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                      <button className="prod-size-btn" aria-pressed={p.size === ""} onClick={() => updateProduct(p.id, 'size', "")}>—</button>
+                      {tallas.map((t: string) => (
+                        <button key={t} className="prod-size-btn" aria-pressed={p.size === t} onClick={() => updateProduct(p.id, 'size', t)}>{t}</button>
+                      ))}
+                    </div>
+                  )}
+                  {p.mixedSizes && (
+                    <div style={{ fontSize: '0.67rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                      Elige la talla en cada color ↓
+                    </div>
+                  )}
                 </div>
                 {!hasColorLines && (
                   <div>
@@ -363,8 +410,21 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               {hasColorLines && (
                 <div className="pc-color-lines">
                   {p.colorLines.map((cL: any) => (
-                    <div key={cL.color} className="pc-color-line">
-                      <span className="pc-color-name">{cL.color}</span>
+                    <div key={cL.color} className="pc-color-line" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+                      <span className="pc-color-name" style={{ flex: 1, minWidth: '70px' }}>{cL.color}</span>
+                      {p.mixedSizes && (
+                        <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
+                          {tallas.map((t: string) => (
+                            <button
+                              key={t}
+                              className="prod-size-btn"
+                              aria-pressed={cL.size === t}
+                              onClick={() => updateColorSize(p.id, cL.color, t)}
+                              style={{ minWidth: '28px', padding: '0.2rem 0.4rem', fontSize: '0.7rem' }}
+                            >{t}</button>
+                          ))}
+                        </div>
+                      )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span className="pc-lbl" style={{ margin: 0 }}>Cant.</span>
                         <div className="qty-stepper" style={{ height: '2rem' }}>

@@ -20,6 +20,7 @@ export interface CuentaData {
 export interface ColorLine {
   color: string;
   qty: number;
+  size?: string;
 }
 
 export interface Product {

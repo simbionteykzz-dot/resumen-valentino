@@ -89,6 +89,7 @@ export function getProductString(
         }
         p.colorLines.forEach(cl => {
           let sub = '  - ' + cl.color.toUpperCase();
+          if (cl.size) sub += ` talla ${cl.size}`;
           if (cl.qty !== 1) sub += ` × ${cl.qty}`;
           subs.push(sub);
         });
