@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import * as XLSX from 'xlsx';
 import { Printer, FileSpreadsheet, Lightbulb, BarChart3, FileText, Trash2, RotateCcw, ChevronDown, ChevronUp, FileDown, AlertTriangle, Copy } from 'lucide-react';
 import type { Profile } from '../../types';
 
@@ -236,6 +237,76 @@ export default function PlanillaPanel({
   const emptyRowsCount = Math.max(0, 40 - visibleSales.length);
   const emptyRows = Array.from({ length: emptyRowsCount });
 
+  const exportXlsx = () => {
+    const datos = visibleSales.map((s: any) => {
+      const detalle: string = s.detalle ?? '';
+      const combo: string = s.combo ?? '';
+      const totalTotal = Number(s.totalTotal) || 0;
+      const qtyN = s.qtyN || 0;
+
+      // Parsear productos del campo detalle
+      const products: { name: string; qty: number; price: number }[] = [];
+      const lines = detalle.split('\n');
+      for (const line of lines) {
+        const t = line.trim();
+        const mNx = t.match(/^-\s+(\d+)[xX×]\s+(.+)/);
+        const mBold = t.match(/^\*(.+?)\*$/);
+        const mDash = t.match(/^-\s+(.+)/);
+        if (mNx) {
+          products.push({ name: mNx[2].replace(/\s*\(talla.*?\)/i, '').trim(), qty: parseInt(mNx[1]), price: 0 });
+        } else if (mBold && !t.includes('X') && mBold[1].length < 60) {
+          const n = mBold[1].trim();
+          if (!n.includes('\n') && products.length < 3) products.push({ name: n, qty: 1, price: 0 });
+        } else if (mDash && !t.startsWith('- -') && mDash[1].length < 60) {
+          const n = mDash[1].replace(/\s*\(talla.*?\)/i, '').replace(/\d+x\s*/i, '').trim();
+          if (n && !n.match(/^[\d.]+$/) && products.length < 3) products.push({ name: n, qty: 1, price: 0 });
+        }
+        if (products.length >= 3) break;
+      }
+      if (products.length === 0 && combo) products.push({ name: combo, qty: qtyN || 1, price: totalTotal });
+      const totalQty = products.reduce((a, p) => a + p.qty, 0) || qtyN || 1;
+      const unitPrice = totalQty > 0 && totalTotal > 0 ? totalTotal / totalQty : 0;
+      products.forEach(p => { p.price = unitPrice * p.qty; });
+
+      const p1 = products[0], p2 = products[1], p3 = products[2];
+      const limaOProv = s.limaMark ? 'LIMA' : s.provMark ? 'PROVINCIA' : '';
+
+      return {
+        'Marca temporal':       s.fecha ? `${s.fecha} ${s.hora ?? ''}`.trim() : selectedDate,
+        'EMPRESA':              (s.marcaLabel === 'BRV') ? 'BRAVOS' : 'OVERSHARK',
+        'VENDEDOR':             vendorLabel,
+        'CELULAR':              '',
+        'LIMA O PROVINCIA':     limaOProv,
+        'NOMBRE DE CLIENTE':    s.nom ?? '',
+        'NUMERO DE CELULAR':    s.cel ?? '',
+        'DNI':                  s.dni ?? '',
+        'PRODUCTO (1)':         p1?.name ?? '',
+        'CANTIDAD (1)':         p1?.qty ?? '',
+        'PRECIO (1)':           p1 && p1.price > 0 ? Number(p1.price.toFixed(2)) : '',
+        'PRODUCTO (2)':         p2?.name ?? '',
+        'CANTIDAD (2)':         p2?.qty ?? '',
+        'PRECIO (2)':           p2 && p2.price > 0 ? Number(p2.price.toFixed(2)) : '',
+        'PRODUCTO (3)':         p3?.name ?? '',
+        'CANTIDAD (3)':         p3?.qty ?? '',
+        'PRECIO (3)':           p3 && p3.price > 0 ? Number(p3.price.toFixed(2)) : '',
+        'MONTO TOTAL':          totalTotal || '',
+        'A CUENTA (DEBE)':      s.resta || '',
+        'SEPARO':               s.separo || '',
+        'METODO DE PAGO':       s.metodoPago ?? '',
+        'CUENTA DE ABONO':      s.codigoYape ?? '',
+        'CODIGO DE PUBLICIDAD': s.codigoPublicidad ?? '',
+        'ESTADO DE PEDIDO':     s.separo ? 'SEPARO' : s.pagoCompletoTxt ? 'PAGO COMPLETO' : 'CONTRA ENTREGA',
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datos);
+    ws['!cols'] = Object.keys(datos[0] ?? {}).map(k => ({ wch: Math.max(k.length, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+    const fileName = `Planilla_${selectedDate}_${vendorLabel.replace(/\s+/g, '_')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   const exportPdf = async () => {
     setExporting(true);
     try {
@@ -455,6 +526,12 @@ export default function PlanillaPanel({
               fontSize: '0.85rem', cursor: 'pointer',
             }}
           />
+          <button
+            onClick={exportXlsx}
+            disabled={exporting || loadingSync || visibleSales.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #1a7a4a', background: '#1a7a4a', color: '#fff', fontWeight: 800, fontSize: '0.85rem', cursor: visibleSales.length === 0 ? 'not-allowed' : 'pointer', opacity: visibleSales.length === 0 ? 0.5 : 1 }}>
+            <FileSpreadsheet size={16} /> Excel
+          </button>
           <button className="btn btn-primary" onClick={exportPdf} disabled={exporting || loadingSync} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {exporting ? '⏳ Generando PDF...' : <><Printer size={16} /> Exportar PDF</>}
           </button>
