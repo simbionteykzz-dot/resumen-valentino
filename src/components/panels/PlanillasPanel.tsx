@@ -27,24 +27,85 @@ const S = {
   surface: 'rgba(255,255,255,0.97)',
 };
 
+// Extrae hasta N productos del campo detalle (formato texto WhatsApp)
+function parseProductosFromDetalle(detalle: string, combo: string, totalTotal: number, qtyN: number): { name: string; qty: number; price: number }[] {
+  const products: { name: string; qty: number; price: number }[] = [];
+  if (!detalle && !combo) return products;
+
+  // Intentar parsear desde detalle (formato: "- NxNombre" o "- Nombre")
+  const lines = (detalle || '').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Líneas de producto: "- Nx Nombre" o "*Nombre*" o "- Nombre"
+    const matchNx = trimmed.match(/^-\s+(\d+)[xX×]\s+(.+)/);
+    const matchBold = trimmed.match(/^\*(.+?)\*$/);
+    const matchDash = trimmed.match(/^-\s+(.+)/);
+    if (matchNx) {
+      products.push({ name: matchNx[2].replace(/\s*\(talla.*?\)/i, '').trim(), qty: parseInt(matchNx[1]), price: 0 });
+    } else if (matchBold && !trimmed.includes('X') && matchBold[1].length < 60) {
+      // bold lines como "*Camiseros*" — nombre de producto
+      const boldName = matchBold[1].trim();
+      if (!boldName.includes('\n') && products.length < 3) {
+        products.push({ name: boldName, qty: 1, price: 0 });
+      }
+    } else if (matchDash && !trimmed.startsWith('- -') && matchDash[1].length < 60) {
+      const dashName = matchDash[1].replace(/\s*\(talla.*?\)/i, '').replace(/\d+x\s*/i, '').trim();
+      if (dashName && !dashName.match(/^[\d.]+$/) && products.length < 3) {
+        products.push({ name: dashName, qty: 1, price: 0 });
+      }
+    }
+    if (products.length >= 3) break;
+  }
+
+  // Si no se parseó nada, usar combo como nombre del producto 1
+  if (products.length === 0 && combo) {
+    products.push({ name: combo, qty: qtyN || 1, price: totalTotal || 0 });
+  }
+
+  // Distribuir precio proporcionalmente (precio unitario = totalTotal / qtyTotal)
+  const totalQty = products.reduce((a, p) => a + p.qty, 0) || qtyN || 1;
+  const unitPrice = totalQty > 0 && totalTotal > 0 ? totalTotal / totalQty : 0;
+  products.forEach(p => { p.price = unitPrice * p.qty; });
+
+  return products;
+}
+
 function salesToDatos(sales: AdminSale[], getRegion: Props['getRegion'], getEstado: Props['getEstado']) {
-  return sales.map(s => ({
-    'Fecha': s.fecha ?? '',
-    'Empresa': s.marcaLabel || 'OVER',
-    'Vendedor': s.vendorName ?? '',
-    'Hora': s.hora ?? '',
-    'Región': getRegion(s),
-    'Cliente': s.nom ?? '',
-    'Celular': s.cel ?? '',
-    'DNI': s.dni ?? '',
-    'Total S/': Number(s.totalTotal) || 0,
-    'Debe': s.resta || '',
-    'Separo': s.separo || '',
-    'Estado': getEstado(s),
-    'Cod. Publicidad': s.codigoPublicidad ?? '',
-    'Met. Pago': s.metodoPago ?? '',
-    'Combo': s.combo ?? '',
-  }));
+  return sales.map(s => {
+    const prods = parseProductosFromDetalle(s.detalle ?? '', s.combo ?? '', Number(s.totalTotal) || 0, s.qtyN || 0);
+    const p1 = prods[0];
+    const p2 = prods[1];
+    const p3 = prods[2];
+    const region = getRegion(s);
+    const limaOProv = s.limaMark ? 'LIMA' : s.provMark ? 'PROVINCIA' : region || '';
+
+    return {
+      'Marca temporal':        s.fecha ? `${s.fecha} ${s.hora ?? ''}`.trim() : '',
+      'EMPRESA':               s.marcaLabel === 'BRV' ? 'BRAVOS' : 'OVERSHARK',
+      'VENDEDOR':              s.vendorName ?? '',
+      'CELULAR':               '',
+      'LIMA O PROVINCIA':      limaOProv,
+      'NOMBRE DE CLIENTE':     s.nom ?? '',
+      'NUMERO DE CELULAR':     s.cel ?? '',
+      'DNI':                   s.dni ?? '',
+      'PRODUCTO (1)':          p1?.name ?? '',
+      'CANTIDAD (1)':          p1?.qty ?? '',
+      'PRECIO (1)':            p1 && p1.price > 0 ? Number(p1.price.toFixed(2)) : '',
+      'PRODUCTO (2)':          p2?.name ?? '',
+      'CANTIDAD (2)':          p2?.qty ?? '',
+      'PRECIO (2)':            p2 && p2.price > 0 ? Number(p2.price.toFixed(2)) : '',
+      'PRODUCTO (3)':          p3?.name ?? '',
+      'CANTIDAD (3)':          p3?.qty ?? '',
+      'PRECIO (3)':            p3 && p3.price > 0 ? Number(p3.price.toFixed(2)) : '',
+      'MONTO TOTAL':           Number(s.totalTotal) || '',
+      'A CUENTA (DEBE)':       s.resta || '',
+      'SEPARO':                s.separo || '',
+      'METODO DE PAGO':        s.metodoPago ?? '',
+      'CUENTA DE ABONO':       s.codigoYape ?? '',
+      'CODIGO DE PUBLICIDAD':  s.codigoPublicidad ?? '',
+      'ESTADO DE PEDIDO':      getEstado(s),
+    };
+  });
 }
 
 export default function PlanillasPanel({ filteredSales, allSales, dateFrom, dateTo, brandFilter, getRegion, getEstado }: Props) {
