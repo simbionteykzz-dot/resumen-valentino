@@ -27,35 +27,51 @@ const S = {
   surface: 'rgba(255,255,255,0.97)',
 };
 
-// Extrae hasta 3 productos del campo detalle (formato WhatsApp generado por getProductString)
+// Parsea hasta 3 productos desde el campo detalle (texto WhatsApp) o combo
 function parseProductosFromDetalle(detalle: string, combo: string, totalTotal: number, qtyN: number): { name: string; qty: number; price: number }[] {
   const products: { name: string; qty: number; price: number }[] = [];
 
   if (detalle) {
     const lines = detalle.split('\n');
+    let inPromo = false;
+
     for (const line of lines) {
       const t = line.trim();
-      // Línea principal de producto: *NOMBRE* o *NOMBRE qty X total*
       const mBold = t.match(/^\*(.+?)\*$/);
+
       if (mBold) {
         const inner = mBold[1];
-        // Formato con qty y precio: "NOMBRE 5 X 495" o similar
         const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
         if (mQtyPrice) {
+          inPromo = false;
           const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
-          const qty = parseInt(mQtyPrice[2]);
-          const price = parseFloat(mQtyPrice[3]);
-          if (products.length < 3) products.push({ name, qty, price });
+          if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
         } else {
-          const name = inner.replace(/\s*\(talla.*?\)/i, '').trim();
-          if (name && name.length < 60 && products.length < 3)
-            products.push({ name, qty: qtyN || 1, price: 0 });
+          // Cabecera de promo — leer hijos en las líneas siguientes
+          inPromo = true;
         }
+        continue;
+      }
+
+      if (inPromo) {
+        const mDash = t.match(/^-\s+(.+)/);
+        if (mDash) {
+          const rawName = mDash[1].replace(/\s*\(talla.*?\)/i, '').trim();
+          const isColorLine = /^[A-ZÁÉÍÓÚÑ\s]+\s*[×x]\s*\d+$/i.test(rawName) || /^\s{2,}/.test(line);
+          if (!isColorLine && rawName && rawName.length < 60 && products.length < 3) {
+            const mQtyName = rawName.match(/^(\d+)[xX×]\s*(.+)/);
+            if (mQtyName) {
+              products.push({ name: mQtyName[2].trim(), qty: parseInt(mQtyName[1]), price: 0 });
+            } else {
+              products.push({ name: rawName, qty: 1, price: 0 });
+            }
+          }
+        }
+        continue;
       }
     }
   }
 
-  // Fallback: usar combo
   if (products.length === 0) {
     if (combo) {
       const mCombo = combo.match(/^(\d+)(?:\s+[xX×]\s+([\d.]+))?\s+(.+)/);
@@ -71,14 +87,13 @@ function parseProductosFromDetalle(detalle: string, combo: string, totalTotal: n
     }
   }
 
-  // Distribuir precio restante en productos con price=0
   const priceAssigned = products.reduce((a, p) => a + p.price, 0);
   const remaining = totalTotal - priceAssigned;
   const zeroPriced = products.filter(p => p.price === 0);
   if (zeroPriced.length > 0 && remaining > 0) {
     const totalZeroQty = zeroPriced.reduce((a, p) => a + p.qty, 0) || 1;
     const unitPrice = remaining / totalZeroQty;
-    zeroPriced.forEach(p => { p.price = unitPrice * p.qty; });
+    zeroPriced.forEach(p => { p.price = Math.round(unitPrice * p.qty * 100) / 100; });
   }
 
   return products;

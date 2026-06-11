@@ -156,6 +156,86 @@ function drawCierreCajaPage(pdf: any, sales: any[], pageW: number, pageH: number
 
 
 
+// Parsea productos desde el campo detalle (texto WhatsApp) o combo
+function parseProductos(detalle: string, combo: string, totalTotal: number, qtyN: number): { name: string; qty: number; price: number }[] {
+  const products: { name: string; qty: number; price: number }[] = [];
+
+  if (detalle) {
+    const lines = detalle.split('\n');
+    let inPromo = false; // true cuando estamos dentro de un bloque de promo (*NOMBRE PROMO*)
+
+    for (const line of lines) {
+      const t = line.trim();
+      const mBold = t.match(/^\*(.+?)\*$/);
+
+      if (mBold) {
+        const inner = mBold[1];
+        // ¿Tiene qty × precio? → producto individual (ej: *CLASICO 10 X 990*)
+        const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
+        if (mQtyPrice) {
+          inPromo = false;
+          const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
+          if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
+        } else {
+          // Solo nombre → es cabecera de promo o producto sin qty aún
+          inPromo = true;
+          // No agregar la promo como producto; sus hijos se agregarán en las líneas "- "
+        }
+        continue;
+      }
+
+      if (inPromo) {
+        // Línea de subproducto dentro de promo: "- NOMBRE" o "- NOMBRE (talla X)"
+        const mDash = t.match(/^-\s+(.+)/);
+        if (mDash) {
+          const rawName = mDash[1].replace(/\s*\(talla.*?\)/i, '').trim();
+          // Ignorar líneas de color (contienen "×" o son muy cortas tipo "NEGRO × 2")
+          const isColorLine = /^[A-ZÁÉÍÓÚÑ\s]+\s*[×x]\s*\d+$/i.test(rawName) || /^\s{2,}/.test(line);
+          if (!isColorLine && rawName && rawName.length < 60 && products.length < 3) {
+            // Extraer qty del nombre si tiene formato "Nx nombre"
+            const mQtyName = rawName.match(/^(\d+)[xX×]\s*(.+)/);
+            if (mQtyName) {
+              products.push({ name: mQtyName[2].trim(), qty: parseInt(mQtyName[1]), price: 0 });
+            } else {
+              products.push({ name: rawName, qty: 1, price: 0 });
+            }
+          }
+        }
+        // Líneas de color (con indentación "  - COLOR × N") → ignorar
+        continue;
+      }
+    }
+  }
+
+  // Fallback: leer desde combo
+  if (products.length === 0) {
+    if (combo) {
+      const mCombo = combo.match(/^(\d+)(?:\s+[xX×]\s+([\d.]+))?\s+(.+)/);
+      if (mCombo) {
+        const qty = parseInt(mCombo[1]);
+        const price = mCombo[2] ? parseFloat(mCombo[2]) * qty : totalTotal;
+        products.push({ name: mCombo[3].trim(), qty, price });
+      } else {
+        products.push({ name: combo, qty: qtyN || 1, price: totalTotal || 0 });
+      }
+    } else {
+      return [];
+    }
+  }
+
+  // Distribuir precio restante en productos con price=0
+  const priceAssigned = products.reduce((a, p) => a + p.price, 0);
+  const remaining = totalTotal - priceAssigned;
+  const zeroPriced = products.filter(p => p.price === 0);
+  if (zeroPriced.length > 0 && remaining > 0) {
+    const totalZeroQty = zeroPriced.reduce((a, p) => a + p.qty, 0) || 1;
+    const unitPrice = remaining / totalZeroQty;
+    zeroPriced.forEach(p => { p.price = Math.round(unitPrice * p.qty * 100) / 100; });
+  }
+
+  return products;
+}
+
 const abrevMetodo = (m: string) => {
   if (!m) return 'I.T';
   const l = m.toLowerCase();
@@ -244,59 +324,7 @@ export default function PlanillaPanel({
       const totalTotal = Number(s.totalTotal) || 0;
       const qtyN = s.qtyN || 0;
 
-      // Parsear productos desde el detalle (formato WhatsApp generado por getProductString)
-      // Líneas de productos tienen formato: *NOMBRE qty X precio_total* o *NOMBRE (talla X)*
-      const products: { name: string; qty: number; price: number }[] = [];
-      if (detalle) {
-        const lines = detalle.split('\n');
-        for (const line of lines) {
-          const t = line.trim();
-          // Línea principal de producto: *NOMBRE* o *NOMBRE qty X total*
-          const mBold = t.match(/^\*(.+?)\*$/);
-          if (mBold) {
-            const inner = mBold[1];
-            // Formato con qty y precio: "NOMBRE 5 X 495" o "NOMBRE 5 X 495 (talla M)"
-            const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
-            if (mQtyPrice) {
-              const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
-              const qty = parseInt(mQtyPrice[2]);
-              const price = parseFloat(mQtyPrice[3]);
-              if (products.length < 3) products.push({ name, qty, price });
-            } else {
-              // Solo nombre: *NOMBRE* — qty y precio se asignan después
-              const name = inner.replace(/\s*\(talla.*?\)/i, '').trim();
-              if (name && name.length < 60 && products.length < 3)
-                products.push({ name, qty: qtyN || 1, price: 0 });
-            }
-          }
-        }
-      }
-      // Fallback: usar combo si no se parseó nada
-      if (products.length === 0) {
-        if (combo) {
-          // combo formato: "10 X 99 CS" o "5 CS" o "10 CS"
-          const mCombo = combo.match(/^(\d+)(?:\s+[xX×]\s+([\d.]+))?\s+(.+)/);
-          if (mCombo) {
-            const qty = parseInt(mCombo[1]);
-            const price = mCombo[2] ? parseFloat(mCombo[2]) * qty : totalTotal;
-            const name = mCombo[3].trim();
-            products.push({ name, qty, price });
-          } else {
-            products.push({ name: combo, qty: qtyN || 1, price: totalTotal });
-          }
-        } else {
-          products.push({ name: '', qty: qtyN || 1, price: totalTotal });
-        }
-      }
-      // Si algún producto tiene price=0, distribuir el totalTotal restante proporcionalmente
-      const priceAssigned = products.reduce((a, p) => a + p.price, 0);
-      const remaining = totalTotal - priceAssigned;
-      const zeroPriceProducts = products.filter(p => p.price === 0);
-      if (zeroPriceProducts.length > 0 && remaining > 0) {
-        const totalZeroQty = zeroPriceProducts.reduce((a, p) => a + p.qty, 0) || 1;
-        const unitPrice = remaining / totalZeroQty;
-        zeroPriceProducts.forEach(p => { p.price = unitPrice * p.qty; });
-      }
+      const products = parseProductos(detalle, combo, totalTotal, qtyN);
 
       const p1 = products[0], p2 = products[1], p3 = products[2];
       const limaOProv = s.limaMark ? 'LIMA' : s.provMark ? 'PROVINCIA' : '';
