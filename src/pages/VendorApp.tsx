@@ -437,23 +437,27 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         </div>
       </div>
 
-      {/* Botón flotante Riesgos */}
+      {/* Botones flotantes agrupados */}
+      <div style={{
+        position: 'fixed', bottom: '1.5rem', right: '1.25rem', zIndex: 900,
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem',
+      }}>
       <button
         onClick={() => setShowRiesgos(true)}
         title="Riesgos"
         style={{
-          position: 'fixed', bottom: '8.75rem', right: '1.75rem', zIndex: 900,
           display: 'flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.75rem 1.25rem', borderRadius: '50px',
+          padding: '0.6rem 1rem', borderRadius: '50px',
           background: '#DC2626', color: '#fff',
-          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem',
-          boxShadow: '0 4px 20px rgba(220,38,38,0.4)',
+          border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem',
+          boxShadow: '0 4px 16px rgba(220,38,38,0.45)',
           transition: 'transform 0.15s, box-shadow 0.15s',
+          whiteSpace: 'nowrap',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
       >
-        <AlertTriangle size={16} /> Riesgos
+        <AlertTriangle size={15} /> Riesgos
       </button>
 
       {/* Drawer Riesgos */}
@@ -495,23 +499,22 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         </>
       )}
 
-      {/* Botón flotante Dudas de compra */}
       <button
         onClick={() => setShowDudas(true)}
         title="Dudas de compra"
         style={{
-          position: 'fixed', bottom: '5.25rem', right: '1.75rem', zIndex: 900,
           display: 'flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.75rem 1.25rem', borderRadius: '50px',
+          padding: '0.6rem 1rem', borderRadius: '50px',
           background: '#7C3AED', color: '#fff',
-          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem',
-          boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
+          border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem',
+          boxShadow: '0 4px 16px rgba(124,58,237,0.45)',
           transition: 'transform 0.15s, box-shadow 0.15s',
+          whiteSpace: 'nowrap',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
       >
-        <HelpCircle size={16} /> Dudas de compra
+        <HelpCircle size={15} /> Dudas de compra
       </button>
 
       {/* Drawer Dudas de compra */}
@@ -553,24 +556,24 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         </>
       )}
 
-      {/* Botón flotante Herramientas */}
       <button
         onClick={() => setShowHerramientas(true)}
         title="Herramientas"
         style={{
-          position: 'fixed', bottom: '1.75rem', right: '1.75rem', zIndex: 900,
           display: 'flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.75rem 1.25rem', borderRadius: '50px',
+          padding: '0.6rem 1rem', borderRadius: '50px',
           background: 'var(--accent)', color: '#fff',
-          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '0.85rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
           transition: 'transform 0.15s, box-shadow 0.15s',
+          whiteSpace: 'nowrap',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
       >
-        <Wrench size={16} /> Herramientas
+        <Wrench size={15} /> Herramientas
       </button>
+      </div>
 
       {/* Drawer Herramientas */}
       {showHerramientas && (

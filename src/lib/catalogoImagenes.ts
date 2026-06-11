@@ -1,370 +1,736 @@
-// Auto-generado
-export const CATALOGO_IMAGENES: Record<string, Record<string, string[]>> = {
-  "CAMISA WAFFLE": {
+export type CatalogoEntry = Record<string, string[]>;
+
+export const CATALOGO_OVERSHARK: Record<string, CatalogoEntry> = {
+  "Camisa Waffle": {
     "beige": [
-      "/productos/CAMISA%20WAFFLE/beige/7.jpg",
-      "/productos/CAMISA%20WAFFLE/beige/frente%20beige.png",
-      "/productos/CAMISA%20WAFFLE/beige/posterio%20beige.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/beige/7.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/beige/frente-beige.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/beige/posterio-beige.webp",
     ],
     "cemento": [
-      "/productos/CAMISA%20WAFFLE/cemento/4.jpg",
-      "/productos/CAMISA%20WAFFLE/cemento/frente%20cemento.png",
-      "/productos/CAMISA%20WAFFLE/cemento/posterio%20cemento.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/cemento/4.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/cemento/frente-cemento.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/cemento/posterio-cemento.webp",
     ],
     "Denim": [
-      "/productos/CAMISA%20WAFFLE/Denim/5.jpg",
-      "/productos/CAMISA%20WAFFLE/Denim/frente%20denim.png",
-      "/productos/CAMISA%20WAFFLE/Denim/posterio%20denim.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Denim/5.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Denim/frente-denim.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Denim/posterio-denim.webp",
     ],
     "Melange": [
-      "/productos/CAMISA%20WAFFLE/Melange/9.jpg",
-      "/productos/CAMISA%20WAFFLE/Melange/Fondo.jpg",
-      "/productos/CAMISA%20WAFFLE/Melange/Frente%20melange.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Melange/9.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Melange/fondo.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Melange/frente-melange.webp",
     ],
     "Negro": [
-      "/productos/CAMISA%20WAFFLE/Negro/6.jpg",
-      "/productos/CAMISA%20WAFFLE/Negro/frente%20negro.png",
-      "/productos/CAMISA%20WAFFLE/Negro/posterio%20negro.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Negro/6.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Negro/frente-negro.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Negro/posterio-negro.webp",
     ],
     "Pacay": [
-      "/productos/CAMISA%20WAFFLE/Pacay/3.jpg",
-      "/productos/CAMISA%20WAFFLE/Pacay/frente%20pacay.png",
-      "/productos/CAMISA%20WAFFLE/Pacay/posterio%20pacay.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Pacay/3.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Pacay/frente-pacay.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Pacay/posterio-pacay.webp",
     ],
     "Palo rosa": [
-      "/productos/CAMISA%20WAFFLE/Palo%20rosa/2.jpg",
-      "/productos/CAMISA%20WAFFLE/Palo%20rosa/frente%20palo%20rosa.png",
-      "/productos/CAMISA%20WAFFLE/Palo%20rosa/posterio%20palo%20rosa.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Palo%20rosa/2.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Palo%20rosa/frente-palo-rosa.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Palo%20rosa/posterio-palo-rosa.webp",
     ],
     "Perla": [
-      "/productos/CAMISA%20WAFFLE/Perla/1.jpg",
-      "/productos/CAMISA%20WAFFLE/Perla/frente%20perla.png",
-      "/productos/CAMISA%20WAFFLE/Perla/posterio%20perla.png"
+      "/productos/Overshark/CAMISA%20WAFFLE/Perla/1.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Perla/frente-perla.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Perla/posterio-perla.webp",
     ],
     "Vino": [
-      "/productos/CAMISA%20WAFFLE/Vino/8.jpg",
-      "/productos/CAMISA%20WAFFLE/Vino/frente%20vino.png",
-      "/productos/CAMISA%20WAFFLE/Vino/posterio%20vino.png"
-    ]
+      "/productos/Overshark/CAMISA%20WAFFLE/Vino/8.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Vino/frente-vino.webp",
+      "/productos/Overshark/CAMISA%20WAFFLE/Vino/posterio-vino.webp",
+    ],
   },
-  "CAMISERO JERSEY": {
+  "Camisero Jersey": {
+    "Azul": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Azul/frontal-azul.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Azul/modelo-azul.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Beige/frontal-beige.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Beige/modelo-beige.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Beige/reversa-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Botella/frontal-botella.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Botella/modelo-botella.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Botella/reversa-botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Cemento/frontal-cemento.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Cemento/modelo-cemento.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Cemento/reversa-cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Denim/frontal-denim.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Denim/modelo-denim.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Denim/reversa-denim.webp",
+    ],
     "Melange": [
-      "/productos/CAMISERO%20JERSEY/Melange/10.jpg",
-      "/productos/CAMISERO%20JERSEY/Melange/8.jpg",
-      "/productos/CAMISERO%20JERSEY/Melange/9.jpg"
+      "/productos/Overshark/CAMISERO%20JERSEY/Melange/10.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Melange/8.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Melange/9.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Negro/frontal-negro.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Negro/modelo-negro.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Negro/reversa-negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Pacay/frontal-pacay.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Pacay/modelo-pacay.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Pacay/reversa-pacay.webp",
+    ],
+    "Palo rosa": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Palo%20rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Palo%20rosa/modelo-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Palo%20rosa/reversa-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Perla/frontal-perla.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Perla/modelo-perla.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Perla/reversa-perla.webp",
     ],
     "Plomo": [
-      "/productos/CAMISERO%20JERSEY/Plomo/modelo%20plomo.jpg",
-      "/productos/CAMISERO%20JERSEY/Plomo/reversa%20plomo.jpg"
-    ]
+      "/productos/Overshark/CAMISERO%20JERSEY/Plomo/frontal-plomo.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Plomo/modelo-plomo.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Plomo/reversa-plomo.webp",
+    ],
+    "Topo": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Topo/frontal-topo.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Topo/modelo-topo.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Topo/reversa-topo.webp",
+    ],
+    "Vino": [
+      "/productos/Overshark/CAMISERO%20JERSEY/Vino/frontal-vino.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Vino/modelo-vino.webp",
+      "/productos/Overshark/CAMISERO%20JERSEY/Vino/reversa-vino.webp",
+    ],
   },
-  "CAMISERO PIKE": {
+  "Camisero Pike": {
     "AZUL": [
-      "/productos/CAMISERO%20PIKE/AZUL/de%20frente%20azul.jpg",
-      "/productos/CAMISERO%20PIKE/AZUL/de%20reversa%20azul.jpg",
-      "/productos/CAMISERO%20PIKE/AZUL/modelo%20azul.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/AZUL/de-frente-azul.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/AZUL/de-reversa-azul.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/AZUL/modelo-azul.webp",
     ],
     "BEIGE": [
-      "/productos/CAMISERO%20PIKE/BEIGE/modelo%20beige.jpg",
-      "/productos/CAMISERO%20PIKE/BEIGE/reversa%20beige.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/BEIGE/de-frente-beige.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/BEIGE/modelo-beige.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/BEIGE/reversa-beige.webp",
     ],
     "BOTELLA": [
-      "/productos/CAMISERO%20PIKE/BOTELLA/de%20frente%20botella.jpg",
-      "/productos/CAMISERO%20PIKE/BOTELLA/modelo%20botella.jpg",
-      "/productos/CAMISERO%20PIKE/BOTELLA/reversa%20botella.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/BOTELLA/de-frente-botella.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/BOTELLA/modelo-botella.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/BOTELLA/reversa-botella.webp",
     ],
     "CEMENTO": [
-      "/productos/CAMISERO%20PIKE/CEMENTO/de%20frente%20cemento.jpg",
-      "/productos/CAMISERO%20PIKE/CEMENTO/modelo%20cemento.jpg",
-      "/productos/CAMISERO%20PIKE/CEMENTO/reversa%20cemento.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/CEMENTO/de-frente-cemento.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/CEMENTO/modelo-cemento.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/CEMENTO/reversa-cemento.webp",
     ],
     "DENIM": [
-      "/productos/CAMISERO%20PIKE/DENIM/de%20frente%20denim.jpg",
-      "/productos/CAMISERO%20PIKE/DENIM/modelo%20denim.jpg",
-      "/productos/CAMISERO%20PIKE/DENIM/reversa%20denim.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/DENIM/de-frente-denim.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/DENIM/modelo-denim.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/DENIM/reversa-denim.webp",
     ],
     "MARRÓN": [
-      "/productos/CAMISERO%20PIKE/MARR%C3%93N/modelo%20marron.jpg",
-      "/productos/CAMISERO%20PIKE/MARR%C3%93N/polo%20de%20frente%20Marron.jpg",
-      "/productos/CAMISERO%20PIKE/MARR%C3%93N/polo%20de%20reversa%20Marron.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/MARRÓN/modelo-marron.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/MARRÓN/polo-de-frente-marron.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/MARRÓN/polo-de-reversa-marron.webp",
     ],
     "MELANGE": [
-      "/productos/CAMISERO%20PIKE/MELANGE/cq1.jpg",
-      "/productos/CAMISERO%20PIKE/MELANGE/cq2.jpg",
-      "/productos/CAMISERO%20PIKE/MELANGE/modelo.png"
+      "/productos/Overshark/CAMISERO%20PIKE/MELANGE/cq1.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/MELANGE/cq2.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/MELANGE/modelo.webp",
     ],
     "NEGRO": [
-      "/productos/CAMISERO%20PIKE/NEGRO/de%20frente%20negro.jpg",
-      "/productos/CAMISERO%20PIKE/NEGRO/modelo%20negro.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/NEGRO/de-frente-negro.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/NEGRO/modelo-negro.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/NEGRO/reversa-negro.webp",
     ],
     "PACAY": [
-      "/productos/CAMISERO%20PIKE/PACAY/de%20frente%20pacay.jpg",
-      "/productos/CAMISERO%20PIKE/PACAY/modelo%20pacay.jpg",
-      "/productos/CAMISERO%20PIKE/PACAY/reversa%20pacay.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/PACAY/de-frente-pacay.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PACAY/modelo-pacay.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PACAY/reversa-pacay.webp",
     ],
     "PALO ROSA": [
-      "/productos/CAMISERO%20PIKE/PALO%20ROSA/de%20frente%20palo%20rosa.jpg",
-      "/productos/CAMISERO%20PIKE/PALO%20ROSA/modelo%20palo%20rosa.jpg",
-      "/productos/CAMISERO%20PIKE/PALO%20ROSA/reversa%20palo%20rosa.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/PALO%20ROSA/de-frente-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PALO%20ROSA/modelo-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PALO%20ROSA/reversa-palo-rosa.webp",
     ],
     "PERLA": [
-      "/productos/CAMISERO%20PIKE/PERLA/de%20frente%20perla.jpg",
-      "/productos/CAMISERO%20PIKE/PERLA/modelo%20perla.jpg",
-      "/productos/CAMISERO%20PIKE/PERLA/reversa%20perla.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/PERLA/de-frente-perla.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PERLA/modelo-perla.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PERLA/reversa-perla.webp",
     ],
     "PLOMO": [
-      "/productos/CAMISERO%20PIKE/PLOMO/de%20frente%20plomo.jpg",
-      "/productos/CAMISERO%20PIKE/PLOMO/modelo%20plomo.jpg",
-      "/productos/CAMISERO%20PIKE/PLOMO/reversa%20plomo.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/PLOMO/de-frente-plomo.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PLOMO/modelo-plomo.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/PLOMO/reversa-plomo.webp",
     ],
     "TOPO": [
-      "/productos/CAMISERO%20PIKE/TOPO/frontal%20topo.jpg",
-      "/productos/CAMISERO%20PIKE/TOPO/modelo%20topo.jpg",
-      "/productos/CAMISERO%20PIKE/TOPO/reversa%20topo.jpg"
+      "/productos/Overshark/CAMISERO%20PIKE/TOPO/frontal-topo.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/TOPO/modelo-topo.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/TOPO/reversa-topo.webp",
     ],
     "VINO": [
-      "/productos/CAMISERO%20PIKE/VINO/de%20frente.jpg",
-      "/productos/CAMISERO%20PIKE/VINO/modelo%20(1).jpg",
-      "/productos/CAMISERO%20PIKE/VINO/reversa.jpg"
-    ]
+      "/productos/Overshark/CAMISERO%20PIKE/VINO/de-frente.webp",
+      "/productos/Overshark/CAMISERO%20PIKE/VINO/modelo-(1).webp",
+      "/productos/Overshark/CAMISERO%20PIKE/VINO/reversa.webp",
+    ],
   },
-  "CAMISERO WAFFLE": {
+  "Camisero Waffle": {
+    "Azul": [
+      "/productos/Overshark/CAMISERO%20WAFFLE/Azul/frontal-azul.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/CAMISERO%20WAFFLE/Beige/frontal-beige.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Beige/modelo-beige.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Beige/reversa-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/CAMISERO%20WAFFLE/Botella/frontal-botella.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Botella/modelo-botella.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Botella/reversa-botella.webp",
+    ],
     "Cemento": [
-      "/productos/CAMISERO%20WAFFLE/Cemento/frontal%20cemento.jpg",
-      "/productos/CAMISERO%20WAFFLE/Cemento/modelo%20cemento.jpg",
-      "/productos/CAMISERO%20WAFFLE/Cemento/reversa%20cemento.jpg"
+      "/productos/Overshark/CAMISERO%20WAFFLE/Cemento/frontal-cemento.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Cemento/modelo-cemento.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Cemento/reversa-cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Overshark/CAMISERO%20WAFFLE/Denim/frontal-denim.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Denim/modelo-denim.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Denim/reversa-denim.webp",
     ],
     "Melange": [
-      "/productos/CAMISERO%20WAFFLE/Melange/Documento12.jpg"
+      "/productos/Overshark/CAMISERO%20WAFFLE/Melange/documento12.webp",
     ],
     "negro": [
-      "/productos/CAMISERO%20WAFFLE/negro/reversa%20negro.jpg"
+      "/productos/Overshark/CAMISERO%20WAFFLE/negro/frontal-negro.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/negro/modelo-negro.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/negro/reversa-negro.webp",
     ],
     "Pacay": [
-      "/productos/CAMISERO%20WAFFLE/Pacay/modelo%20pacay.jpg"
+      "/productos/Overshark/CAMISERO%20WAFFLE/Pacay/frontal-pacay.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Pacay/modelo-pacay.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Pacay/reversa-425941.webp",
     ],
     "Palo Rosa": [
-      "/productos/CAMISERO%20WAFFLE/Palo%20Rosa/frontal%20palo%20rosa.jpg",
-      "/productos/CAMISERO%20WAFFLE/Palo%20Rosa/modelo%20palo%20rosa.jpg",
-      "/productos/CAMISERO%20WAFFLE/Palo%20Rosa/reversa%20palo%20rosa.jpg"
+      "/productos/Overshark/CAMISERO%20WAFFLE/Palo%20Rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Palo%20Rosa/modelo-palo-rosa.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Palo%20Rosa/reversa-palo-rosa.webp",
     ],
-    "topo": [
-      "/productos/CAMISERO%20WAFFLE/topo/frontal%20topo.jpg",
-      "/productos/CAMISERO%20WAFFLE/topo/modelo%20topo.jpg",
-      "/productos/CAMISERO%20WAFFLE/topo/reversa%20topo.jpg"
-    ]
-  },
-  "CLASICOS-Ok": {
-    "Beige": [
-      "/productos/CLASICOS-Ok/Beige/frontal%20beige.jpg",
-      "/productos/CLASICOS-Ok/Beige/modelo%20beige.jpg",
-      "/productos/CLASICOS-Ok/Beige/reversa%20beige.jpg"
-    ],
-    "Denim": [
-      "/productos/CLASICOS-Ok/Denim/frontal%20denim.jpg",
-      "/productos/CLASICOS-Ok/Denim/modelo%20denim.jpg",
-      "/productos/CLASICOS-Ok/Denim/reversa%20denim.jpg"
-    ],
-    "Melange": [
-      "/productos/CLASICOS-Ok/Melange/c1.jpg",
-      "/productos/CLASICOS-Ok/Melange/c2.jpg",
-      "/productos/CLASICOS-Ok/Melange/c3.jpg"
-    ],
-    "Negro": [
-      "/productos/CLASICOS-Ok/Negro/frontal%20negro.jpg",
-      "/productos/CLASICOS-Ok/Negro/modelo%20negro.jpg"
-    ],
-    "Pacay": [
-      "/productos/CLASICOS-Ok/Pacay/frontal%20Pacay.jpg",
-      "/productos/CLASICOS-Ok/Pacay/modelo%20pacay.jpg",
-      "/productos/CLASICOS-Ok/Pacay/reversa%20pacay.jpg"
+    "Perla": [
+      "/productos/Overshark/CAMISERO%20WAFFLE/Perla/frontal-perla.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Perla/modelo-perla.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Perla/reversa-perla.webp",
     ],
     "Plomo": [
-      "/productos/CLASICOS-Ok/Plomo/frontal%20plomo.jpg",
-      "/productos/CLASICOS-Ok/Plomo/reversa%20plomo.jpg"
-    ],
-    "Topo": [
-      "/productos/CLASICOS-Ok/Topo/frontal%20topo.jpg",
-      "/productos/CLASICOS-Ok/Topo/modelo%20topo.jpg",
-      "/productos/CLASICOS-Ok/Topo/reversa%20topo.jpg"
-    ],
-    "Vino": [
-      "/productos/CLASICOS-Ok/Vino/frontal%20Vino.jpg",
-      "/productos/CLASICOS-Ok/Vino/modelo%20vino.jpg",
-      "/productos/CLASICOS-Ok/Vino/reversa%20vino.jpg"
-    ]
-  },
-  "MANGA LARGA JERSEY": {
-    "Beige": [
-      "/productos/MANGA%20LARGA%20JERSEY/Beige/frontal%20Beige.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Beige/modelo%20Beige.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Beige/reversa%20Beige.jpg"
-    ],
-    "Denim": [
-      "/productos/MANGA%20LARGA%20JERSEY/Denim/frontal%20Denim.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Denim/modelo%20Denim.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Denim/reversa%20Denim.jpg"
-    ],
-    "Melange": [
-      "/productos/MANGA%20LARGA%20JERSEY/Melange/Documento.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Melange/Documento1.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Melange/Documento2.jpg"
-    ],
-    "Palo Rosa": [
-      "/productos/MANGA%20LARGA%20JERSEY/Palo%20Rosa/frontal%20palo%20rosa.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Palo%20Rosa/reversa%20palo%20rosa.jpg"
-    ],
-    "Topo": [
-      "/productos/MANGA%20LARGA%20JERSEY/Topo/frontal%20Topo.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Topo/modelo%20topo.jpg",
-      "/productos/MANGA%20LARGA%20JERSEY/Topo/reversa%20topo.jpg"
-    ]
-  },
-  "MANGA LARGA WAFFLE": {
-    "Beige": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Beige/Frontal%20beige.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Beige/modelo%20beige.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Beige/reverso%20beige.jpg"
-    ],
-    "Denim": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Denim/Frontal%20denim.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Denim/modelo%20denim.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Denim/reverso%20denim.jpg"
-    ],
-    "melange": [
-      "/productos/MANGA%20LARGA%20WAFFLE/melange/Gemini_Generated_Image_a4o1hna4o1hna4o1.png",
-      "/productos/MANGA%20LARGA%20WAFFLE/melange/Gemini_Generated_Image_u0vc9mu0vc9mu0vc.jpg"
-    ],
-    "Pacay": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Pacay/modelo%20pacay.jpg"
-    ],
-    "Palo rosa": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Palo%20rosa/Frontal%20Palo%20rosa.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Palo%20rosa/modelo%20Palo%20rosa.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Palo%20rosa/reverso%20palo%20rosa.jpg"
-    ],
-    "Topo": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Topo/Frontal%20topo.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Topo/modelo%20topo.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Topo/reverso%20topo.jpg"
-    ],
-    "Vino": [
-      "/productos/MANGA%20LARGA%20WAFFLE/Vino/Frontal%20vino.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Vino/modelo%20vino.jpg",
-      "/productos/MANGA%20LARGA%20WAFFLE/Vino/reverso%20vino.jpg"
-    ]
-  },
-  "NOTCH PIQUE": {
-    "Azul": [
-      "/productos/NOTCH%20PIQUE/Azul/frontal%20azul.png",
-      "/productos/NOTCH%20PIQUE/Azul/np%203.jpg",
-      "/productos/NOTCH%20PIQUE/Azul/reversa%20azul.png"
-    ],
-    "Beige": [
-      "/productos/NOTCH%20PIQUE/Beige/frontal%20beige.png",
-      "/productos/NOTCH%20PIQUE/Beige/np%207.jpg",
-      "/productos/NOTCH%20PIQUE/Beige/reversa%20beige.png"
-    ],
-    "Botella": [
-      "/productos/NOTCH%20PIQUE/Botella/frontal%20botella.png",
-      "/productos/NOTCH%20PIQUE/Botella/np%204.jpg",
-      "/productos/NOTCH%20PIQUE/Botella/reversa%20botella.png"
-    ],
-    "Cemento": [
-      "/productos/NOTCH%20PIQUE/Cemento/forntal%20cemento.png",
-      "/productos/NOTCH%20PIQUE/Cemento/np%208.jpg",
-      "/productos/NOTCH%20PIQUE/Cemento/reversa%20cemento.png"
-    ],
-    "Melange": [
-      "/productos/NOTCH%20PIQUE/Melange/2.jpg",
-      "/productos/NOTCH%20PIQUE/Melange/3.jpg",
-      "/productos/NOTCH%20PIQUE/Melange/4.jpg"
-    ],
-    "Negro": [
-      "/productos/NOTCH%20PIQUE/Negro/forntal%20negro.png",
-      "/productos/NOTCH%20PIQUE/Negro/np%201.jpg",
-      "/productos/NOTCH%20PIQUE/Negro/reversa%20negro.png"
-    ],
-    "Palo rosa": [
-      "/productos/NOTCH%20PIQUE/Palo%20rosa/forntal%20palo%20rosa.png",
-      "/productos/NOTCH%20PIQUE/Palo%20rosa/np%209.jpg",
-      "/productos/NOTCH%20PIQUE/Palo%20rosa/reversa%20palo%20rosa.png"
-    ],
-    "Perla": [
-      "/productos/NOTCH%20PIQUE/Perla/frontal%20perla.png",
-      "/productos/NOTCH%20PIQUE/Perla/np%202.jpg",
-      "/productos/NOTCH%20PIQUE/Perla/reversa%20perla.png"
+      "/productos/Overshark/CAMISERO%20WAFFLE/Plomo/frontal-plomo.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Plomo/modelo-plomo.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Plomo/reversa-plomo.webp",
     ],
     "topo": [
-      "/productos/NOTCH%20PIQUE/topo/frontal%20topo.png",
-      "/productos/NOTCH%20PIQUE/topo/np%205.jpg",
-      "/productos/NOTCH%20PIQUE/topo/reversa%20topo.png"
+      "/productos/Overshark/CAMISERO%20WAFFLE/topo/frontal-topo.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/topo/modelo-topo.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/topo/reversa-topo.webp",
     ],
     "Vino": [
-      "/productos/NOTCH%20PIQUE/Vino/frontal%20vino.png",
-      "/productos/NOTCH%20PIQUE/Vino/np%206.jpg",
-      "/productos/NOTCH%20PIQUE/Vino/reversa%20vino.png"
-    ]
+      "/productos/Overshark/CAMISERO%20WAFFLE/Vino/frontal-vino.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Vino/modelo-vino.webp",
+      "/productos/Overshark/CAMISERO%20WAFFLE/Vino/reversa-vino.webp",
+    ],
   },
-  "NOTCH WAFFLE": {
+  "Clásicos": {
     "Azul": [
-      "/productos/NOTCH%20WAFFLE/Azul/Azul.jpg",
-      "/productos/NOTCH%20WAFFLE/Azul/frontal%20azul.png",
-      "/productos/NOTCH%20WAFFLE/Azul/Posterior%20azul.png"
+      "/productos/Overshark/CLASICOS-Ok/Azul/frontal-azul.webp",
+      "/productos/Overshark/CLASICOS-Ok/Azul/modelo-azul.webp",
+      "/productos/Overshark/CLASICOS-Ok/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/CLASICOS-Ok/Beige/frontal-beige.webp",
+      "/productos/Overshark/CLASICOS-Ok/Beige/modelo-beige.webp",
+      "/productos/Overshark/CLASICOS-Ok/Beige/reversa-beige.webp",
     ],
     "Botella": [
-      "/productos/NOTCH%20WAFFLE/Botella/botella.jpg",
-      "/productos/NOTCH%20WAFFLE/Botella/frontal%20botella.png",
-      "/productos/NOTCH%20WAFFLE/Botella/Posterior%20botella.png"
+      "/productos/Overshark/CLASICOS-Ok/Botella/frontal-botella.webp",
+      "/productos/Overshark/CLASICOS-Ok/Botella/modelo-botella.webp",
+      "/productos/Overshark/CLASICOS-Ok/Botella/reversa-botella.webp",
     ],
     "Cemento": [
-      "/productos/NOTCH%20WAFFLE/Cemento/cemento.jpg",
-      "/productos/NOTCH%20WAFFLE/Cemento/frontal%20cemento.png",
-      "/productos/NOTCH%20WAFFLE/Cemento/Posterior%20cemento.png"
+      "/productos/Overshark/CLASICOS-Ok/Cemento/frontal-cemento.webp",
+      "/productos/Overshark/CLASICOS-Ok/Cemento/modelo-cemento.webp",
+      "/productos/Overshark/CLASICOS-Ok/Cemento/reversa-cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Overshark/CLASICOS-Ok/Denim/frontal-denim.webp",
+      "/productos/Overshark/CLASICOS-Ok/Denim/modelo-denim.webp",
+      "/productos/Overshark/CLASICOS-Ok/Denim/reversa-denim.webp",
     ],
     "Melange": [
-      "/productos/NOTCH%20WAFFLE/Melange/5.jpg",
-      "/productos/NOTCH%20WAFFLE/Melange/6.jpg",
-      "/productos/NOTCH%20WAFFLE/Melange/7.jpg"
+      "/productos/Overshark/CLASICOS-Ok/Melange/c1.webp",
+      "/productos/Overshark/CLASICOS-Ok/Melange/c2.webp",
+      "/productos/Overshark/CLASICOS-Ok/Melange/c3.webp",
     ],
     "Negro": [
-      "/productos/NOTCH%20WAFFLE/Negro/frontal%20negro.png",
-      "/productos/NOTCH%20WAFFLE/Negro/Negro.jpg",
-      "/productos/NOTCH%20WAFFLE/Negro/Posterior%20negro.png"
+      "/productos/Overshark/CLASICOS-Ok/Negro/frontal-negro.webp",
+      "/productos/Overshark/CLASICOS-Ok/Negro/modelo-negro.webp",
+      "/productos/Overshark/CLASICOS-Ok/Negro/reversa-negro.webp",
     ],
     "Pacay": [
-      "/productos/NOTCH%20WAFFLE/Pacay/frontal%20pacay.png",
-      "/productos/NOTCH%20WAFFLE/Pacay/pacay.jpg",
-      "/productos/NOTCH%20WAFFLE/Pacay/Posterior%20pacay.png"
+      "/productos/Overshark/CLASICOS-Ok/Pacay/frontal-pacay.webp",
+      "/productos/Overshark/CLASICOS-Ok/Pacay/modelo-pacay.webp",
+      "/productos/Overshark/CLASICOS-Ok/Pacay/reversa-pacay.webp",
     ],
     "Palo Rosa": [
-      "/productos/NOTCH%20WAFFLE/Palo%20Rosa/frontal%20palo%20rosa.png",
-      "/productos/NOTCH%20WAFFLE/Palo%20Rosa/Palo%20rosa.jpg",
-      "/productos/NOTCH%20WAFFLE/Palo%20Rosa/Posterior%20palo%20rosa.png"
+      "/productos/Overshark/CLASICOS-Ok/Palo%20Rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/CLASICOS-Ok/Palo%20Rosa/modelo-palo-rosa.webp",
+      "/productos/Overshark/CLASICOS-Ok/Palo%20Rosa/reversa-palo-rosa.webp",
     ],
     "Perla": [
-      "/productos/NOTCH%20WAFFLE/Perla/Blanco.jpg",
-      "/productos/NOTCH%20WAFFLE/Perla/frontal%20perla.png",
-      "/productos/NOTCH%20WAFFLE/Perla/Posterior%20perla.png"
-    ]
-  },
-  "WAFFLE CLASICO-Ok": {
-    "Beige": [
-      "/productos/WAFFLE%20CLASICO-Ok/Beige/frontal%20waffle%20beige.jpg",
-      "/productos/WAFFLE%20CLASICO-Ok/Beige/reversa%20waffle%20beige.jpg"
+      "/productos/Overshark/CLASICOS-Ok/Perla/frontal-perla.webp",
+      "/productos/Overshark/CLASICOS-Ok/Perla/modelo-perla.webp",
+      "/productos/Overshark/CLASICOS-Ok/Perla/reversa-perla.webp",
     ],
-    "denim": [
-      "/productos/WAFFLE%20CLASICO-Ok/denim/frontal%20waffle%20demin.jpg",
-      "/productos/WAFFLE%20CLASICO-Ok/denim/reversa%20waffle%20demin.jpg"
-    ],
-    "Melange": [
-      "/productos/WAFFLE%20CLASICO-Ok/Melange/11.jpg",
-      "/productos/WAFFLE%20CLASICO-Ok/Melange/12.jpg",
-      "/productos/WAFFLE%20CLASICO-Ok/Melange/13.jpg"
+    "Plomo": [
+      "/productos/Overshark/CLASICOS-Ok/Plomo/frontal-plomo.webp",
+      "/productos/Overshark/CLASICOS-Ok/Plomo/modelo-plomo.webp",
+      "/productos/Overshark/CLASICOS-Ok/Plomo/reversa-plomo.webp",
     ],
     "Topo": [
-      "/productos/WAFFLE%20CLASICO-Ok/Topo/frontal%20waffle%20topo.jpg",
-      "/productos/WAFFLE%20CLASICO-Ok/Topo/reversa%20waffle%20topo.jpg"
-    ]
-  }
+      "/productos/Overshark/CLASICOS-Ok/Topo/frontal-topo.webp",
+      "/productos/Overshark/CLASICOS-Ok/Topo/modelo-topo.webp",
+      "/productos/Overshark/CLASICOS-Ok/Topo/reversa-topo.webp",
+    ],
+    "Vino": [
+      "/productos/Overshark/CLASICOS-Ok/Vino/frontal-vino.webp",
+      "/productos/Overshark/CLASICOS-Ok/Vino/modelo-vino.webp",
+      "/productos/Overshark/CLASICOS-Ok/Vino/reversa-vino.webp",
+    ],
+  },
+  "Manga Larga Jersey": {
+    "Azul": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Azul/frontal-azul.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Azul/modelo-azul.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Beige/frontal-beige.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Beige/modelo-beige.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Beige/reversa-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Botella/frontal-botella.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Botella/modelo-bottela.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Botella/reversa-botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Cemento/frontal-cemneto.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Cemento/modelo-cemento.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Cemento/reversa-cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Denim/frontal-denim.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Denim/modelo-denim.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Denim/reversa-denim.webp",
+    ],
+    "Melange": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Melange/documento.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Melange/documento1.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Melange/documento2.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Negro/frontal-negro.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Negro/modelo-negro.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Negro/reversa-negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/frontal-pacay{.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/modelo-pacay.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/reversa-pacay.webp",
+    ],
+    "Palo Rosa": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Palo%20Rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Palo%20Rosa/modelo-palo-rosa.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Palo%20Rosa/reversa-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Perla/frontal-perla.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Perla/modelo-perla.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Perla/reversa-perla.webp",
+    ],
+    "Plomo": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Plomo/frontal-plomo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Plomo/modelo-plomo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Plomo/reversa-plomo.webp",
+    ],
+    "Topo": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Topo/frontal-topo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Topo/modelo-topo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Topo/reversa-topo.webp",
+    ],
+    "Vino": [
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Vino/frontal-vino.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Vino/modelo-viono.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Vino/reversa-vino.webp",
+    ],
+  },
+  "Manga Larga Waffle": {
+    "Azul": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Azul/frontal-azul.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Azul/modelo-azul.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Azul/reverso-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Beige/frontal-beige.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Beige/modelo-beige.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Beige/reverso-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/frontal-botella}.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/modelo-botella.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/reverso-bottella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Cemento/frontal-cemento.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Cemento/modelo-cemento.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Cemento/reverso-cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Denim/frontal-denim.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Denim/modelo-denim.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Denim/reverso-denim.webp",
+    ],
+    "melange": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/melange/gemini_generated_image_a4o1hna4o1hna4o1.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/melange/gemini_generated_image_e4d7d3e4d7d3e4d7.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/melange/gemini_generated_image_u0vc9mu0vc9mu0vc.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Negro/frontal-negro.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Negro/modelo-negro.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Negro/reverso-negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Pacay/frontal-pacay.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Pacay/modelo-pacay.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Pacay/reverso-pacay.webp",
+    ],
+    "Palo rosa": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Palo%20rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Palo%20rosa/modelo-palo-rosa.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Palo%20rosa/reverso-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Perla/frontal-perla.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Perla/modelo-perla.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Perla/reverso-perla.webp",
+    ],
+    "Plomo": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Plomo/frontal-plomo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Plomo/modelo-plomo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Plomo/reverso-plomo.webp",
+    ],
+    "Topo": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Topo/frontal-topo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Topo/modelo-topo.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Topo/reverso-topo.webp",
+    ],
+    "Vino": [
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Vino/frontal-vino.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Vino/modelo-vino.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Vino/reverso-vino.webp",
+    ],
+  },
+  "Notch Piqué": {
+    "Azul": [
+      "/productos/Overshark/NOTCH%20PIQUE/Azul/frontal-azul.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Azul/np-3.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/NOTCH%20PIQUE/Beige/frontal-beige.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Beige/np-7.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Beige/reversa-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/NOTCH%20PIQUE/Botella/frontal-botella.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Botella/np-4.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Botella/reversa-botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/NOTCH%20PIQUE/Cemento/forntal-cemento.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Cemento/np-8.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Cemento/reversa-cemento.webp",
+    ],
+    "Melange": [
+      "/productos/Overshark/NOTCH%20PIQUE/Melange/2.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Melange/3.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Melange/4.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/NOTCH%20PIQUE/Negro/forntal-negro.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Negro/np-1.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Negro/reversa-negro.webp",
+    ],
+    "Palo rosa": [
+      "/productos/Overshark/NOTCH%20PIQUE/Palo%20rosa/forntal-palo-rosa.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Palo%20rosa/np-9.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Palo%20rosa/reversa-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/NOTCH%20PIQUE/Perla/frontal-perla.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Perla/np-2.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Perla/reversa-perla.webp",
+    ],
+    "topo": [
+      "/productos/Overshark/NOTCH%20PIQUE/topo/frontal-topo.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/topo/np-5.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/topo/reversa-topo.webp",
+    ],
+    "Vino": [
+      "/productos/Overshark/NOTCH%20PIQUE/Vino/frontal-vino.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Vino/np-6.webp",
+      "/productos/Overshark/NOTCH%20PIQUE/Vino/reversa-vino.webp",
+    ],
+  },
+  "Notch Waffle": {
+    "Azul": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Azul/azul.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Azul/frontal-azul.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Azul/posterior-azul.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Botella/botella.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Botella/frontal-botella.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Botella/posterior-botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Cemento/cemento.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Cemento/frontal-cemento.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Cemento/posterior-cemento.webp",
+    ],
+    "Melange": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Melange/5.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Melange/6.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Melange/7.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Negro/frontal-negro.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Negro/negro.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Negro/posterior-negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Pacay/frontal-pacay.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Pacay/pacay.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Pacay/posterior-pacay.webp",
+    ],
+    "Palo Rosa": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Palo%20Rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Palo%20Rosa/palo-rosa.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Palo%20Rosa/posterior-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/NOTCH%20WAFFLE/Perla/blanco.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Perla/frontal-perla.webp",
+      "/productos/Overshark/NOTCH%20WAFFLE/Perla/posterior-perla.webp",
+    ],
+  },
+  "Waffle Clásico": {
+    "Azul": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Azul/frontal-azul.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Azul/modelo-waffle-azul.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Azul/reversa-azul.webp",
+    ],
+    "Beige": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Beige/frontal-waffle-beige.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Beige/modelo-waffle-beige.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Beige/reversa-waffle-beige.webp",
+    ],
+    "Botella": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Botella/frontal-waffle-botella.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Botella/modelo-waffle-botella.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Botella/reversa-waffle-botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/frontal-waffle-cemento.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/modelo-waffle-cemento.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/reversa-waffle-cemento.jpg}.webp",
+    ],
+    "denim": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/denim/frontal-waffle-demin.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/denim/modelo-waffle-demin.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/denim/reversa-waffle-demin.webp",
+    ],
+    "Melange": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Melange/11.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Melange/12.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Melange/13.webp",
+    ],
+    "Negro": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Negro/frontal-waffle-negro.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Negro/modelo-waffle-negro.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Negro/reversa-waffle-negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Pacay/frontal-waffle-pacay.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Pacay/modelo-waffle-pacay.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Pacay/reversa-waffle-pacay.webp",
+    ],
+    "Palo rosa": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Palo%20rosa/frontal-palo-rosa.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Palo%20rosa/modelo-waffle-palo-rosa.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Palo%20rosa/reversa-palo-rosa.webp",
+    ],
+    "Perla": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Perla/frontal-perla.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Perla/modelo-perla.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Perla/reversa-perla.webp",
+    ],
+    "Polomo": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Polomo/frontal-waffle.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Polomo/modelo-waffle-plomo.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Polomo/reversa-waffle-plomo.webp",
+    ],
+    "Topo": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Topo/frontal-waffle-topo.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Topo/modelo-waffle-topo.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Topo/reversa-waffle-topo.webp",
+    ],
+    "vino": [
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/vino/frontal-waffle-vino.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/vino/modelo-waffle-vino.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/vino/reversa-waffle-vino.webp",
+    ],
+  },
+};
+
+export const CATALOGO_BRAVOS: Record<string, CatalogoEntry> = {
+  "Boxy Fit": {
+    "Beige": [
+      "/productos/Bravos/Boxy%20Fit/Beige/beige-2.webp",
+      "/productos/Bravos/Boxy%20Fit/Beige/beige-3.webp",
+      "/productos/Bravos/Boxy%20Fit/Beige/beige-4.webp",
+      "/productos/Bravos/Boxy%20Fit/Beige/beige.webp",
+    ],
+    "Blanco": [
+      "/productos/Bravos/Boxy%20Fit/Blanco/blanco-2.webp",
+      "/productos/Bravos/Boxy%20Fit/Blanco/blanco-3.webp",
+      "/productos/Bravos/Boxy%20Fit/Blanco/blanco-4.webp",
+      "/productos/Bravos/Boxy%20Fit/Blanco/blanco.webp",
+    ],
+    "Cemento": [
+      "/productos/Bravos/Boxy%20Fit/Cemento/cemento-2.webp",
+      "/productos/Bravos/Boxy%20Fit/Cemento/cemento-3.webp",
+      "/productos/Bravos/Boxy%20Fit/Cemento/cemento-4.webp",
+      "/productos/Bravos/Boxy%20Fit/Cemento/cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Bravos/Boxy%20Fit/Denim/denim-2.webp",
+      "/productos/Bravos/Boxy%20Fit/Denim/denim-3.webp",
+      "/productos/Bravos/Boxy%20Fit/Denim/denim-4.webp",
+      "/productos/Bravos/Boxy%20Fit/Denim/denim.webp",
+    ],
+    "Rosa": [
+      "/productos/Bravos/Boxy%20Fit/Rosa/rosa-2.webp",
+      "/productos/Bravos/Boxy%20Fit/Rosa/rosa-3.webp",
+      "/productos/Bravos/Boxy%20Fit/Rosa/rosa-4.webp",
+      "/productos/Bravos/Boxy%20Fit/Rosa/rosa.webp",
+    ],
+  },
+  "Bratz": {
+    "Beige": [
+      "/productos/Bravos/Bratz/Beige/beige-2.webp",
+      "/productos/Bravos/Bratz/Beige/beige-3.webp",
+      "/productos/Bravos/Bratz/Beige/beige.webp",
+    ],
+    "Blanco": [
+      "/productos/Bravos/Bratz/Blanco/blanco-2.webp",
+      "/productos/Bravos/Bratz/Blanco/blanco-3.webp",
+      "/productos/Bravos/Bratz/Blanco/blanco.webp",
+    ],
+    "Denim": [
+      "/productos/Bravos/Bratz/Denim/denim-2.webp",
+      "/productos/Bravos/Bratz/Denim/denim-3.webp",
+      "/productos/Bravos/Bratz/Denim/denim.webp",
+    ],
+    "Pacay": [
+      "/productos/Bravos/Bratz/Pacay/pacay-2.webp",
+      "/productos/Bravos/Bratz/Pacay/pacay-3.webp",
+      "/productos/Bravos/Bratz/Pacay/pacay.webp",
+    ],
+    "Rosa": [
+      "/productos/Bravos/Bratz/Rosa/rosa-2.webp",
+      "/productos/Bravos/Bratz/Rosa/rosa-3.webp",
+      "/productos/Bravos/Bratz/Rosa/rosa.webp",
+    ],
+  },
+  "Neru": {
+    "Azul marino": [
+      "/productos/Bravos/Neru/Azul%20marino/azul-marino-2.webp",
+      "/productos/Bravos/Neru/Azul%20marino/azul-marino-3.webp",
+      "/productos/Bravos/Neru/Azul%20marino/azul-marino.webp",
+    ],
+    "Beige": [
+      "/productos/Bravos/Neru/Beige/beige-2.webp",
+      "/productos/Bravos/Neru/Beige/beige-3.webp",
+      "/productos/Bravos/Neru/Beige/beige.webp",
+    ],
+    "Blanco": [
+      "/productos/Bravos/Neru/Blanco/blanco-2.webp",
+      "/productos/Bravos/Neru/Blanco/blanco-3.webp",
+      "/productos/Bravos/Neru/Blanco/blanco.webp",
+    ],
+    "Botella": [
+      "/productos/Bravos/Neru/Botella/botella-2.webp",
+      "/productos/Bravos/Neru/Botella/botella-3.webp",
+      "/productos/Bravos/Neru/Botella/botella.webp",
+    ],
+    "Cemento": [
+      "/productos/Bravos/Neru/Cemento/cemento-2.webp",
+      "/productos/Bravos/Neru/Cemento/cemento-3.webp",
+      "/productos/Bravos/Neru/Cemento/cemento.webp",
+    ],
+    "Denim": [
+      "/productos/Bravos/Neru/Denim/denim-2.webp",
+      "/productos/Bravos/Neru/Denim/denim-3.webp",
+      "/productos/Bravos/Neru/Denim/denim.webp",
+    ],
+    "Melange": [
+      "/productos/Bravos/Neru/Melange/melange-2.webp",
+      "/productos/Bravos/Neru/Melange/melange-3.webp",
+      "/productos/Bravos/Neru/Melange/melange.webp",
+    ],
+    "Negro": [
+      "/productos/Bravos/Neru/Negro/negro-2.webp",
+      "/productos/Bravos/Neru/Negro/negro-3.webp",
+      "/productos/Bravos/Neru/Negro/negro.webp",
+    ],
+    "Pacay": [
+      "/productos/Bravos/Neru/Pacay/pacay-2.webp",
+      "/productos/Bravos/Neru/Pacay/pacay-3.webp",
+      "/productos/Bravos/Neru/Pacay/pacay.webp",
+    ],
+    "Rosa": [
+      "/productos/Bravos/Neru/Rosa/rosa-2.webp",
+      "/productos/Bravos/Neru/Rosa/rosa-3.webp",
+      "/productos/Bravos/Neru/Rosa/rosa.webp",
+    ],
+  },
+};
+
+// Legacy export — mantiene compatibilidad con cualquier código que aún use CATALOGO_IMAGENES
+export const CATALOGO_IMAGENES: Record<string, CatalogoEntry> = {
+  ...CATALOGO_OVERSHARK,
+  ...CATALOGO_BRAVOS,
 };

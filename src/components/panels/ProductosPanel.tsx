@@ -18,6 +18,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [newPromoQty, setNewPromoQty] = useState("1");
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
+  const [promoView, setPromoView] = useState<'chips' | 'lista'>('chips');
   const [mixOpen, setMixOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
   const [catalogCopied, setCatalogCopied] = useState(false);
@@ -238,55 +239,115 @@ export default function ProductosPanel({ products, setProducts, customComboName,
 
         {/* Cargar Promoción — individual */}
         <div className="promo-block">
-          <div className="promo-block-header">
-            <Tag size={13} />
-            <span>Cargar Promoción</span>
+          <div className="promo-block-header" style={{ justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Tag size={13} />
+              <span>Cargar Promoción</span>
+            </div>
+            {!isBravos && (
+              <div className="promo-view-toggle">
+                <button
+                  className={`promo-view-btn${promoView === 'chips' ? ' promo-view-btn--active' : ''}`}
+                  onClick={() => setPromoView('chips')}
+                  title="Vista burbujas"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <rect x="0" y="0" width="6" height="6" rx="3" fill="currentColor"/>
+                    <rect x="8" y="0" width="6" height="6" rx="3" fill="currentColor"/>
+                    <rect x="0" y="8" width="6" height="6" rx="3" fill="currentColor"/>
+                    <rect x="8" y="8" width="6" height="6" rx="3" fill="currentColor"/>
+                  </svg>
+                  Burbujas
+                </button>
+                <button
+                  className={`promo-view-btn${promoView === 'lista' ? ' promo-view-btn--active' : ''}`}
+                  onClick={() => setPromoView('lista')}
+                  title="Vista lista"
+                >
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/>
+                    <rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/>
+                    <rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/>
+                  </svg>
+                  Lista
+                </button>
+              </div>
+            )}
           </div>
 
           {!isBravos ? (
             <>
-              {/* Chips de producto */}
-              <div className="promo-chips-row">
-                {PROMOS_GROUPS.map(g => {
-                  const isActive = activePromoGroup === g.label;
-                  const variantCount = g.keys.length;
-                  return (
-                    <button
-                      key={g.label}
-                      onClick={() => setActivePromoGroup(isActive ? null : g.label)}
-                      className={`promo-chip ${isActive ? 'promo-chip--active' : ''}`}
-                    >
-                      <span className="promo-chip-label">{g.label}</span>
-                      <span className="promo-chip-count">{variantCount}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Panel de variantes */}
-              {activeGroup && (
-                <div className="promo-variants-panel">
-                  <div className="promo-variants-title">
-                    {activeGroup.label} — elige cantidad
-                  </div>
-                  <div className="promo-variants-grid">
-                    {activeGroup.keys.map(k => {
-                      const v = PROMOS_DATA[k];
-                      if (!v) return null;
-                      const label = variantLabel(v);
-                      const isLive = v.comboData.includes('REGALO');
+              {promoView === 'chips' ? (
+                <>
+                  {/* Vista Burbujas */}
+                  <div className="promo-chips-row">
+                    {PROMOS_GROUPS.map(g => {
+                      const isActive = activePromoGroup === g.label;
+                      const variantCount = g.keys.length;
                       return (
                         <button
-                          key={k}
-                          onClick={() => handlePromoLoad(k)}
-                          className={`promo-variant-btn ${isLive ? 'promo-variant-btn--live' : ''}`}
+                          key={g.label}
+                          onClick={() => setActivePromoGroup(isActive ? null : g.label)}
+                          className={`promo-chip ${isActive ? 'promo-chip--active' : ''}`}
                         >
-                          <span className="promo-variant-qty">{label}</span>
-                          <span className="promo-variant-price">S/ {v.price}</span>
+                          <span className="promo-chip-label">{g.label}</span>
+                          <span className="promo-chip-count">{variantCount}</span>
                         </button>
                       );
                     })}
                   </div>
+                  {activeGroup && (
+                    <div className="promo-variants-panel">
+                      <div className="promo-variants-title">
+                        {activeGroup.label} — elige cantidad
+                      </div>
+                      <div className="promo-variants-grid">
+                        {activeGroup.keys.map(k => {
+                          const v = PROMOS_DATA[k];
+                          if (!v) return null;
+                          const label = variantLabel(v);
+                          const isLive = v.comboData.includes('REGALO');
+                          return (
+                            <button
+                              key={k}
+                              onClick={() => handlePromoLoad(k)}
+                              className={`promo-variant-btn ${isLive ? 'promo-variant-btn--live' : ''}`}
+                            >
+                              <span className="promo-variant-qty">{label}</span>
+                              <span className="promo-variant-price">S/ {v.price}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* Vista Lista */
+                <div className="promo-lista">
+                  {PROMOS_GROUPS.map(g => (
+                    <div key={g.label} className="promo-lista-group">
+                      <div className="promo-lista-group-label">{g.label}</div>
+                      <div className="promo-lista-variants">
+                        {g.keys.map(k => {
+                          const v = PROMOS_DATA[k];
+                          if (!v) return null;
+                          const label = variantLabel(v);
+                          const isLive = v.comboData.includes('REGALO');
+                          return (
+                            <button
+                              key={k}
+                              onClick={() => handlePromoLoad(k)}
+                              className={`promo-lista-btn${isLive ? ' promo-lista-btn--live' : ''}`}
+                            >
+                              <span className="promo-lista-qty">{label}</span>
+                              <span className="promo-lista-price">S/ {v.price}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </>

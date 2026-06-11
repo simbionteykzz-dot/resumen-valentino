@@ -1113,6 +1113,107 @@ input[type="radio"]:checked { border-color: var(--accent) !important; }
   color: var(--accent);
 }
 
+/* View toggle buttons */
+.promo-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.18rem;
+}
+.promo-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.promo-view-btn:hover { color: var(--accent); }
+.promo-view-btn--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(69,131,77,0.3);
+}
+
+/* Vista lista */
+.promo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+}
+.promo-lista-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+.promo-lista-group:hover { border-color: rgba(104,168,119,0.4); }
+.promo-lista-group-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text);
+  min-width: 110px;
+  flex-shrink: 0;
+}
+.promo-lista-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1;
+}
+.promo-lista-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 7px;
+  border: 1.5px solid rgba(104,168,119,0.35);
+  background: rgba(104,168,119,0.07);
+  color: var(--text2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.promo-lista-btn:hover {
+  border-color: var(--accent);
+  background: rgba(104,168,119,0.15);
+  color: var(--accent);
+}
+.promo-lista-btn--live {
+  border-color: rgba(220,38,38,0.3);
+  background: rgba(220,38,38,0.06);
+  color: #DC2626;
+}
+.promo-lista-btn--live:hover {
+  border-color: #DC2626;
+  background: rgba(220,38,38,0.12);
+}
+.promo-lista-qty {
+  font-weight: 900;
+}
+.promo-lista-price {
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
 /* Variant panel */
 .promo-variants-panel {
   margin-top: 0.6rem;

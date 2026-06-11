@@ -273,12 +273,12 @@ function parseProductos(detalle: string, combo: string, totalTotal: number, qtyN
 }
 
 const abrevMetodo = (m: string) => {
-  if (!m) return 'I.T';
+  if (!m) return 'Y. Import';
   const l = m.toLowerCase();
-  if (l.includes('yape') || l.includes('import')) return 'I.T';
+  if (l.includes('yape') || l.includes('import')) return 'Y. Import';
   if (l.includes('completo')) return 'P.C';
   if (l.includes('contra')) return 'C.E';
-  return m.slice(0, 4).toUpperCase();
+  return m;
 };
 
 interface PlanillaPanelProps {
@@ -369,7 +369,8 @@ export default function PlanillaPanel({
         'Marca temporal':       s.fecha ? `${s.fecha} ${s.hora ?? ''}`.trim() : selectedDate,
         'EMPRESA':              (s.marcaLabel === 'BRV') ? 'BRAVOS' : 'OVERSHARK',
         'VENDEDOR':             vendorLabel,
-        'CELULAR':              '',
+        'CELULAR':              'LIVE OVERSHARK',
+        'TIPO DE PEDIDO':       (!s.limaMark && !s.provMark) ? 'RECOJO EN TIENDA' : s.metodoPago === 'Contra entrega' ? 'CONTRA ENTREGA' : 'PAGO COMPLETO',
         'LIMA O PROVINCIA':     limaOProv,
         'NOMBRE DE CLIENTE':    s.nom ?? '',
         'NUMERO DE CELULAR':    s.cel ?? '',
@@ -386,9 +387,10 @@ export default function PlanillaPanel({
         'MONTO TOTAL':          totalTotal || '',
         'A CUENTA (DEBE)':      s.resta || '',
         'SEPARO':               s.separo || '',
-        'METODO DE PAGO':       s.metodoPago ?? '',
-        'CUENTA DE ABONO':      s.codigoYape ?? '',
-        'CODIGO DE PUBLICIDAD': s.codigoPublicidad ?? '',
+        'METODO DE PAGO':       s.metodoPago?.toLowerCase().includes('yape') || s.metodoPago?.toLowerCase().includes('import') || !s.metodoPago ? 'Yape Import Textil' : s.metodoPago,
+        'CUENTA DE ABONO':      'OTRO',
+        'CODIGO DE OPERACION':  s.codigoYape ?? '',
+        'CODIGO DE PUBLICIDAD': 'LIVE',
         'ESTADO DE PEDIDO':     s.separo ? 'SEPARO' : s.pagoCompletoTxt ? 'PAGO COMPLETO' : 'CONTRA ENTREGA',
       };
     });
@@ -735,7 +737,7 @@ export default function PlanillaPanel({
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'cel', e)}>{cv(rk, 'cel', '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'nom', e)}>{cv(rk, 'nom', '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'dni', e)}>{cv(rk, 'dni', '')}</td>
-                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'metodo', e)}>{cv(rk, 'metodo', 'I.T')}</td>
+                  <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'metodo', e)}>{cv(rk, 'metodo', 'Y. Import')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'hora', e)}>{cv(rk, 'hora', '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'etiq', e)}>{cv(rk, 'etiq', '')}</td>
                   <td contentEditable suppressContentEditableWarning onBlur={e => handleBlur(rk, 'for', e)}>{cv(rk, 'for', '')}</td>
