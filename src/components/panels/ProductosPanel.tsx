@@ -105,6 +105,40 @@ export default function ProductosPanel({ products, setProducts, customComboName,
     return Object.keys(VARIANTES).find(k => k.toLowerCase() === tl) || null;
   };
 
+  // Fuzzy autocorrect: al salir del input, corrige el nombre al producto más cercano del catálogo
+  const fuzzyCorrectName = (id: number, rawName: string) => {
+    const val = rawName.trim();
+    if (!val) return;
+    // Si ya coincide exacto (case-insensitive) no hacer nada
+    if (CATALOGO.some(c => c.toLowerCase() === val.toLowerCase())) {
+      // Normalizar capitalización al valor oficial
+      const official = CATALOGO.find(c => c.toLowerCase() === val.toLowerCase())!;
+      if (official !== val) updateProduct(id, 'name', official);
+      return;
+    }
+    // Distancia de Levenshtein simplificada
+    const lev = (a: string, b: string): number => {
+      const m = a.length, n = b.length;
+      const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+        Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+      );
+      for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+          dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      return dp[m][n];
+    };
+    const norm = (s: string) => s.toUpperCase().replace(/[ÁÀÂÄ]/g,'A').replace(/[ÉÈÊË]/g,'E').replace(/[ÍÌÎÏ]/g,'I').replace(/[ÓÒÔÖ]/g,'O').replace(/[ÚÙÛÜ]/g,'U').replace(/WAFLE/g,'WAFFLE').replace(/PIQUE/g,'PIKE');
+    const normVal = norm(val);
+    let best = '', bestDist = Infinity;
+    for (const c of CATALOGO) {
+      const d = lev(normVal, norm(c));
+      if (d < bestDist) { bestDist = d; best = c; }
+    }
+    // Aplicar corrección si la distancia es menor al 40% del largo del nombre escrito
+    const threshold = Math.max(3, Math.floor(val.length * 0.4));
+    if (bestDist <= threshold) updateProduct(id, 'name', best);
+  };
+
   const addColorLine = (id: number, color: string) =>
     setProducts(products.map((p: any) => {
       if (p.id !== id) return p;
@@ -583,7 +617,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
           return (
             <div key={p.id} className="product-card-v2">
               <div className="pc-row pc-head-row">
-                <input list={listId} value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)} placeholder="Escribe o elige producto..." style={{ flex: 1 }} />
+                <input list={listId} value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)} onBlur={e => fuzzyCorrectName(p.id, e.target.value)} placeholder="Escribe o elige producto..." style={{ flex: 1 }} />
                 {cpCode && (
                   <span style={{ fontSize: '0.6rem', fontWeight: 900, padding: '0.12rem 0.5rem', borderRadius: '5px', background: 'rgba(69,131,77,0.12)', border: '1px solid rgba(69,131,77,0.3)', color: '#45834D', whiteSpace: 'nowrap', letterSpacing: '0.05em', flexShrink: 0 }}>
                     {cpCode}
