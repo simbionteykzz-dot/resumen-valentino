@@ -244,29 +244,59 @@ export default function PlanillaPanel({
       const totalTotal = Number(s.totalTotal) || 0;
       const qtyN = s.qtyN || 0;
 
-      // Parsear productos del campo detalle
+      // Parsear productos desde el detalle (formato WhatsApp generado por getProductString)
+      // Líneas de productos tienen formato: *NOMBRE qty X precio_total* o *NOMBRE (talla X)*
       const products: { name: string; qty: number; price: number }[] = [];
-      const lines = detalle.split('\n');
-      for (const line of lines) {
-        const t = line.trim();
-        const mNx = t.match(/^-\s+(\d+)[xX×]\s+(.+)/);
-        const mBold = t.match(/^\*(.+?)\*$/);
-        const mDash = t.match(/^-\s+(.+)/);
-        if (mNx) {
-          products.push({ name: mNx[2].replace(/\s*\(talla.*?\)/i, '').trim(), qty: parseInt(mNx[1]), price: 0 });
-        } else if (mBold && !t.includes('X') && mBold[1].length < 60) {
-          const n = mBold[1].trim();
-          if (!n.includes('\n') && products.length < 3) products.push({ name: n, qty: 1, price: 0 });
-        } else if (mDash && !t.startsWith('- -') && mDash[1].length < 60) {
-          const n = mDash[1].replace(/\s*\(talla.*?\)/i, '').replace(/\d+x\s*/i, '').trim();
-          if (n && !n.match(/^[\d.]+$/) && products.length < 3) products.push({ name: n, qty: 1, price: 0 });
+      if (detalle) {
+        const lines = detalle.split('\n');
+        for (const line of lines) {
+          const t = line.trim();
+          // Línea principal de producto: *NOMBRE* o *NOMBRE qty X total*
+          const mBold = t.match(/^\*(.+?)\*$/);
+          if (mBold) {
+            const inner = mBold[1];
+            // Formato con qty y precio: "NOMBRE 5 X 495" o "NOMBRE 5 X 495 (talla M)"
+            const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
+            if (mQtyPrice) {
+              const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
+              const qty = parseInt(mQtyPrice[2]);
+              const price = parseFloat(mQtyPrice[3]);
+              if (products.length < 3) products.push({ name, qty, price });
+            } else {
+              // Solo nombre: *NOMBRE* — qty y precio se asignan después
+              const name = inner.replace(/\s*\(talla.*?\)/i, '').trim();
+              if (name && name.length < 60 && products.length < 3)
+                products.push({ name, qty: qtyN || 1, price: 0 });
+            }
+          }
         }
-        if (products.length >= 3) break;
       }
-      if (products.length === 0 && combo) products.push({ name: combo, qty: qtyN || 1, price: totalTotal });
-      const totalQty = products.reduce((a, p) => a + p.qty, 0) || qtyN || 1;
-      const unitPrice = totalQty > 0 && totalTotal > 0 ? totalTotal / totalQty : 0;
-      products.forEach(p => { p.price = unitPrice * p.qty; });
+      // Fallback: usar combo si no se parseó nada
+      if (products.length === 0) {
+        if (combo) {
+          // combo formato: "10 X 99 CS" o "5 CS" o "10 CS"
+          const mCombo = combo.match(/^(\d+)(?:\s+[xX×]\s+([\d.]+))?\s+(.+)/);
+          if (mCombo) {
+            const qty = parseInt(mCombo[1]);
+            const price = mCombo[2] ? parseFloat(mCombo[2]) * qty : totalTotal;
+            const name = mCombo[3].trim();
+            products.push({ name, qty, price });
+          } else {
+            products.push({ name: combo, qty: qtyN || 1, price: totalTotal });
+          }
+        } else {
+          products.push({ name: '', qty: qtyN || 1, price: totalTotal });
+        }
+      }
+      // Si algún producto tiene price=0, distribuir el totalTotal restante proporcionalmente
+      const priceAssigned = products.reduce((a, p) => a + p.price, 0);
+      const remaining = totalTotal - priceAssigned;
+      const zeroPriceProducts = products.filter(p => p.price === 0);
+      if (zeroPriceProducts.length > 0 && remaining > 0) {
+        const totalZeroQty = zeroPriceProducts.reduce((a, p) => a + p.qty, 0) || 1;
+        const unitPrice = remaining / totalZeroQty;
+        zeroPriceProducts.forEach(p => { p.price = unitPrice * p.qty; });
+      }
 
       const p1 = products[0], p2 = products[1], p3 = products[2];
       const limaOProv = s.limaMark ? 'LIMA' : s.provMark ? 'PROVINCIA' : '';

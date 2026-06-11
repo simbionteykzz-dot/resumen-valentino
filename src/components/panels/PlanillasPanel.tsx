@@ -27,45 +27,59 @@ const S = {
   surface: 'rgba(255,255,255,0.97)',
 };
 
-// Extrae hasta N productos del campo detalle (formato texto WhatsApp)
+// Extrae hasta 3 productos del campo detalle (formato WhatsApp generado por getProductString)
 function parseProductosFromDetalle(detalle: string, combo: string, totalTotal: number, qtyN: number): { name: string; qty: number; price: number }[] {
   const products: { name: string; qty: number; price: number }[] = [];
-  if (!detalle && !combo) return products;
 
-  // Intentar parsear desde detalle (formato: "- NxNombre" o "- Nombre")
-  const lines = (detalle || '').split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    // Líneas de producto: "- Nx Nombre" o "*Nombre*" o "- Nombre"
-    const matchNx = trimmed.match(/^-\s+(\d+)[xX×]\s+(.+)/);
-    const matchBold = trimmed.match(/^\*(.+?)\*$/);
-    const matchDash = trimmed.match(/^-\s+(.+)/);
-    if (matchNx) {
-      products.push({ name: matchNx[2].replace(/\s*\(talla.*?\)/i, '').trim(), qty: parseInt(matchNx[1]), price: 0 });
-    } else if (matchBold && !trimmed.includes('X') && matchBold[1].length < 60) {
-      // bold lines como "*Camiseros*" — nombre de producto
-      const boldName = matchBold[1].trim();
-      if (!boldName.includes('\n') && products.length < 3) {
-        products.push({ name: boldName, qty: 1, price: 0 });
-      }
-    } else if (matchDash && !trimmed.startsWith('- -') && matchDash[1].length < 60) {
-      const dashName = matchDash[1].replace(/\s*\(talla.*?\)/i, '').replace(/\d+x\s*/i, '').trim();
-      if (dashName && !dashName.match(/^[\d.]+$/) && products.length < 3) {
-        products.push({ name: dashName, qty: 1, price: 0 });
+  if (detalle) {
+    const lines = detalle.split('\n');
+    for (const line of lines) {
+      const t = line.trim();
+      // Línea principal de producto: *NOMBRE* o *NOMBRE qty X total*
+      const mBold = t.match(/^\*(.+?)\*$/);
+      if (mBold) {
+        const inner = mBold[1];
+        // Formato con qty y precio: "NOMBRE 5 X 495" o similar
+        const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
+        if (mQtyPrice) {
+          const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
+          const qty = parseInt(mQtyPrice[2]);
+          const price = parseFloat(mQtyPrice[3]);
+          if (products.length < 3) products.push({ name, qty, price });
+        } else {
+          const name = inner.replace(/\s*\(talla.*?\)/i, '').trim();
+          if (name && name.length < 60 && products.length < 3)
+            products.push({ name, qty: qtyN || 1, price: 0 });
+        }
       }
     }
-    if (products.length >= 3) break;
   }
 
-  // Si no se parseó nada, usar combo como nombre del producto 1
-  if (products.length === 0 && combo) {
-    products.push({ name: combo, qty: qtyN || 1, price: totalTotal || 0 });
+  // Fallback: usar combo
+  if (products.length === 0) {
+    if (combo) {
+      const mCombo = combo.match(/^(\d+)(?:\s+[xX×]\s+([\d.]+))?\s+(.+)/);
+      if (mCombo) {
+        const qty = parseInt(mCombo[1]);
+        const price = mCombo[2] ? parseFloat(mCombo[2]) * qty : totalTotal;
+        products.push({ name: mCombo[3].trim(), qty, price });
+      } else {
+        products.push({ name: combo, qty: qtyN || 1, price: totalTotal || 0 });
+      }
+    } else {
+      return [];
+    }
   }
 
-  // Distribuir precio proporcionalmente (precio unitario = totalTotal / qtyTotal)
-  const totalQty = products.reduce((a, p) => a + p.qty, 0) || qtyN || 1;
-  const unitPrice = totalQty > 0 && totalTotal > 0 ? totalTotal / totalQty : 0;
-  products.forEach(p => { p.price = unitPrice * p.qty; });
+  // Distribuir precio restante en productos con price=0
+  const priceAssigned = products.reduce((a, p) => a + p.price, 0);
+  const remaining = totalTotal - priceAssigned;
+  const zeroPriced = products.filter(p => p.price === 0);
+  if (zeroPriced.length > 0 && remaining > 0) {
+    const totalZeroQty = zeroPriced.reduce((a, p) => a + p.qty, 0) || 1;
+    const unitPrice = remaining / totalZeroQty;
+    zeroPriced.forEach(p => { p.price = unitPrice * p.qty; });
+  }
 
   return products;
 }
