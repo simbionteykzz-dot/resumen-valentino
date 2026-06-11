@@ -170,16 +170,18 @@ function parseProductos(detalle: string, combo: string, totalTotal: number, qtyN
 
       if (mBold) {
         const inner = mBold[1];
-        // ¿Tiene qty × precio? → producto individual (ej: *CLASICO 10 X 990*)
         const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
         if (mQtyPrice) {
-          inPromo = false;
           const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
-          if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
+          // Si es una promo, leer sus hijos como productos individuales
+          if (/PROMO/i.test(name)) {
+            inPromo = true;
+          } else {
+            inPromo = false;
+            if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
+          }
         } else {
-          // Solo nombre → es cabecera de promo o producto sin qty aún
           inPromo = true;
-          // No agregar la promo como producto; sus hijos se agregarán en las líneas "- "
         }
         continue;
       }

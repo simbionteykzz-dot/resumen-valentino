@@ -43,11 +43,14 @@ function parseProductosFromDetalle(detalle: string, combo: string, totalTotal: n
         const inner = mBold[1];
         const mQtyPrice = inner.match(/^(.+?)\s+(\d+)\s+[xX×]\s+([\d.]+)/);
         if (mQtyPrice) {
-          inPromo = false;
           const name = mQtyPrice[1].replace(/\s*\(talla.*?\)/i, '').trim();
-          if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
+          if (/PROMO/i.test(name)) {
+            inPromo = true;
+          } else {
+            inPromo = false;
+            if (products.length < 3) products.push({ name, qty: parseInt(mQtyPrice[2]), price: parseFloat(mQtyPrice[3]) });
+          }
         } else {
-          // Cabecera de promo — leer hijos en las líneas siguientes
           inPromo = true;
         }
         continue;
