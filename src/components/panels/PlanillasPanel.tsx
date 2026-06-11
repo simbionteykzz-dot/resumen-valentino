@@ -42,6 +42,11 @@ const PRODUCT_NAME_MAP: Record<string, string> = {
   'CUELLO NOTCH PIQUE':       'Polo Cuello Notch Piqué',
   'CUELLO NOTCH WAFLE':       'Polo Cuello Notch Waffle',
   'MEDIAS':                   'Medias cortas',
+  // BRAVOS
+  'POLERA BOXYFIT':           'Polera Boxy fit',
+  'POLERA NERU':              'Neru french terry',
+  'PANTALON BRATZ':           'Bratz french terry',
+  'PANTALON OPRA':            'Pantalon Ophra',
 };
 
 function normProductName(name: string): string {
