@@ -157,17 +157,25 @@ function drawCierreCajaPage(pdf: any, sales: any[], pageW: number, pageH: number
 
 
 const PRODUCT_NAME_MAP: Record<string, string> = {
+  // OVERSHARK — nombres canónicos
   'BABY TY':                  'Baby tee',
   'BABY TY ESCOTADO':         'Baby tee escote',
   'BABY TY MANGA':            'Baby tee manga larga cuello redondo',
   'BABY TY MANGA ESCOTADO':   'Baby tee manga larga con escote',
   'CAMISA WAFFLE':            'Camisa Waffle',
+  'CAMISA WAFLE':             'Camisa Waffle',
   'CAMISERO PIKE':            'Camiseros',
+  'CAMISERO PIQUE':           'Camiseros',
   'CLASICO':                  'Clásicos',
   'JERSEY MANGA LARGA':       'Manga larga jersey',
+  'MANGALARGA JERSEY':        'Manga larga jersey',
   'WAFFLE':                   'Waffle',
+  'WAFLE':                    'Waffle',
+  'MANGA CORTA WAFLE':        'Waffle',
   'WAFFLE CAMISERO':          'Waffle Camisero',
+  'CAMISERO WAFLE':           'Waffle Camisero',
   'WAFFLE MANGA LARGA':       'Waffle manga larga',
+  'MANGALARGA WAFLE':         'Waffle manga larga',
   'CUELLO NOTCH PIQUE':       'Polo Cuello Notch Piqué',
   'CUELLO NOTCH WAFLE':       'Polo Cuello Notch Waffle',
   'MEDIAS':                   'Medias cortas',
