@@ -156,6 +156,27 @@ function drawCierreCajaPage(pdf: any, sales: any[], pageW: number, pageH: number
 
 
 
+const PRODUCT_NAME_MAP: Record<string, string> = {
+  'BABY TY':                  'Baby tee',
+  'BABY TY ESCOTADO':         'Baby tee escote',
+  'BABY TY MANGA':            'Baby tee manga larga cuello redondo',
+  'BABY TY MANGA ESCOTADO':   'Baby tee manga larga con escote',
+  'CAMISA WAFFLE':            'Camisa Waffle',
+  'CAMISERO PIKE':            'Camiseros',
+  'CLASICO':                  'Clásicos',
+  'JERSEY MANGA LARGA':       'Manga larga jersey',
+  'WAFFLE':                   'Waffle',
+  'WAFFLE CAMISERO':          'Waffle Camisero',
+  'WAFFLE MANGA LARGA':       'Waffle manga larga',
+  'CUELLO NOTCH PIQUE':       'Polo Cuello Notch Piqué',
+  'CUELLO NOTCH WAFLE':       'Polo Cuello Notch Waffle',
+  'MEDIAS':                   'Medias cortas',
+};
+
+function normProductName(name: string): string {
+  return PRODUCT_NAME_MAP[name.toUpperCase().trim()] ?? name;
+}
+
 // Parsea productos desde el campo detalle (texto WhatsApp) o combo
 function parseProductos(detalle: string, combo: string, totalTotal: number, qtyN: number): { name: string; qty: number; price: number }[] {
   const products: { name: string; qty: number; price: number }[] = [];
@@ -235,7 +256,7 @@ function parseProductos(detalle: string, combo: string, totalTotal: number, qtyN
     zeroPriced.forEach(p => { p.price = Math.round(unitPrice * p.qty * 100) / 100; });
   }
 
-  return products;
+  return products.map(p => ({ ...p, name: normProductName(p.name) }));
 }
 
 const abrevMetodo = (m: string) => {
