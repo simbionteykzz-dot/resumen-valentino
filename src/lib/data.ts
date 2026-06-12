@@ -177,6 +177,12 @@ export const BRV_PROMOS_DATA: Record<string, { name: string; comboData: string; 
   "boxyfit_2_99": { name: "Promo Boxyfit 2 Conjuntos×99", comboData: "PROMO BOXYFIT — 2 CONJUNTOS BOXYFIT X 99 SOLES", price: 99, list: [{ n: "POLERA BOXYFIT", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
   // ── Promo Neru ───────────────────────────────────────────────────────────
   "neru_2_119":   { name: "Promo Neru 2 Conjuntos×119",   comboData: "PROMO NERU — 2 CONJUNTOS NERU X 119 SOLES",   price: 119, list: [{ n: "POLERA NERU", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
+  // ── Neru suelto ──────────────────────────────────────────────────────────
+  "neru_1_35":    { name: "Neru 1×35",   comboData: "POLERA NERU 1 X 35",   price: 35,  list: [{ n: "POLERA NERU", q: 1 }] },
+  "neru_2_70":    { name: "Neru 2×70",   comboData: "POLERA NERU 2 X 70",   price: 70,  list: [{ n: "POLERA NERU", q: 2 }] },
+  // ── Boxyfit suelto ───────────────────────────────────────────────────────
+  "boxyfit_1_35": { name: "Boxyfit 1×35", comboData: "POLERA BOXYFIT 1 X 35", price: 35, list: [{ n: "POLERA BOXYFIT", q: 1 }] },
+  "boxyfit_2_70": { name: "Boxyfit 2×70", comboData: "POLERA BOXYFIT 2 X 70", price: 70, list: [{ n: "POLERA BOXYFIT", q: 2 }] },
 };
 
 // ────────────────────────────────────────────────────────────────────────────
