@@ -1,5 +1,5 @@
-import React from 'react';
-import { BarChart3, DollarSign, Package, Truck, MapPin, Bike, TrendingUp, CreditCard, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { BarChart3, DollarSign, Package, Truck, MapPin, Bike, TrendingUp, CreditCard, ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 // ── Helper: modern metric card with top accent bar + icon badge ───────────────
 function MetricCard({
@@ -99,6 +99,7 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
 }
 
 export default function CierreCajaPanel({ sales }: { sales: any[] }) {
+  const [collapsed, setCollapsed] = useState(true);
   const totalVentas = sales.length;
   const totalPrendas = sales.reduce((acc, s) => acc + (Number(s.qtyN) || 0), 0);
 
@@ -131,19 +132,23 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
     <div className="panel always" id="cierre-caja-export" style={{ marginTop: '1.25rem' }}>
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgb(22,46,32), rgb(34,65,44))',
-        borderRadius: '14px',
-        padding: '1.25rem 1.4rem',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '1rem',
-        flexWrap: 'wrap',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
+      <div
+        onClick={() => setCollapsed(c => !c)}
+        style={{
+          background: 'linear-gradient(135deg, rgb(22,46,32), rgb(34,65,44))',
+          borderRadius: collapsed ? '14px' : '14px 14px 0 0',
+          padding: '1.25rem 1.4rem',
+          marginBottom: collapsed ? 0 : '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          flexWrap: 'wrap',
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}>
         {/* decorative circles */}
         <div style={{ position: 'absolute', top: '-30px', right: '160px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: '-40px', right: '-20px', width: '140px', height: '140px', borderRadius: '50%', background: 'rgba(69,131,77,0.15)', pointerEvents: 'none' }} />
@@ -183,6 +188,7 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
           </p>
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {/* Featured total recaudado */}
         <div style={{
           background: 'rgba(69,131,77,0.25)',
@@ -200,8 +206,14 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
             {solesStr(totalRecaudado)}
           </div>
         </div>
+        {/* Chevron colapso */}
+        <div style={{ color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>
+          {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+        </div>
+        </div>
       </div>
 
+      {!collapsed && <>
       {/* ── Sección 1: Métricas principales ──────────────────────────────── */}
       <SectionTitle
         icon={<BarChart3 size={15} color="var(--accent)" />}
@@ -389,6 +401,7 @@ export default function CierreCajaPanel({ sales }: { sales: any[] }) {
           icon={<Package size={13} />}
         />
       </div>
+      </>}
 
     </div>
   );

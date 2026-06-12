@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { TrendingUp, Package, DollarSign, ShoppingBag, Bike, MapPin, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, ShoppingBag, Bike, MapPin, ChevronLeft, ChevronRight, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DayKPI {
   fecha: string;
@@ -88,6 +88,7 @@ function KPIBadge({ icon, label, value, sub, color, barPct }: {
 }
 
 export default function KPIHistorialPanel({ userId }: { userId?: string }) {
+  const [collapsed, setCollapsed] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
   const [data, setData] = useState<DayKPI[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,13 +169,17 @@ export default function KPIHistorialPanel({ userId }: { userId?: string }) {
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
 
       {/* ── Header ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgb(18,40,28), rgb(28,58,40))',
-        borderRadius: '14px', padding: '1.1rem 1.3rem',
-        marginBottom: '1.25rem',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap',
-        position: 'relative', overflow: 'hidden',
-      }}>
+      <div
+        onClick={() => setCollapsed(c => !c)}
+        style={{
+          background: 'linear-gradient(135deg, rgb(18,40,28), rgb(28,58,40))',
+          borderRadius: collapsed ? '14px' : '14px 14px 0 0',
+          padding: '1.1rem 1.3rem',
+          marginBottom: collapsed ? 0 : '1.25rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap',
+          position: 'relative', overflow: 'hidden',
+          cursor: 'pointer', userSelect: 'none',
+        }}>
         <div style={{ position: 'absolute', bottom: '-30px', right: '-20px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(69,131,77,0.12)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(69,131,77,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgb(140,220,160)' }}>
@@ -186,6 +191,7 @@ export default function KPIHistorialPanel({ userId }: { userId?: string }) {
           </div>
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
         {/* Resumen semana */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {[
@@ -203,8 +209,14 @@ export default function KPIHistorialPanel({ userId }: { userId?: string }) {
             </div>
           ))}
         </div>
+        {/* Chevron colapso */}
+        <div style={{ color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>
+          {collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+        </div>
+        </div>
       </div>
 
+      {!collapsed && <>
       {/* ── Controls ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {/* Mode toggle */}
@@ -325,6 +337,7 @@ export default function KPIHistorialPanel({ userId }: { userId?: string }) {
           ))}
         </div>
       )}
+      </>}
     </div>
   );
 }

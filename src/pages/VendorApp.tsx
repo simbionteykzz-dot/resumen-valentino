@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Trash2, Store, Bike, Package, BarChart3, Wrench, Radio, Megaphone, X, HelpCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Trash2, Store, Bike, Package, BarChart3, Wrench, X, HelpCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useSales } from '../hooks/useSales';
 import { useToast } from '../hooks/useToast';
@@ -185,6 +185,12 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
   };
 
   const totalSoles = sales.reduce((a: number, s: any) => a + (Number(s.totalTotal) || 0), 0);
+  const salesOver = sales.filter((s: any) => (s.marcaLabel || 'OVER') === 'OVER');
+  const salesBrv  = sales.filter((s: any) => s.marcaLabel === 'BRV');
+  const salesCountOver = salesOver.length;
+  const totalSolesOver = salesOver.reduce((a: number, s: any) => a + (Number(s.totalTotal) || 0), 0);
+  const salesCountBrv  = salesBrv.length;
+  const totalSolesBrv  = salesBrv.reduce((a: number, s: any) => a + (Number(s.totalTotal) || 0), 0);
 
   return (
     <>
@@ -209,128 +215,36 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
         <AppHeader
           salesCount={sales.length}
           totalSoles={totalSoles}
+          salesCountOver={salesCountOver}
+          totalSolesOver={totalSolesOver}
+          salesCountBrv={salesCountBrv}
+          totalSolesBrv={totalSolesBrv}
           metaDiaria={metaVentas}
           userName={vendedorName}
           onSignOut={signOut}
           brand={brand}
+          onChangeBrand={handleChangeBrand}
+          saleSource={saleSource}
+          onChangeSaleSource={handleSaleSourceChange}
         />
 
-        {/* Selector de marca */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.75rem' }}>
-          {(['overshark', 'bravos'] as BrandKey[]).map(bKey => {
-            const b = BRANDS[bKey].selector;
-            const active = brand === bKey;
-            return (
-              <button
-                key={bKey}
-                onClick={() => handleChangeBrand(bKey)}
-                style={{
-                  position: 'relative', overflow: 'hidden',
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  padding: '1rem 1.5rem', borderRadius: '18px', cursor: 'pointer',
-                  transition: 'all 0.25s',
-                  border: `2px solid ${active ? b.color : b.border}`,
-                  background: active ? b.gradActive : b.grad,
-                  outline: 'none', minWidth: '230px', flex: 1, maxWidth: '300px',
-                  boxShadow: active ? `0 6px 28px ${b.glow}, inset 0 1px 0 rgba(255,255,255,0.06)` : 'none',
-                }}
-              >
-                {active && (
-                  <div style={{
-                    position: 'absolute', top: '-30px', right: '-20px',
-                    width: '100px', height: '100px', borderRadius: '50%',
-                    background: b.color, opacity: 0.12, filter: 'blur(30px)',
-                    pointerEvents: 'none',
-                  }} />
-                )}
-                <div style={{
-                  width: '52px', height: '52px', borderRadius: '14px', flexShrink: 0,
-                  background: active ? `linear-gradient(135deg, ${b.color}33, ${b.color}11)` : `${b.color}11`,
-                  border: `1.5px solid ${active ? b.color + '55' : b.border}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: active ? `0 4px 16px ${b.glow}` : 'none',
-                }}>
-                  <img src={b.icon} alt={b.label} style={{ width: '34px', height: '34px', objectFit: 'contain' }} />
-                </div>
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 900, color: active ? b.color : '#6b7280', letterSpacing: '0.06em', lineHeight: 1 }}>
-                    {b.label}
-                  </div>
-                  <div style={{ fontSize: '0.74rem', color: active ? (bKey === 'bravos' ? '#FFA85D' : '#68A877') : '#6a7a68', marginTop: '3px', fontWeight: 500 }}>
-                    {b.sub}
-                  </div>
-                  {active && (
-                    <div style={{ marginTop: '5px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${b.color}22`, border: `1px solid ${b.color}44`, borderRadius: '20px', padding: '2px 8px' }}>
-                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: b.color }} />
-                      <span style={{ fontSize: '0.65rem', color: b.color, fontWeight: 700, letterSpacing: '0.04em' }}>ACTIVO</span>
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
 
-        {/* Switch Live / Publicidad */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
-          padding: '0.65rem 1rem', marginBottom: '1rem',
-          background: saleSource === 'live' ? 'rgba(34,197,94,0.06)' : 'rgba(139,92,246,0.07)',
-          border: `1px solid ${saleSource === 'live' ? 'rgba(34,197,94,0.3)' : 'rgba(139,92,246,0.3)'}`,
-          borderRadius: '12px',
-        }}>
-          <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-            Registrando en:
-          </span>
-          <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border)', gap: '2px' }}>
-            <button
-              onClick={() => handleSaleSourceChange('live')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.35rem',
-                padding: '0.35rem 1rem', fontSize: '0.82rem', fontWeight: 800, borderRadius: '6px',
-                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                background: saleSource === 'live' ? '#16a34a' : 'transparent',
-                color: saleSource === 'live' ? '#fff' : 'var(--muted)',
-              }}
-            >
-              <Radio size={14} /> LIVE
-            </button>
-            <button
-              onClick={() => handleSaleSourceChange('publicidad')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.35rem',
-                padding: '0.35rem 1rem', fontSize: '0.82rem', fontWeight: 800, borderRadius: '6px',
-                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                background: saleSource === 'publicidad' ? '#7C3AED' : 'transparent',
-                color: saleSource === 'publicidad' ? '#fff' : 'var(--muted)',
-              }}
-            >
-              <Megaphone size={14} /> PUBLICIDAD
-            </button>
-          </div>
-          {saleSource === 'publicidad' && (
+        {/* Input código publicidad (solo visible cuando aplica) */}
+        {saleSource === 'publicidad' && (
+          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#9333ea', whiteSpace: 'nowrap' }}>Código publicidad:</span>
             <input
-              placeholder="Código de publicidad (ej: META-001)"
+              placeholder="Ej: META-001"
               value={pubCode}
               onChange={e => handlePubCodeChange(e.target.value)}
               style={{
                 background: 'var(--surface2)', border: '1px solid rgba(139,92,246,0.4)',
-                borderRadius: '8px', color: 'var(--text)', padding: '0.35rem 0.7rem',
-                fontSize: '0.82rem', minWidth: '200px', outline: 'none',
+                borderRadius: '8px', color: 'var(--text)', padding: '0.3rem 0.65rem',
+                fontSize: '0.82rem', minWidth: '180px', outline: 'none',
               }}
             />
-          )}
-          <span style={{
-            fontSize: '0.78rem', fontWeight: 600, marginLeft: 'auto',
-            color: saleSource === 'live' ? '#16a34a' : '#9333ea',
-            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-          }}>
-            <CheckCircle2 size={13} />
-            {saleSource === 'live'
-              ? 'Las ventas van a planilla LIVE'
-              : `Las ventas van a planilla PUBLICIDAD${pubCode ? ` · ${pubCode}` : ''}`}
-          </span>
-        </div>
+          </div>
+        )}
 
         {/* Tabs de entrega */}
         <div className="tabs-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border2)', paddingBottom: '1rem' }}>
