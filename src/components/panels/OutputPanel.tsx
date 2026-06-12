@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Copy, Check, PackagePlus, Lock, Eye, EyeOff } from 'lucide-react';
+import { ClipboardList, Copy, Check, PackagePlus, Lock, Eye, EyeOff, Users } from 'lucide-react';
 
 function renderWAText(text: string): React.ReactNode {
   const lines = text.split('\n');
@@ -30,13 +30,18 @@ export default function OutputPanel({
   onAddSale,
   clientCelular,
   clientNombre,
+  vendedorName,
+  codigoYape,
 }: {
   outputText: string;
   onAddSale: () => void;
   clientCelular?: string;
   clientNombre?: string;
+  vendedorName?: string;
+  codigoYape?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [copiedGrupo, setCopiedGrupo] = useState(false);
   const [added, setAdded] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
@@ -46,6 +51,13 @@ export default function OutputPanel({
   }, [outputText]);
 
   const canRegister = !!(clientCelular?.trim() || clientNombre?.trim());
+
+  const grupoText = [
+    `Vendedor: ${vendedorName || ''}`,
+    `C.O: ${codigoYape || ''}`,
+    `🫵🏻Nombre: ${clientNombre || ''}`,
+    `📲Numero celular: ${clientCelular || ''}`,
+  ].join('\n');
 
   const handleCopy = () => {
     if (!registered) return;
@@ -61,6 +73,22 @@ export default function OutputPanel({
       document.body.removeChild(el);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleCopyGrupo = () => {
+    navigator.clipboard.writeText(grupoText).then(() => {
+      setCopiedGrupo(true);
+      setTimeout(() => setCopiedGrupo(false), 2000);
+    }).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = grupoText;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopiedGrupo(true);
+      setTimeout(() => setCopiedGrupo(false), 2000);
     });
   };
 
@@ -88,6 +116,8 @@ export default function OutputPanel({
 
   return (
     <div className="panel always" style={{ marginTop: '1.25rem' }}>
+
+      {/* ── Header ── */}
       <div className="cliente-panel-head">
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <ClipboardList size={18} /> Resumen del pedido
@@ -108,6 +138,7 @@ export default function OutputPanel({
         )}
       </div>
 
+      {/* ── Preview del resumen ── */}
       {showRaw ? (
         <textarea
           value={outputText}
@@ -129,8 +160,8 @@ export default function OutputPanel({
         </div>
       )}
 
+      {/* ── Botones principales ── */}
       <div className="actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
-
         <button
           className="btn btn-primary"
           onClick={handleCopy}
@@ -193,6 +224,57 @@ export default function OutputPanel({
           <Lock size={11} /> Registra la venta para habilitar Copiar y WhatsApp
         </p>
       )}
+
+      {/* ── Formato para grupo de pago ── */}
+      <div style={{
+        marginTop: '1rem',
+        borderTop: '1px solid var(--border)',
+        paddingTop: '0.9rem',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '0.6rem',
+        }}>
+          <span style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)',
+            textTransform: 'uppercase', letterSpacing: '0.05em',
+          }}>
+            <Users size={13} /> Formato grupo
+          </span>
+          <button
+            onClick={handleCopyGrupo}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+              background: copiedGrupo ? 'rgba(34,197,94,0.15)' : 'var(--surface2)',
+              border: `1px solid ${copiedGrupo ? 'rgba(34,197,94,0.4)' : 'var(--border)'}`,
+              borderRadius: '8px', padding: '0.35rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700,
+              color: copiedGrupo ? '#22c55e' : 'var(--muted)',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+          >
+            {copiedGrupo ? <><Check size={13} /> ¡Copiado!</> : <><Copy size={13} /> Copiar</>}
+          </button>
+        </div>
+
+        <div style={{
+          background: 'var(--surface2)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: '0.75rem 0.9rem',
+          fontSize: '0.82rem',
+          lineHeight: '1.8',
+          color: 'var(--fg)',
+          fontFamily: 'inherit',
+        }}>
+          <div><span style={{ color: 'var(--muted)', fontWeight: 600 }}>Vendedor:</span> <strong>{vendedorName || '—'}</strong></div>
+          <div><span style={{ color: 'var(--muted)', fontWeight: 600 }}>C.O:</span> <strong style={{ color: codigoYape ? '#a855f7' : 'var(--muted)' }}>{codigoYape || '—'}</strong></div>
+          <div><span style={{ color: 'var(--muted)', fontWeight: 600 }}>🫵🏻Nombre:</span> <strong>{clientNombre || '—'}</strong></div>
+          <div><span style={{ color: 'var(--muted)', fontWeight: 600 }}>📲Numero celular:</span> <strong>{clientCelular || '—'}</strong></div>
+        </div>
+      </div>
+
     </div>
   );
 }

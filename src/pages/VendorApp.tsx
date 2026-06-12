@@ -366,6 +366,8 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
               onAddSale={handlePushSale}
               clientCelular={clientData.celular}
               clientNombre={clientData.nombre}
+              vendedorName={vendedorName}
+              codigoYape={cuentaData.yape}
             />
           </div>
         </div>
