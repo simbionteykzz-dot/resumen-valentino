@@ -177,6 +177,8 @@ export const BRV_PROMOS_DATA: Record<string, { name: string; comboData: string; 
   "boxyfit_2_99": { name: "Promo Boxyfit 2 Conjuntos×99", comboData: "PROMO BOXYFIT — 2 CONJUNTOS BOXYFIT X 99 SOLES", price: 99, list: [{ n: "POLERA BOXYFIT", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
   // ── Promo Neru ───────────────────────────────────────────────────────────
   "neru_2_119":   { name: "Promo Neru 2 Conjuntos×119",   comboData: "PROMO NERU — 2 CONJUNTOS NERU X 119 SOLES",   price: 119, list: [{ n: "POLERA NERU", q: 2 }, { n: "PANTALON BRATZ", q: 2 }] },
+  // ── Oferta Imperdible ────────────────────────────────────────────────────
+  "imperdible_4_119": { name: "Promo Bravos 4×119", comboData: "PROMO BRAVOS — BOXYFIT + NERU + PANTALON BRATZ X 99 SOLES + PRENDA EXTRA X 119 SOLES", price: 119, list: [{ n: "POLERA BOXYFIT", q: 1 }, { n: "POLERA NERU", q: 1 }, { n: "PANTALON BRATZ", q: 1 }, { n: "PRENDA EXTRA BRAVOS", q: 1 }] },
   // ── Neru suelto ──────────────────────────────────────────────────────────
   "neru_1_35":    { name: "Neru 1×35",   comboData: "POLERA NERU 1 X 35",   price: 35,  list: [{ n: "POLERA NERU", q: 1 }] },
   "neru_2_70":    { name: "Neru 2×70",   comboData: "POLERA NERU 2 X 70",   price: 70,  list: [{ n: "POLERA NERU", q: 2 }] },
@@ -184,6 +186,15 @@ export const BRV_PROMOS_DATA: Record<string, { name: string; comboData: string; 
   "boxyfit_1_35": { name: "Boxyfit 1×35", comboData: "POLERA BOXYFIT 1 X 35", price: 35, list: [{ n: "POLERA BOXYFIT", q: 1 }] },
   "boxyfit_2_70": { name: "Boxyfit 2×70", comboData: "POLERA BOXYFIT 2 X 70", price: 70, list: [{ n: "POLERA BOXYFIT", q: 2 }] },
 };
+
+export const BRV_PROMOS_GROUPS: { label: string; keys: string[] }[] = [
+  { label: "Boxyfit",    keys: ["boxyfit_1_35", "boxyfit_2_70", "boxyfit_3_99"] },
+  { label: "Neru",       keys: ["neru_1_35", "neru_2_70", "neru_3_99"] },
+  { label: "Bratz",      keys: ["bratz_3_99"] },
+  { label: "Opra",       keys: ["opra_3_99"] },
+  { label: "Conjuntos",  keys: ["boxyfit_2_99", "neru_2_119"] },
+  { label: "Especiales", keys: ["imperdible_4_119", "50mil_seguidores", "clasicos_regalo"] },
+];
 
 // ────────────────────────────────────────────────────────────────────────────
 

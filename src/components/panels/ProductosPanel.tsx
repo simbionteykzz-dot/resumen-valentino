@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X, Tag, Shuffle, ChevronDown, Package, ClipboardList, Check, Copy } from 'lucide-react';
 import {
   POLOS_CATALOGO_OVERSHARK, POL_VARIANTES_OVERSHARK, PROMOS_DATA, MIX_PROMOS_DATA, PROMOS_GROUPS, TALLAS_SMLXL,
-  POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, PRODUCT_NAME_TO_CP,
+  POLOS_CATALOGO_BRAVOS, BRV_VARIANTES, BRV_PROMOS_DATA, BRV_PROMOS_GROUPS, PRODUCT_NAME_TO_CP,
 } from '../../lib/data';
 
 export default function ProductosPanel({ products, setProducts, customComboName, setCustomComboName, promoPrice, setPromoPrice, brand = 'overshark' }: any) {
@@ -18,6 +18,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [newPromoQty, setNewPromoQty] = useState("1");
   const [colorInputs, setColorInputs] = useState<Record<number, string>>({});
   const [activePromoGroup, setActivePromoGroup] = useState<string | null>(null);
+  const [activeBrvGroup, setActiveBrvGroup] = useState<string | null>(null);
   const [promoView, setPromoView] = useState<'chips' | 'lista'>('chips');
   const [mixOpen, setMixOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
@@ -352,15 +353,53 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               )}
             </>
           ) : (
-            <div className="promo-cards-scroll">
-              {Object.entries(PROMOS).map(([k, v]) => (
-                <button key={k} className="promo-card" onClick={() => handlePromoLoad(k)}>
-                  <span className="promo-card-name">{v.name}</span>
-                  <span className="promo-card-items">{promoItemsLabel(v.list)}</span>
-                  <span className="promo-card-price">S/ {v.price}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              {/* Vista Burbujas Bravos */}
+              <div className="promo-chips-row">
+                {BRV_PROMOS_GROUPS.map(g => {
+                  const isActive = activeBrvGroup === g.label;
+                  return (
+                    <button
+                      key={g.label}
+                      onClick={() => setActiveBrvGroup(isActive ? null : g.label)}
+                      className={`promo-chip ${isActive ? 'promo-chip--active' : ''}`}
+                    >
+                      <span className="promo-chip-label">{g.label}</span>
+                      <span className="promo-chip-count">{g.keys.length}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {activeBrvGroup && (() => {
+                const grp = BRV_PROMOS_GROUPS.find(g => g.label === activeBrvGroup);
+                if (!grp) return null;
+                return (
+                  <div className="promo-variants-panel">
+                    <div className="promo-variants-title">
+                      {grp.label} — elige variante
+                    </div>
+                    <div className="promo-variants-grid">
+                      {grp.keys.map(k => {
+                        const v = BRV_PROMOS_DATA[k];
+                        if (!v) return null;
+                        const label = v.list.map(i => `${i.q}× ${i.n.replace('POLERA ', '').replace('PANTALON ', '')}`).join(' · ');
+                        return (
+                          <button
+                            key={k}
+                            onClick={() => handlePromoLoad(k)}
+                            className="promo-variant-btn"
+                            style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.15rem' }}
+                          >
+                            <span className="promo-variant-qty" style={{ fontSize: '0.72rem', whiteSpace: 'normal', textAlign: 'left', lineHeight: 1.3 }}>{label}</span>
+                            <span className="promo-variant-price">{v.price > 0 ? `S/ ${v.price}` : '—'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
           )}
         </div>
 
