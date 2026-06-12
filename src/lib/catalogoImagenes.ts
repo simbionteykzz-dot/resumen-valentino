@@ -355,7 +355,7 @@ export const CATALOGO_OVERSHARK: Record<string, CatalogoEntry> = {
       "/productos/Overshark/MANGA%20LARGA%20JERSEY/Negro/reversa-negro.webp",
     ],
     "Pacay": [
-      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/frontal-pacay{.webp",
+      "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/frontal-pacay.webp",
       "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/modelo-pacay.webp",
       "/productos/Overshark/MANGA%20LARGA%20JERSEY/Pacay/reversa-pacay.webp",
     ],
@@ -397,7 +397,7 @@ export const CATALOGO_OVERSHARK: Record<string, CatalogoEntry> = {
       "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Beige/reverso-beige.webp",
     ],
     "Botella": [
-      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/frontal-botella}.webp",
+      "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/frontal-botella.webp",
       "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/modelo-botella.webp",
       "/productos/Overshark/MANGA%20LARGA%20WAFFLE/Botella/reverso-bottella.webp",
     ],
@@ -565,7 +565,7 @@ export const CATALOGO_OVERSHARK: Record<string, CatalogoEntry> = {
     "Cemento": [
       "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/frontal-waffle-cemento.webp",
       "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/modelo-waffle-cemento.webp",
-      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/reversa-waffle-cemento.jpg}.webp",
+      "/productos/Overshark/WAFFLE%20CLASICO-Ok/Cemento/reversa-waffle-cemento.webp",
     ],
     "denim": [
       "/productos/Overshark/WAFFLE%20CLASICO-Ok/denim/frontal-waffle-demin.webp",
