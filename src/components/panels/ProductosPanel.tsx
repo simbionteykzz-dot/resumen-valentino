@@ -28,6 +28,7 @@ export default function ProductosPanel({ products, setProducts, customComboName,
   const [comboItems, setComboItems] = useState<{ name: string; qty: number; size: string; mixedSizes: boolean; colorLines: { color: string; qty: number; size?: string }[]; colorInput: string }[]>([]);
   const [comboName, setComboName] = useState('');
   const [comboPrice, setComboPrice] = useState('');
+  const [pendingExtraPromo, setPendingExtraPromo] = useState<null | { ts: number }>(null);
 
   const copyPromoText = (e: React.MouseEvent, pData: any) => {
     e.stopPropagation();
@@ -64,6 +65,10 @@ export default function ProductosPanel({ products, setProducts, customComboName,
     setProducts(products.map((p: any) => p.id === id ? { ...p, [field]: value } : p));
 
   const handlePromoLoad = (key: string) => {
+    if (key === 'imperdible_4_119') {
+      setPendingExtraPromo({ ts: Date.now() });
+      return;
+    }
     const pData = PROMOS[key] ?? MIX_PROMOS_DATA[key];
     if (!pData) return;
     const ts = Date.now();
@@ -82,6 +87,29 @@ export default function ProductosPanel({ products, setProducts, customComboName,
         return (isNaN(n) ? 0 : n) + pData.price;
       });
     }
+  };
+
+  const handleConfirmExtra = (prendaNombre: string) => {
+    const pData = BRV_PROMOS_DATA['imperdible_4_119'];
+    if (!pData || !pendingExtraPromo) return;
+    const ts = pendingExtraPromo.ts;
+    const comboData = `PROMO BRAVOS — BOXYFIT + NERU + PANTALON BRATZ + ${prendaNombre.toUpperCase()} EXTRA X 119 SOLES`;
+    const list = [
+      { n: "POLERA BOXYFIT", q: 1 },
+      { n: "POLERA NERU", q: 1 },
+      { n: "PANTALON BRATZ", q: 1 },
+      { n: prendaNombre, q: 1 },
+    ];
+    const pricePerUnit = pData.price / list.length;
+    const newProducts = list.map((item, i) => ({
+      id: ts + i, name: item.n, size: "", qty: item.q,
+      colorLines: [], promoName: comboData, promoPricePerUnit: pricePerUnit,
+      promoInstance: String(ts),
+    }));
+    setProducts((prev: any[]) => [...prev, ...newProducts]);
+    setCustomComboName((prev: string) => prev ? prev + " + " + comboData : comboData);
+    setPromoPrice((prev: any) => (isNaN(parseFloat(prev)) ? 0 : parseFloat(prev)) + pData.price);
+    setPendingExtraPromo(null);
   };
 
   const handleAddManualPromo = () => {
@@ -373,6 +401,38 @@ export default function ProductosPanel({ products, setProducts, customComboName,
               {activeBrvGroup && (() => {
                 const grp = BRV_PROMOS_GROUPS.find(g => g.label === activeBrvGroup);
                 if (!grp) return null;
+
+                // Selector de prenda extra inline
+                if (pendingExtraPromo) {
+                  return (
+                    <div className="promo-variants-panel" style={{ background: 'linear-gradient(135deg, #FFF5EC, #FFF0E6)', border: '1.5px solid rgba(235,115,71,0.35)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <div className="promo-variants-title" style={{ margin: 0, color: '#EB7347' }}>
+                          ¿Cuál es la prenda extra?
+                        </div>
+                        <button onClick={() => setPendingExtraPromo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b07040' }}>
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#b07040', marginBottom: '0.6rem' }}>
+                        Boxyfit + Neru + Bratz ya incluidos · S/119
+                      </div>
+                      <div className="promo-variants-grid">
+                        {["POLERA BOXYFIT", "POLERA NERU", "PANTALON BRATZ", "PANTALON OPRA"].map(prenda => (
+                          <button
+                            key={prenda}
+                            onClick={() => handleConfirmExtra(prenda)}
+                            className="promo-variant-btn"
+                            style={{ borderColor: 'rgba(235,115,71,0.4)', color: '#EB7347' }}
+                          >
+                            <span className="promo-variant-qty">{prenda.replace('POLERA ', '').replace('PANTALON ', '')}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div className="promo-variants-panel">
                     <div className="promo-variants-title">
