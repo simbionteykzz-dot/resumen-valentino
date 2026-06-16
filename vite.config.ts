@@ -41,15 +41,6 @@ export default defineConfig(({mode}) => {
     },
     build: {
       chunkSizeWarningLimit: 2000,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-xlsx': ['xlsx'],
-            'vendor-pdf': ['jspdf', 'jspdf-autotable'],
-          },
-        },
-      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
