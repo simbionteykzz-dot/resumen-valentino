@@ -1,8 +1,9 @@
 import { MapPin, CheckCircle2, XCircle, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { DISTRITOS } from '../../lib/data';
-import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazu, findNearestShalom, CoberturaResult } from '../../lib/geo';
+import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazuAsync, findNearestShalom, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
+import CoberturaMapPanel from './CoberturaMapPanel';
 
 
 function FieldLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -54,6 +55,7 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [cobResult, setCobResult] = useState<CoberturaResult | null>(null);
   const [nearestShalom, setNearestShalom] = useState<{ sede: any; distKm: number }[]>([]);
   const [distritoDetectado, setDistritoDetectado] = useState(false);
+  const [pinCoords, setPinCoords] = useState<{ lon: number; lat: number } | null>(null);
 
   const [celularError, setCelularError] = useState("");
   const [dniError, setDniError] = useState("");
@@ -116,17 +118,31 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     onChange('ubicacion', val);
     const coords = parseCoords(val);
     if (coords) {
-      const result = checkCoberturaZazu(coords.lon, coords.lat);
-      setCobResult(result);
-      if (!result.dentro) setNearestShalom(findNearestShalom(coords.lat, coords.lon, 3));
-      else setNearestShalom([]);
-      const distrito = detectarDistritoLima(coords.lat, coords.lon);
-      if (distrito) {
-        setDistQuery(distrito); onChange('distrito', distrito);
+      setPinCoords({ lon: coords.lon, lat: coords.lat });
+      checkCoberturaZazuAsync(coords.lon, coords.lat).then(result => {
+        setCobResult(result);
+        if (!result.dentro) setNearestShalom(findNearestShalom(coords.lat, coords.lon, 3));
+        else setNearestShalom([]);
+        if (result.mensaje.includes('(')) {
+          // El distrito ya viene en el mensaje, extraerlo
+          const m = result.mensaje.match(/\(([^)]+)\)/);
+          const distrito = m ? m[1] : null;
+          if (distrito) {
+            setDistQuery(distrito); onChange('distrito', distrito);
+            setDistritoDetectado(true);
+            setTimeout(() => setDistritoDetectado(false), 3000);
+          }
+        }
+      });
+      // Detección de distrito en paralelo (puede llegar antes del resultado de cobertura)
+      const distSync = detectarDistritoLima(coords.lat, coords.lon);
+      if (distSync) {
+        setDistQuery(distSync); onChange('distrito', distSync);
         setDistritoDetectado(true);
         setTimeout(() => setDistritoDetectado(false), 3000);
       } else setDistritoDetectado(false);
     } else {
+      setPinCoords(null);
       setCobResult(null); setNearestShalom([]); setDistritoDetectado(false);
     }
   };
@@ -237,7 +253,11 @@ export default function ClientePanel({ tab, data, onChange }: any) {
 
       {tab === 'lima' && (
         <SectionCard icon={<Bike size={16} />} title="Delivery Lima">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <CoberturaMapPanel
+            pinLon={pinCoords?.lon}
+            pinLat={pinCoords?.lat}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
             {nombreField}
             {celularField}
             {dniField('DNI')}
