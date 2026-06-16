@@ -25,7 +25,56 @@ export default function ShalomMapPanel({ pins }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<any[]>([]);
   const initializedRef = useRef(false);
+  const pendingPinsRef = useRef<ShalomPin[] | null>(null);
 
+  // Auto-abrir cuando llegan pins
+  useEffect(() => {
+    if (pins && pins.length > 0) {
+      setOpen(true);
+    }
+  }, [pins]);
+
+  function placePins(Lf: typeof import('leaflet'), currentPins: ShalomPin[]) {
+    if (!mapRef.current) return;
+
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    currentPins.forEach((pin) => {
+      const color = pin.isSelected ? '#22c55e' : '#3b82f6';
+      const size = pin.isSelected ? 22 : 16;
+
+      const icon = Lf.divIcon({
+        html: `<div style="
+          width:${size}px;height:${size}px;border-radius:50%;
+          background:${color};border:3px solid #fff;
+          box-shadow:0 0 0 3px ${color}55,0 2px 8px rgba(0,0,0,0.4);
+          display:flex;align-items:center;justify-content:center;
+        "></div>`,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+
+      const marker = Lf.marker([pin.lat, pin.lon], { icon })
+        .bindTooltip(pin.label, { permanent: false, direction: 'top', offset: [0, -size / 2] })
+        .addTo(mapRef.current);
+
+      markersRef.current.push(marker);
+    });
+
+    const selected = currentPins.find(p => p.isSelected);
+    if (selected) {
+      mapRef.current.setView([selected.lat, selected.lon], 13, { animate: true });
+    } else if (currentPins.length > 1) {
+      const bounds = Lf.latLngBounds(currentPins.map(p => [p.lat, p.lon] as [number, number]));
+      mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true });
+    } else if (currentPins.length === 1) {
+      mapRef.current.setView([currentPins[0].lat, currentPins[0].lon], 13, { animate: true });
+    }
+  }
+
+  // Inicializar mapa cuando se abre
   useEffect(() => {
     if (!open || initializedRef.current) return;
     let mounted = true;
@@ -54,7 +103,15 @@ export default function ShalomMapPanel({ pins }: Props) {
 
       mapRef.current = map;
       initializedRef.current = true;
-      setTimeout(() => map.invalidateSize(), 100);
+      setTimeout(() => {
+        map.invalidateSize();
+        // Colocar pins que llegaron antes de que el mapa estuviese listo
+        const toPlace = pendingPinsRef.current;
+        if (toPlace && toPlace.length > 0) {
+          pendingPinsRef.current = null;
+          placePins(Lf, toPlace);
+        }
+      }, 150);
     });
 
     return () => { mounted = false; };
@@ -62,51 +119,20 @@ export default function ShalomMapPanel({ pins }: Props) {
 
   // Actualizar marcadores cuando cambian los pins
   useEffect(() => {
-    if (!mapRef.current || !initializedRef.current) return;
+    if (!pins || pins.length === 0) return;
+
+    if (!mapRef.current || !initializedRef.current) {
+      // Mapa aún no listo, guardar para cuando se inicialice
+      pendingPinsRef.current = pins;
+      return;
+    }
 
     getLeaflet().then((Lf) => {
-      // Limpiar marcadores anteriores
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
-
-      if (!pins || pins.length === 0) return;
-
-      pins.forEach((pin) => {
-        const color = pin.isSelected ? '#22c55e' : '#3b82f6';
-        const size = pin.isSelected ? 22 : 16;
-
-        const icon = Lf.divIcon({
-          html: `<div style="
-            width:${size}px;height:${size}px;border-radius:50%;
-            background:${color};border:3px solid #fff;
-            box-shadow:0 0 0 3px ${color}55,0 2px 8px rgba(0,0,0,0.4);
-            display:flex;align-items:center;justify-content:center;
-          "></div>`,
-          className: '',
-          iconSize: [size, size],
-          iconAnchor: [size / 2, size / 2],
-        });
-
-        const marker = Lf.marker([pin.lat, pin.lon], { icon })
-          .bindTooltip(pin.label, { permanent: false, direction: 'top', offset: [0, -size / 2] })
-          .addTo(mapRef.current);
-
-        markersRef.current.push(marker);
-      });
-
-      // Zoom: si hay un pin seleccionado ir a él, si no fit a todos
-      const selected = pins.find(p => p.isSelected);
-      if (selected) {
-        mapRef.current.setView([selected.lat, selected.lon], 13, { animate: true });
-      } else if (pins.length > 1) {
-        const bounds = Lf.latLngBounds(pins.map(p => [p.lat, p.lon] as [number, number]));
-        mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true });
-      } else if (pins.length === 1) {
-        mapRef.current.setView([pins[0].lat, pins[0].lon], 13, { animate: true });
-      }
+      placePins(Lf, pins);
     });
   }, [pins]);
 
+  // Redimensionar al abrir
   useEffect(() => {
     if (open && mapRef.current) {
       setTimeout(() => mapRef.current.invalidateSize(), 150);
