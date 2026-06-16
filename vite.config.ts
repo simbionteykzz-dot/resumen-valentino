@@ -47,7 +47,6 @@ export default defineConfig(({mode}) => {
             'vendor-react': ['react', 'react-dom'],
             'vendor-xlsx': ['xlsx'],
             'vendor-pdf': ['jspdf', 'jspdf-autotable'],
-            'vendor-leaflet': ['leaflet'],
           },
         },
       },
