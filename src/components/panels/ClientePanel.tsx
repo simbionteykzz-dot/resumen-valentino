@@ -4,6 +4,7 @@ import { DISTRITOS } from '../../lib/data';
 import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazuAsync, findNearestShalom, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
 import CoberturaMapPanel from './CoberturaMapPanel';
+import ShalomMapPanel, { ShalomPin } from './ShalomMapPanel';
 
 
 function FieldLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -56,6 +57,7 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [nearestShalom, setNearestShalom] = useState<{ sede: any; distKm: number }[]>([]);
   const [distritoDetectado, setDistritoDetectado] = useState(false);
   const [pinCoords, setPinCoords] = useState<{ lon: number; lat: number } | null>(null);
+  const [shalomPins, setShalomPins] = useState<ShalomPin[]>([]);
 
   const [celularError, setCelularError] = useState("");
   const [dniError, setDniError] = useState("");
@@ -104,6 +106,10 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     setSedeQuery(label); onChange('sede', label);
     onChange('provincia', s.prov || ""); onChange('depto', s.dep || "");
     setShowSedeDrop(false);
+    // Pin en mapa
+    if (s.lat && s.lon) {
+      setShalomPins([{ lat: s.lat, lon: s.lon, label: `Shalom ${s.n} — ${s.prov}`, isSelected: true }]);
+    }
   };
 
   const handleDistSearch = (val: string) => {
@@ -230,7 +236,7 @@ export default function ClientePanel({ tab, data, onChange }: any) {
                 <input ref={sedeInputRef} value={sedeQuery} onChange={e => handleSedeSearch(e.target.value)} onFocus={() => setSedeQuery("")} placeholder="Busca por distrito, provincia o dirección…" className="form-input" style={{ flex: 1 }} />
                 <button className="btn btn-secondary" onClick={() => handleSedeSearch("Shalom")} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente.</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente. También puedes pegar tus coordenadas abajo para ver las 3 más cercanas.</div>
               <DropdownPortal isOpen={showSedeDrop} anchorRef={sedeInputRef} onClose={() => setShowSedeDrop(false)} className="sede-dropdown-portal">
                 <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><MapPin size={14} /> <strong style={{ color: '#fff' }}>{sedesCount}</strong> sedes cargadas</span>
@@ -248,6 +254,27 @@ export default function ClientePanel({ tab, data, onChange }: any) {
               </DropdownPortal>
             </div>
           </div>
+          {/* Campo coordenadas para buscar sedes cercanas */}
+          <div style={{ marginTop: '0.75rem' }}>
+            <FieldLabel>TU UBICACIÓN (para sedes cercanas)</FieldLabel>
+            <input
+              placeholder="Pega link de Google Maps o coordenadas lat,lon"
+              className="form-input"
+              onChange={e => {
+                const coords = parseCoords(e.target.value);
+                if (coords) {
+                  const nearest = findNearestShalom(coords.lat, coords.lon, 3);
+                  setShalomPins(nearest.map((ns, i) => ({
+                    lat: ns.sede.lat,
+                    lon: ns.sede.lon,
+                    label: `#${i + 1} Shalom ${ns.sede.n} — ${ns.distKm.toFixed(1)}km`,
+                    isSelected: i === 0,
+                  })));
+                }
+              }}
+            />
+          </div>
+          <ShalomMapPanel pins={shalomPins} />
         </SectionCard>
       )}
 
