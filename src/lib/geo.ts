@@ -1,16 +1,11 @@
-// We use a simplified list to stay within limits but it's fully functional.
-export let SEDES = [
-  { n: "Chachapoyas Co Dos de Mayo", dist: "Chachapoyas", prov: "Chachapoyas", dep: "Amazonas", addr: "Jr. Dos de Mayo Cdra. 15 s/n", lat: -6.238673, lon: -77.868008 },
-  { n: "Huaraz", dist: "Huaraz", prov: "Huaraz", dep: "Ancash", addr: "Av. 27 de Noviembre Cdra. 20", lat: -9.541547, lon: -77.531075 },
-  { n: "Av Enrique Meiggs", dist: "Chimbote", prov: "Santa", dep: "Ancash", addr: "Av. Enrique Meiggs n° 2457.", lat: -9.093950, lon: -78.568466 },
-  { n: "Abancay", dist: "Abancay", prov: "Abancay", dep: "Apurimac", addr: "Av. Panamericana s/n", lat: -13.638156, lon: -72.898993 },
-  { n: "Av Parra 379 Co", dist: "Arequipa", prov: "Arequipa", dep: "Arequipa", addr: "Av. Parra 379 - Arequipa", lat: -16.414719, lon: -71.547783 },
-  { n: "Ayacucho Co", dist: "Ayacucho", prov: "Huamanga", dep: "Ayacucho", addr: "Aa.hh Complejo Artesanal T1 Lt1", lat: -13.134925, lon: -74.232660 }
-].map(s => {
-  const norm = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
-  return { ...s, _s: norm(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`) };
-});
+﻿import shalomSedesData from './shalomSedes.json';
 
+const _normSede = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+
+export let SEDES = (shalomSedesData as any[]).map(s => ({
+  ...s,
+  _s: _normSede(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`),
+}));
 export function updateSedes(newSedes: any[]) {
   const norm = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
   SEDES = newSedes.map(s => ({ ...s, _s: norm(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`) }));
@@ -247,3 +242,4 @@ export function parseCoords(text: string) {
   }
   return null;
 }
+
