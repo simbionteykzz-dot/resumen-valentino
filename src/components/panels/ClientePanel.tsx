@@ -76,10 +76,10 @@ export default function ClientePanel({ tab, data, onChange }: any) {
         setSedesCount(getSedesCount());
         setSedeResults(searchSedes(sedeQuery, 14));
       } else {
-        alert("Error de Shalom: " + (json.message || "Desconocido"));
+        console.warn("Shalom API:", json.message || "Sin datos");
       }
     } catch (err: any) {
-      alert("Error al conectar: " + err.message);
+      console.warn("Shalom fetch error:", err.message);
     } finally {
       setUpdatingSedes(false);
     }
