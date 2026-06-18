@@ -200,6 +200,9 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     const label = s.n.split('/').pop()?.trim() || s.n;
     setOlvaQuery(label);
     setShowOlvaDrop(false);
+    onChange('sede', `Olva ${label}`);
+    onChange('provincia', s.prov || '');
+    onChange('depto', s.dep || '');
     if (s.lat && s.lon) {
       setOlvaPins([{ lat: s.lat, lon: s.lon, label: `Olva ${label} — ${s.prov}`, isSelected: true }]);
     }
@@ -216,6 +219,9 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     const label = s.n.split('/').pop()?.trim() || s.n;
     setMarvisurQuery(label);
     setShowMarvisurDrop(false);
+    onChange('sede', `Marvisur ${label}`);
+    onChange('provincia', s.prov || '');
+    onChange('depto', s.dep || '');
     if (s.lat && s.lon) {
       setMarvisurPins([{ lat: s.lat, lon: s.lon, label: `Marvisur ${label} — ${s.prov}`, isSelected: true }]);
     }
