@@ -38,6 +38,43 @@ export function searchSedes(q: string, lim = 14) {
   return res.sort((a, b) => b.sc - a.sc).slice(0, lim).map(r => r.s);
 }
 
+/* ── Olva Agencias ── */
+import olvaAgenciasData from './olvaAgencias.json';
+
+export let OLVA_AGENCIAS = (olvaAgenciasData as any[]).map(s => ({
+  ...s,
+  _s: _normSede(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`),
+}));
+
+export function searchOlva(q: string, lim = 14) {
+  const norm = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+  const nq = norm(q);
+  if (!nq) return [];
+  const terms = nq.split(" ").filter(t => t.length >= 2);
+  if (!terms.length) terms.push(nq);
+  const res = [];
+  for (const s of OLVA_AGENCIAS) {
+    let score = 0, ok = true;
+    for (const t of terms) {
+      if (s._s.indexOf(t) < 0) { ok = false; break; }
+      if (norm(s.n).indexOf(t) >= 0) score += 10;
+      if (norm(s.dist).indexOf(t) >= 0) score += 7;
+      if (norm(s.prov).indexOf(t) >= 0) score += 5;
+      if (norm(s.dep).indexOf(t) >= 0) score += 3;
+      if (norm(s.addr).indexOf(t) >= 0) score += 2;
+    }
+    if (ok) res.push({ s, sc: score });
+  }
+  return res.sort((a, b) => b.sc - a.sc).slice(0, lim).map(r => r.s);
+}
+
+export function findNearestOlva(lat: number, lon: number, limit = 3): { sede: typeof OLVA_AGENCIAS[0]; distKm: number }[] {
+  return OLVA_AGENCIAS
+    .map(s => ({ sede: s, distKm: calcularDistancia(lat, lon, s.lat, s.lon) }))
+    .sort((a, b) => a.distKm - b.distKm)
+    .slice(0, limit);
+}
+
 /* ── Marvisur Sedes ── */
 import marvisurSedesData from './marvisurSedes.json';
 
