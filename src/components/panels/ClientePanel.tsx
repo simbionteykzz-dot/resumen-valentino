@@ -59,6 +59,9 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [pinCoords, setPinCoords] = useState<{ lon: number; lat: number } | null>(null);
   const [shalomPins, setShalomPins] = useState<ShalomPin[]>([]);
 
+  // Courier selector
+  const [activeCourier, setActiveCourier] = useState<'shalom' | 'olva' | 'marvisur'>('shalom');
+
   // Olva state
   const [olvaQuery, setOlvaQuery] = useState("");
   const [olvaResults, setOlvaResults] = useState<any[]>([]);
@@ -269,159 +272,167 @@ export default function ClientePanel({ tab, data, onChange }: any) {
               <input value={data.depto} onChange={e => onChange('depto', e.target.value)} placeholder="Ej. Trujillo" className="form-input" />
             </div>
             {codPubField}
+            {/* Courier selector */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                <FieldLabel style={{ marginBottom: 0 }}>SEDE SHALOM</FieldLabel>
-                <button onClick={handleUpdateSedes} disabled={updatingSedes} className="btn btn-secondary"
-                  style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <RefreshCw size={12} className={updatingSedes ? "fa-spin" : ""} />
-                  {updatingSedes ? "Sincronizando..." : "Actualizar Sedes"}
-                </button>
+              <FieldLabel>ENVÍO VÍA</FieldLabel>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {([
+                  { key: 'shalom', label: 'Shalom', count: `${sedesCount} sedes` },
+                  { key: 'olva',   label: 'Olva',   count: '+170 agencias' },
+                  { key: 'marvisur', label: 'Marvisur', count: '47 sucursales' },
+                ] as const).map(({ key, label, count }) => {
+                  const active = activeCourier === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveCourier(key)}
+                      style={{
+                        flex: 1, padding: '0.55rem 0.5rem', borderRadius: '10px', cursor: 'pointer',
+                        border: active ? '2px solid #3b82f6' : '1.5px solid rgba(255,255,255,0.1)',
+                        background: active ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: active ? '#93c5fd' : 'var(--muted)',
+                        fontWeight: active ? 800 : 600,
+                        fontSize: '0.82rem',
+                        transition: 'all 0.15s',
+                        display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.15rem',
+                      }}
+                    >
+                      <span>{label}</span>
+                      <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                <input ref={sedeInputRef} value={sedeQuery} onChange={e => handleSedeSearch(e.target.value)} onFocus={() => setSedeQuery("")} placeholder="Busca por distrito, provincia o dirección…" className="form-input" style={{ flex: 1 }} />
-                <button className="btn btn-secondary" onClick={() => handleSedeSearch("Shalom")} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente. También puedes pegar tus coordenadas abajo para ver las 3 más cercanas.</div>
-              <DropdownPortal isOpen={showSedeDrop} anchorRef={sedeInputRef} onClose={() => setShowSedeDrop(false)} className="sede-dropdown-portal">
-                <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><MapPin size={14} /> <strong style={{ color: '#fff' }}>{sedesCount}</strong> sedes cargadas</span>
-                  {sedeResults.length > 0 && <span>{sedeResults.length} resultados</span>}
-                </div>
-                {sedeResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
-                  sedeResults.map((s, i) => (
-                    <div key={i} className="sede-item" onClick={() => selectSede(s)}>
-                      <div className="sede-item-name">{s.n}</div>
-                      <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}</div>
+            </div>
+
+            {/* Panel activo según courier */}
+            <div style={{ gridColumn: '1 / -1' }}>
+              {activeCourier === 'shalom' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <FieldLabel style={{ marginBottom: 0 }}>SEDE SHALOM</FieldLabel>
+                    <button onClick={handleUpdateSedes} disabled={updatingSedes} className="btn btn-secondary"
+                      style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <RefreshCw size={12} className={updatingSedes ? "fa-spin" : ""} />
+                      {updatingSedes ? "Sincronizando..." : "Actualizar Sedes"}
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <input ref={sedeInputRef} value={sedeQuery} onChange={e => handleSedeSearch(e.target.value)} onFocus={() => setSedeQuery("")} placeholder="Busca por distrito, provincia o dirección…" className="form-input" style={{ flex: 1 }} />
+                    <button className="btn btn-secondary" onClick={() => handleSedeSearch("Shalom")} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.4rem' }}>Al elegir una sede se completan Departamento y Provincia automáticamente.</div>
+                  <DropdownPortal isOpen={showSedeDrop} anchorRef={sedeInputRef} onClose={() => setShowSedeDrop(false)} className="sede-dropdown-portal">
+                    <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--muted)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><MapPin size={14} /> <strong style={{ color: '#fff' }}>{sedesCount}</strong> sedes</span>
+                      {sedeResults.length > 0 && <span>{sedeResults.length} resultados</span>}
                     </div>
-                  ))
-                }
-              </DropdownPortal>
-            </div>
-          </div>
-          {/* Campo coordenadas para buscar sedes cercanas */}
-          <div style={{ marginTop: '0.75rem' }}>
-            <FieldLabel>TU UBICACIÓN (para sedes cercanas)</FieldLabel>
-            <input
-              placeholder="Pega link de Google Maps o coordenadas lat,lon"
-              className="form-input"
-              onChange={e => {
-                const coords = parseCoords(e.target.value);
-                if (coords) {
-                  const nearest = findNearestShalom(coords.lat, coords.lon, 3);
-                  setShalomPins(nearest.map((ns, i) => ({
-                    lat: ns.sede.lat,
-                    lon: ns.sede.lon,
-                    label: `#${i + 1} Shalom ${ns.sede.n} — ${ns.distKm.toFixed(1)}km`,
-                    isSelected: i === 0,
-                  })));
-                }
-              }}
-            />
-          </div>
-          <ShalomMapPanel pins={shalomPins} />
-
-          {/* ── Olva ── */}
-          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-              <FieldLabel style={{ marginBottom: 0 }}>AGENCIA OLVA</FieldLabel>
-              <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>+170 agencias</span>
-            </div>
-            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-              <input
-                ref={olvaInputRef}
-                value={olvaQuery}
-                onChange={e => handleOlvaSearch(e.target.value)}
-                onFocus={() => olvaQuery && setShowOlvaDrop(true)}
-                placeholder="Busca distrito, ciudad o departamento…"
-                className="form-input"
-                style={{ flex: 1 }}
-              />
-              <button className="btn btn-secondary" onClick={() => { setOlvaQuery(""); setOlvaPins([]); }} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
-            </div>
-            <DropdownPortal isOpen={showOlvaDrop} anchorRef={olvaInputRef} onClose={() => setShowOlvaDrop(false)} className="sede-dropdown-portal">
-              {olvaResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
-                olvaResults.map((s, i) => (
-                  <div key={i} className="sede-item" onClick={() => selectOlva(s)}>
-                    <div className="sede-item-name">{s.n.split('/').pop()?.trim()}</div>
-                    <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}{s.phone ? ` · ${s.phone}` : ''}</div>
+                    {sedeResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
+                      sedeResults.map((s, i) => (
+                        <div key={i} className="sede-item" onClick={() => selectSede(s)}>
+                          <div className="sede-item-name">{s.n}</div>
+                          <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}</div>
+                        </div>
+                      ))
+                    }
+                  </DropdownPortal>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <FieldLabel>TU UBICACIÓN (sedes cercanas)</FieldLabel>
+                    <input placeholder="Pega link de Google Maps o coordenadas lat,lon" className="form-input"
+                      onChange={e => {
+                        const coords = parseCoords(e.target.value);
+                        if (coords) {
+                          const nearest = findNearestShalom(coords.lat, coords.lon, 3);
+                          setShalomPins(nearest.map((ns, i) => ({
+                            lat: ns.sede.lat, lon: ns.sede.lon,
+                            label: `#${i + 1} Shalom ${ns.sede.n} — ${ns.distKm.toFixed(1)}km`,
+                            isSelected: i === 0,
+                          })));
+                        }
+                      }}
+                    />
                   </div>
-                ))
-              }
-            </DropdownPortal>
-            <div style={{ marginTop: '0.75rem' }}>
-              <FieldLabel>TU UBICACIÓN (agencias Olva cercanas)</FieldLabel>
-              <input
-                placeholder="Pega link de Google Maps o coordenadas lat,lon"
-                className="form-input"
-                onChange={e => {
-                  const coords = parseCoords(e.target.value);
-                  if (coords) {
-                    const nearest = findNearestOlva(coords.lat, coords.lon, 3);
-                    setOlvaPins(nearest.map((ns, i) => ({
-                      lat: ns.sede.lat,
-                      lon: ns.sede.lon,
-                      label: `#${i + 1} Olva ${ns.sede.n.split('/').pop()?.trim()} — ${ns.distKm.toFixed(1)}km`,
-                      isSelected: i === 0,
-                    })));
-                  }
-                }}
-              />
-            </div>
-            <ShalomMapPanel pins={olvaPins} />
-          </div>
+                  <ShalomMapPanel pins={shalomPins} />
+                </>
+              )}
 
-          {/* ── Marvisur ── */}
-          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-              <FieldLabel style={{ marginBottom: 0 }}>SEDE MARVISUR</FieldLabel>
-              <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>47 sucursales</span>
-            </div>
-            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-              <input
-                ref={marvisurInputRef}
-                value={marvisurQuery}
-                onChange={e => handleMarvisurSearch(e.target.value)}
-                onFocus={() => marvisurQuery && setShowMarvisurDrop(true)}
-                placeholder="Busca ciudad o departamento…"
-                className="form-input"
-                style={{ flex: 1 }}
-              />
-              <button className="btn btn-secondary" onClick={() => { setMarvisurQuery(""); setMarvisurPins([]); }} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
-            </div>
-            <DropdownPortal isOpen={showMarvisurDrop} anchorRef={marvisurInputRef} onClose={() => setShowMarvisurDrop(false)} className="sede-dropdown-portal">
-              {marvisurResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
-                marvisurResults.map((s, i) => (
-                  <div key={i} className="sede-item" onClick={() => selectMarvisur(s)}>
-                    <div className="sede-item-name">{s.n.split('/').pop()?.trim()}</div>
-                    <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}{s.phone ? ` · ${s.phone}` : ''}</div>
+              {activeCourier === 'olva' && (
+                <>
+                  <FieldLabel>AGENCIA OLVA</FieldLabel>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <input ref={olvaInputRef} value={olvaQuery} onChange={e => handleOlvaSearch(e.target.value)} onFocus={() => olvaQuery && setShowOlvaDrop(true)} placeholder="Busca distrito, ciudad o departamento…" className="form-input" style={{ flex: 1 }} />
+                    <button className="btn btn-secondary" onClick={() => { setOlvaQuery(""); setOlvaPins([]); }} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
                   </div>
-                ))
-              }
-            </DropdownPortal>
-            <div style={{ marginTop: '0.75rem' }}>
-              <FieldLabel>TU UBICACIÓN (sedes Marvisur cercanas)</FieldLabel>
-              <input
-                placeholder="Pega link de Google Maps o coordenadas lat,lon"
-                className="form-input"
-                onChange={e => {
-                  const coords = parseCoords(e.target.value);
-                  if (coords) {
-                    const nearest = findNearestMarvisur(coords.lat, coords.lon, 3);
-                    setMarvisurPins(nearest.map((ns, i) => ({
-                      lat: ns.sede.lat,
-                      lon: ns.sede.lon,
-                      label: `#${i + 1} Marvisur ${ns.sede.n.split('/').pop()?.trim()} — ${ns.distKm.toFixed(1)}km`,
-                      isSelected: i === 0,
-                    })));
-                  }
-                }}
-              />
+                  <DropdownPortal isOpen={showOlvaDrop} anchorRef={olvaInputRef} onClose={() => setShowOlvaDrop(false)} className="sede-dropdown-portal">
+                    {olvaResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
+                      olvaResults.map((s, i) => (
+                        <div key={i} className="sede-item" onClick={() => selectOlva(s)}>
+                          <div className="sede-item-name">{s.n.split('/').pop()?.trim()}</div>
+                          <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}{s.phone ? ` · ${s.phone}` : ''}</div>
+                        </div>
+                      ))
+                    }
+                  </DropdownPortal>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <FieldLabel>TU UBICACIÓN (agencias cercanas)</FieldLabel>
+                    <input placeholder="Pega link de Google Maps o coordenadas lat,lon" className="form-input"
+                      onChange={e => {
+                        const coords = parseCoords(e.target.value);
+                        if (coords) {
+                          const nearest = findNearestOlva(coords.lat, coords.lon, 3);
+                          setOlvaPins(nearest.map((ns, i) => ({
+                            lat: ns.sede.lat, lon: ns.sede.lon,
+                            label: `#${i + 1} Olva ${ns.sede.n.split('/').pop()?.trim()} — ${ns.distKm.toFixed(1)}km`,
+                            isSelected: i === 0,
+                          })));
+                        }
+                      }}
+                    />
+                  </div>
+                  <ShalomMapPanel pins={olvaPins} />
+                </>
+              )}
+
+              {activeCourier === 'marvisur' && (
+                <>
+                  <FieldLabel>SEDE MARVISUR</FieldLabel>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <input ref={marvisurInputRef} value={marvisurQuery} onChange={e => handleMarvisurSearch(e.target.value)} onFocus={() => marvisurQuery && setShowMarvisurDrop(true)} placeholder="Busca ciudad o departamento…" className="form-input" style={{ flex: 1 }} />
+                    <button className="btn btn-secondary" onClick={() => { setMarvisurQuery(""); setMarvisurPins([]); }} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
+                  </div>
+                  <DropdownPortal isOpen={showMarvisurDrop} anchorRef={marvisurInputRef} onClose={() => setShowMarvisurDrop(false)} className="sede-dropdown-portal">
+                    {marvisurResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
+                      marvisurResults.map((s, i) => (
+                        <div key={i} className="sede-item" onClick={() => selectMarvisur(s)}>
+                          <div className="sede-item-name">{s.n.split('/').pop()?.trim()}</div>
+                          <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}{s.phone ? ` · ${s.phone}` : ''}</div>
+                        </div>
+                      ))
+                    }
+                  </DropdownPortal>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <FieldLabel>TU UBICACIÓN (sedes cercanas)</FieldLabel>
+                    <input placeholder="Pega link de Google Maps o coordenadas lat,lon" className="form-input"
+                      onChange={e => {
+                        const coords = parseCoords(e.target.value);
+                        if (coords) {
+                          const nearest = findNearestMarvisur(coords.lat, coords.lon, 3);
+                          setMarvisurPins(nearest.map((ns, i) => ({
+                            lat: ns.sede.lat, lon: ns.sede.lon,
+                            label: `#${i + 1} Marvisur ${ns.sede.n.split('/').pop()?.trim()} — ${ns.distKm.toFixed(1)}km`,
+                            isSelected: i === 0,
+                          })));
+                        }
+                      }}
+                    />
+                  </div>
+                  <ShalomMapPanel pins={marvisurPins} />
+                </>
+              )}
             </div>
-            <ShalomMapPanel pins={marvisurPins} />
           </div>
         </SectionCard>
       )}
