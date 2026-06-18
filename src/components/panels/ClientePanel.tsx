@@ -1,7 +1,7 @@
 import { MapPin, CheckCircle2, XCircle, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { DISTRITOS } from '../../lib/data';
-import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazuAsync, findNearestShalom, CoberturaResult } from '../../lib/geo';
+import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazuAsync, findNearestShalom, searchMarvisur, findNearestMarvisur, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
 import CoberturaMapPanel from './CoberturaMapPanel';
 import ShalomMapPanel, { ShalomPin } from './ShalomMapPanel';
@@ -58,6 +58,13 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [distritoDetectado, setDistritoDetectado] = useState(false);
   const [pinCoords, setPinCoords] = useState<{ lon: number; lat: number } | null>(null);
   const [shalomPins, setShalomPins] = useState<ShalomPin[]>([]);
+
+  // Marvisur state
+  const [marvisurQuery, setMarvisurQuery] = useState("");
+  const [marvisurResults, setMarvisurResults] = useState<any[]>([]);
+  const [showMarvisurDrop, setShowMarvisurDrop] = useState(false);
+  const [marvisurPins, setMarvisurPins] = useState<ShalomPin[]>([]);
+  const marvisurInputRef = useRef<HTMLInputElement>(null);
 
   const [celularError, setCelularError] = useState("");
   const [dniError, setDniError] = useState("");
@@ -172,6 +179,22 @@ export default function ClientePanel({ tab, data, onChange }: any) {
       .catch(() => {});
   };
 
+  const handleMarvisurSearch = (val: string) => {
+    setMarvisurQuery(val);
+    if (!val) { setShowMarvisurDrop(false); return; }
+    setMarvisurResults(searchMarvisur(val, 14));
+    setShowMarvisurDrop(true);
+  };
+
+  const selectMarvisur = (s: any) => {
+    const label = s.n.split('/').pop()?.trim() || s.n;
+    setMarvisurQuery(label);
+    setShowMarvisurDrop(false);
+    if (s.lat && s.lon) {
+      setMarvisurPins([{ lat: s.lat, lon: s.lon, label: `Marvisur ${label} — ${s.prov}`, isSelected: true }]);
+    }
+  };
+
   // ── Shared fields ──────────────────────────────────────────────────────
 
   const nombreField = (
@@ -275,6 +298,57 @@ export default function ClientePanel({ tab, data, onChange }: any) {
             />
           </div>
           <ShalomMapPanel pins={shalomPins} />
+
+          {/* ── Marvisur ── */}
+          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+              <FieldLabel style={{ marginBottom: 0 }}>SEDE MARVISUR</FieldLabel>
+              <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>47 sucursales</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+              <input
+                ref={marvisurInputRef}
+                value={marvisurQuery}
+                onChange={e => handleMarvisurSearch(e.target.value)}
+                onFocus={() => marvisurQuery && setShowMarvisurDrop(true)}
+                placeholder="Busca ciudad o departamento…"
+                className="form-input"
+                style={{ flex: 1 }}
+              />
+              <button className="btn btn-secondary" onClick={() => { setMarvisurQuery(""); setMarvisurPins([]); }} style={{ height: '42px', padding: '0 1rem' }}><RotateCcw size={16} /></button>
+            </div>
+            <DropdownPortal isOpen={showMarvisurDrop} anchorRef={marvisurInputRef} onClose={() => setShowMarvisurDrop(false)} className="sede-dropdown-portal">
+              {marvisurResults.length === 0 ? <div className="sede-empty">Sin resultados</div> :
+                marvisurResults.map((s, i) => (
+                  <div key={i} className="sede-item" onClick={() => selectMarvisur(s)}>
+                    <div className="sede-item-name">{s.n.split('/').pop()?.trim()}</div>
+                    <div className="sede-item-loc" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><MapPin size={12} opacity={0.7} /> {s.prov}, {s.dep}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{s.addr}{s.phone ? ` · ${s.phone}` : ''}</div>
+                  </div>
+                ))
+              }
+            </DropdownPortal>
+            <div style={{ marginTop: '0.75rem' }}>
+              <FieldLabel>TU UBICACIÓN (sedes Marvisur cercanas)</FieldLabel>
+              <input
+                placeholder="Pega link de Google Maps o coordenadas lat,lon"
+                className="form-input"
+                onChange={e => {
+                  const coords = parseCoords(e.target.value);
+                  if (coords) {
+                    const nearest = findNearestMarvisur(coords.lat, coords.lon, 3);
+                    setMarvisurPins(nearest.map((ns, i) => ({
+                      lat: ns.sede.lat,
+                      lon: ns.sede.lon,
+                      label: `#${i + 1} Marvisur ${ns.sede.n.split('/').pop()?.trim()} — ${ns.distKm.toFixed(1)}km`,
+                      isSelected: i === 0,
+                    })));
+                  }
+                }}
+              />
+            </div>
+            <ShalomMapPanel pins={marvisurPins} />
+          </div>
         </SectionCard>
       )}
 
