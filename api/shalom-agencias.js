@@ -2,15 +2,13 @@
 import { createHmac, createDecipheriv } from 'crypto';
 
 const SECRET = '.Overskull2023.';
+const AES_KEY = Buffer.from('uQn/bQ94PXBEfId70zjN+VE1hSU7kh9VBXTOUd68Ssc=', 'base64');
 
 function decryptShalom(encryptedBase64) {
   const hex = Buffer.from(encryptedBase64, 'base64').toString('hex');
-  const iv = Buffer.from(hex.substring(0, 32), 'hex');
-  const ciphertext = Buffer.from(hex.substring(32), 'hex');
-  // Key: UTF-8 del secret, paddeado a 32 bytes con ceros
-  const key = Buffer.alloc(32, 0);
-  Buffer.from(SECRET, 'utf8').copy(key);
-  const decipher = createDecipheriv('aes-256-cbc', key, iv);
+  const iv = Buffer.from(hex.substring(0, 32), 'hex');         // primeros 16 bytes = IV
+  const ciphertext = Buffer.from(hex.substring(32), 'hex');    // resto = ciphertext
+  const decipher = createDecipheriv('aes-256-cbc', AES_KEY, iv);
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
 
