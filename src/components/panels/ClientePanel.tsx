@@ -1,5 +1,6 @@
-import { MapPin, CheckCircle2, XCircle, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import { MapPin, CheckCircle2, XCircle, RotateCcw, RefreshCw, Package, Bike, Store, AlertCircle, UserCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { buscarClientePrevio } from '../../lib/supabase';
 import { DISTRITOS } from '../../lib/data';
 import { searchSedes, parseCoords, updateSedes, getSedesCount, detectarDistritoLima, checkCoberturaZazuAsync, findNearestShalom, searchMarvisur, findNearestMarvisur, searchOlva, findNearestOlva, CoberturaResult } from '../../lib/geo';
 import DropdownPortal from '../ui/DropdownPortal';
@@ -79,16 +80,23 @@ export default function ClientePanel({ tab, data, onChange }: any) {
   const [celularError, setCelularError] = useState("");
   const [dniError, setDniError] = useState("");
 
+  // Autocompletar cliente previo
+  const [clientePrevio, setClientePrevio] = useState<{ nom: string; dni: string; sede?: string; provincia?: string; depto?: string; distrito?: string; ubicacion?: string } | null>(null);
+  const [autoFillApplied, setAutoFillApplied] = useState(false);
+  const celularTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleUpdateSedes = async () => {
     setUpdatingSedes(true);
     try {
       const res = await fetch('/api/shalom-agencias', { method: 'POST' });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
-        const mapped = json.data.map((a: any) => ({
-          n: a.nombre, dist: a.zona, prov: a.provincia, dep: a.departamento,
-          addr: a.direccion, lat: parseFloat(a.latitud) || 0, lon: parseFloat(a.longitud) || 0,
-        }));
+        const mapped = json.data
+          .filter((a: any) => a.web === 1 && a.destino === 1)
+          .map((a: any) => ({
+            n: a.lugar_over || a.lugar || a.nombre, dist: a.zona, prov: a.provincia, dep: a.departamento,
+            addr: a.direccion, lat: parseFloat(a.latitud) || 0, lon: parseFloat(a.longitud) || 0,
+          }));
         updateSedes(mapped);
         setSedesCount(getSedesCount());
         setSedeResults(searchSedes(sedeQuery, 14));
@@ -107,6 +115,14 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     const id = setInterval(handleUpdateSedes, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Resetear estado de autocompletar cuando el celular se vacía (clearAll)
+  useEffect(() => {
+    if (!data.celular) {
+      setClientePrevio(null);
+      setAutoFillApplied(false);
+    }
+  }, [data.celular]);
 
   const handleSedeSearch = (val: string) => {
     setSedeQuery(val); onChange('sede', val);
@@ -174,7 +190,29 @@ export default function ClientePanel({ tab, data, onChange }: any) {
     onChange('celular', val);
     const n = val.replace(/\D/g, '');
     setCelularError(n.length > 0 && n.length < 9 ? "El número debe tener 9 dígitos" : "");
+    setClientePrevio(null);
+    setAutoFillApplied(false);
+    if (celularTimerRef.current) clearTimeout(celularTimerRef.current);
+    if (n.length === 9) {
+      celularTimerRef.current = setTimeout(async () => {
+        const prev = await buscarClientePrevio(n);
+        if (prev) setClientePrevio(prev);
+      }, 400);
+    }
   };
+
+  const applyAutoFill = useCallback(() => {
+    if (!clientePrevio) return;
+    if (clientePrevio.nom) onChange('nombre', clientePrevio.nom);
+    if (clientePrevio.dni) onChange('dni', clientePrevio.dni);
+    if (clientePrevio.sede) onChange('sede', clientePrevio.sede);
+    if (clientePrevio.provincia) onChange('provincia', clientePrevio.provincia);
+    if (clientePrevio.depto) onChange('depto', clientePrevio.depto);
+    if (clientePrevio.distrito) onChange('distrito', clientePrevio.distrito);
+    if (clientePrevio.ubicacion) onChange('ubicacion', clientePrevio.ubicacion);
+    setAutoFillApplied(true);
+    setClientePrevio(null);
+  }, [clientePrevio, onChange]);
 
   const handleDniChange = (val: string) => {
     onChange('dni', val);
@@ -241,6 +279,34 @@ export default function ClientePanel({ tab, data, onChange }: any) {
       <FieldLabel>CELULAR</FieldLabel>
       <input value={data.celular} onChange={e => handleCelularChange(e.target.value)} placeholder="9xxxxxxxx" className={`form-input ${celularError ? 'error' : ''}`} />
       {celularError && <FieldError msg={celularError} />}
+      {clientePrevio && !autoFillApplied && (
+        <div style={{
+          marginTop: '0.5rem', padding: '0.55rem 0.75rem',
+          background: 'rgba(69,131,77,0.08)', border: '1px solid rgba(69,131,77,0.3)',
+          borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.6rem',
+        }}>
+          <UserCheck size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cliente encontrado</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientePrevio.nom}</div>
+          </div>
+          <button
+            onClick={applyAutoFill}
+            style={{
+              flexShrink: 0, padding: '0.3rem 0.65rem', fontSize: '0.73rem', fontWeight: 800,
+              background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '6px',
+              cursor: 'pointer', letterSpacing: '0.03em',
+            }}
+          >
+            Autocompletar
+          </button>
+        </div>
+      )}
+      {autoFillApplied && (
+        <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <CheckCircle2 size={12} /> Datos del cliente cargados
+        </div>
+      )}
     </div>
   );
 
