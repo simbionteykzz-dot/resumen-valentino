@@ -81,10 +81,12 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
   const [products, setProducts] = useState<any[]>([]);
   const [customComboName, setCustomComboName] = useState('');
   const [promoPrice, setPromoPrice] = useState<string | number>('');
-  const [boosters, setBoosters] = useState<BoosterState>({
-    cadenitas: 1, urgencia: false, socialProof: false,
-    recomendacion: false, descuento: false, fraseVenta: true,
-    garantia: false, referido: false,
+  const [boosters, setBoosters] = useState<BoosterState>(() => {
+    try {
+      const saved = localStorage.getItem('overshark_boosters');
+      if (saved) return { ...JSON.parse(saved), cadenitas: 1 };
+    } catch {}
+    return { cadenitas: 1, urgencia: false, socialProof: false, recomendacion: false, descuento: false, fraseVenta: true, garantia: false, referido: false };
   });
   const [metaVentas, setMetaVentas] = useState<number>(0);
 
@@ -126,7 +128,11 @@ export default function VendorApp({ profile, profiles, onSwitchToAdmin }: Vendor
   }), [tab, clientData, cuentaData, products, customComboName, boosters, modelosEnPedido, vendedorName, brand]);
 
   const handleBoosterChange = (field: string, value: any) =>
-    setBoosters(prev => ({ ...prev, [field]: value }));
+    setBoosters(prev => {
+      const next = { ...prev, [field]: value };
+      try { localStorage.setItem('overshark_boosters', JSON.stringify(next)); } catch {}
+      return next;
+    });
 
   const handleClientChange = (field: keyof ClientData, value: string) =>
     setClientData(prev => ({ ...prev, [field]: value }));

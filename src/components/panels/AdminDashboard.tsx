@@ -262,6 +262,8 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const H = doc.internal.pageSize.getHeight();
     const mg = 16;
     const contentW = W - mg * 2;
+    const FOOTER_H = 14;
+    const PAGE_BOTTOM = H - FOOTER_H - 4;
     const estado = getEstado(s);
     const region = getRegion(s);
 
@@ -278,55 +280,82 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       estado === 'CONTRA ENTREGA' ? warn :
       estado === 'ANULADO' ? danger : muted;
 
-    // Premium but denser visual scaffold
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, W, H, 'F');
-    doc.setFillColor(...dark);
-    doc.rect(0, 0, W, 2.5, 'F');
-    doc.setFillColor(246, 249, 252);
-    doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'F');
-    doc.setDrawColor(...line);
-    doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'S');
-
-    // Header
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(...dark);
-    doc.text('LIVEX AGENCY', mg, 12);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('Comprobante de compra', mg, 20);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(...muted);
-    doc.text('Detalle de pedido y resumen de pago', mg, 25);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 12, { align: 'right' });
-    doc.text(`${s.fecha ?? '—'}${s.hora ? ` · ${s.hora}` : ''}`, W - mg, 17, { align: 'right' });
-
-    // Estado chip outline only
-    const chipW = 58;
-    const chipH = 8;
-    const chipX = W - mg - chipW;
-    const chipY = 21.5;
-    doc.setDrawColor(...estadoColor);
-    doc.setLineWidth(0.45);
-    doc.roundedRect(chipX, chipY, chipW, chipH, 2, 2, 'S');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...estadoColor);
-    doc.text(estado, chipX + chipW / 2, chipY + 5.2, { align: 'center' });
-
     const money = (v?: string | number) => {
       const n = typeof v === 'number' ? v : Number(v || 0);
       return `S/ ${Number.isFinite(n) ? n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}`;
     };
 
-    // quick KPI row to reduce empty look
+    const drawFooter = () => {
+      const pg = doc.getNumberOfPages();
+      doc.setDrawColor(...line);
+      doc.setLineWidth(0.35);
+      doc.line(mg, H - FOOTER_H, W - mg, H - FOOTER_H);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.8);
+      doc.setTextColor(...muted);
+      doc.text('Livex Agency · Documento operativo', mg, H - 9);
+      doc.text(`Pág. ${pg}  ·  ${new Date().toLocaleString('es-PE')}`, W - mg, H - 9, { align: 'right' });
+    };
+
+    const drawHeader = () => {
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, W, H, 'F');
+      doc.setFillColor(...dark);
+      doc.rect(0, 0, W, 2.5, 'F');
+      doc.setFillColor(246, 249, 252);
+      doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'F');
+      doc.setDrawColor(...line);
+      doc.roundedRect(mg, 8, contentW, 24, 2.5, 2.5, 'S');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...dark);
+      doc.text('LIVEX AGENCY', mg, 12);
+
+      doc.setFontSize(14);
+      doc.text('Comprobante de compra', mg, 20);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(...muted);
+      doc.text('Detalle de pedido y resumen de pago', mg, 25);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text(`Ref: ${s._dbId?.slice(-8).toUpperCase() ?? 'N/A'}`, W - mg, 12, { align: 'right' });
+      doc.text(`${s.fecha ?? '—'}${s.hora ? ` · ${s.hora}` : ''}`, W - mg, 17, { align: 'right' });
+
+      const chipW = 58, chipH = 8, chipX = W - mg - chipW, chipY = 21.5;
+      doc.setDrawColor(...estadoColor);
+      doc.setLineWidth(0.45);
+      doc.roundedRect(chipX, chipY, chipW, chipH, 2, 2, 'S');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...estadoColor);
+      doc.text(estado, chipX + chipW / 2, chipY + 5.2, { align: 'center' });
+    };
+
+    const addNewPage = () => {
+      drawFooter();
+      doc.addPage();
+      drawHeader();
+      doc.setFillColor(246, 249, 252);
+      doc.roundedRect(mg, 35, contentW, 8, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(7);
+      doc.setTextColor(...muted);
+      doc.text('(continuación)', mg + 3, 40.5);
+      return 50;
+    };
+
+    const checkY = (needed: number, currentY: number): number => {
+      if (currentY + needed > PAGE_BOTTOM) return addNewPage();
+      return currentY;
+    };
+
+    drawHeader();
+
+    // KPI row
     const kpiY = 34.5;
     const kpiGap = 4;
     const kpiW = (contentW - kpiGap * 2) / 3;
@@ -350,10 +379,9 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       doc.text(k.value, x + 2.8, kpiY + 8.7);
     });
 
-    // divider
     doc.setDrawColor(...line);
     doc.setLineWidth(0.35);
-    doc.line(mg, 31, W - mg, 31);
+    doc.line(mg, 47.5, W - mg, 47.5);
 
     let y = 52;
     const labelX = mg;
@@ -362,6 +390,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     const rightValueX = rightLabelX + 24;
 
     const sectionTitle = (title: string) => {
+      y = checkY(14, y);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(...dark);
@@ -383,64 +412,32 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
       doc.text(value || '—', isRight ? rightValueX : valueX, y);
     };
 
-    // Right summary rail to avoid empty feel
-    const railX = W - mg - 58;
-    const railY = 54;
-    const railW = 58;
-    const railH = 112;
-    doc.setDrawColor(...line);
-    doc.setLineWidth(0.35);
-    doc.roundedRect(railX, railY, railW, railH, 2, 2, 'S');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...muted);
-    doc.text('RESUMEN RÁPIDO', railX + 4, railY + 6);
-    doc.setDrawColor(...line);
-    doc.line(railX + 3, railY + 8, railX + railW - 3, railY + 8);
-
-    const quickRow = (label: string, value: string, rowY: number, color: [number, number, number]) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.8);
-      doc.setTextColor(...muted);
-      doc.text(label, railX + 4, rowY);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.4);
-      doc.setTextColor(...color);
-      doc.text(value, railX + 4, rowY + 5);
-    };
-    quickRow('Total', money(s.totalTotal), railY + 16, success);
-    quickRow('Separo', s.separo ? money(s.separo) : '—', railY + 33, primary);
-    quickRow('Pendiente', s.resta && parseFloat(s.resta) > 0 ? money(s.resta) : '—', railY + 50, s.resta && parseFloat(s.resta) > 0 ? danger : muted);
-    quickRow('Estado', estado, railY + 67, estadoColor);
-    quickRow('Región', region, railY + 84, primary);
-
-    doc.setDrawColor(...line);
-    doc.line(railX + 3, railY + 99, railX + railW - 3, railY + 99);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.6);
-    doc.setTextColor(...muted);
-    doc.text('Vendedor', railX + 4, railY + 105);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...dark);
-    doc.text(s.vendorName || '—', railX + 4, railY + 110);
-
+    // — DATOS DEL CLIENTE —
     sectionTitle('DATOS DEL CLIENTE');
+
+    y = checkY(7, y);
     pair('Nombre', s.nom || '—');
     y += 7;
+
+    y = checkY(7, y);
     pair('Celular', s.cel || '—', { color: primary });
     pair('DNI', s.dni || '—', { right: true });
     y += 7;
+
+    y = checkY(7, y);
     pair('Región', region);
     pair('Marca', s.marcaLabel || 'OVER', { right: true });
     y += 7;
+
     if (region === 'Lima') {
       if (s.distrito) {
+        y = checkY(7, y);
         pair('Distrito', s.distrito, { color: primary });
         y += 7;
       }
       if (s.ubicacion) {
         const lines = doc.splitTextToSize(s.ubicacion, contentW - 34);
+        y = checkY(lines.length * 5 + 4, y);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(...muted);
@@ -453,6 +450,7 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
     } else {
       if (s.sede) {
         const lines = doc.splitTextToSize(s.sede, contentW - 34);
+        y = checkY(lines.length * 5 + 4, y);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(...muted);
@@ -463,60 +461,72 @@ export default function AdminDashboard({ adminName, onSignOut, onSwitchToVendedo
         y += lines.length * 5 + 2;
       }
       if (s.provincia || s.depto) {
+        y = checkY(7, y);
         pair('Departamento', s.provincia || '—');
         pair('Provincia', s.depto || '—', { right: true });
         y += 7;
       }
     }
 
+    // — DETALLE DEL PEDIDO —
     y += 2;
-    const maxContentX = railX - 6;
-    doc.setDrawColor(...line);
-    doc.line(mg, y - 1, maxContentX, y - 1);
     sectionTitle('DETALLE DEL PEDIDO');
-    const detalle = (s.detalle && s.detalle.trim()) ? s.detalle.trim() : (s.combo || 'Sin detalle');
-    const detalleLines = doc.splitTextToSize(detalle, maxContentX - mg - 2);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.6);
-    doc.setTextColor(...dark);
-    doc.text(detalleLines, mg + 1, y);
-    y += detalleLines.length * 4.9 + 3;
 
+    const detalle = (s.detalle && s.detalle.trim()) ? s.detalle.trim() : (s.combo || 'Sin detalle');
+    const detalleLines = doc.splitTextToSize(detalle, contentW - 2);
+
+    // Split detalle across pages if needed
+    let remainingLines = [...detalleLines];
+    while (remainingLines.length > 0) {
+      const lineH = 4.9;
+      const availableH = PAGE_BOTTOM - y;
+      const linesPerPage = Math.max(1, Math.floor(availableH / lineH));
+      const chunk = remainingLines.splice(0, linesPerPage);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.6);
+      doc.setTextColor(...dark);
+      doc.text(chunk, mg + 1, y);
+      y += chunk.length * lineH + 2;
+      if (remainingLines.length > 0) {
+        y = addNewPage();
+      }
+    }
+
+    y = checkY(7, y);
     pair('Cantidad', `${s.qtyN ?? '—'} prendas`);
     pair('Vendedor', s.vendorName || '—', { right: true });
     y += 7;
+
     if (s.codigoPublicidad) {
+      y = checkY(7, y);
       pair('Cod. Publicidad', s.codigoPublicidad, { color: [88, 92, 170] });
       y += 7;
     }
 
+    // — RESUMEN DE PAGO —
     y += 2;
-    doc.setDrawColor(...line);
-    doc.line(mg, y - 1, maxContentX, y - 1);
     sectionTitle('RESUMEN DE PAGO');
+
+    y = checkY(7, y);
     pair('Método de pago', s.metodoPago || '—');
     y += 7;
-    pair('Total', `S/ ${s.totalTotal ?? 0}`, { color: success });
+
+    y = checkY(7, y);
+    pair('Total', money(s.totalTotal), { color: success });
     y += 7;
+
     if (s.separo) {
-      pair('Separo / Adelanto', `S/ ${s.separo}`, { color: primary });
+      y = checkY(7, y);
+      pair('Separo / Adelanto', money(s.separo), { color: primary });
       y += 7;
     }
     if (s.resta && parseFloat(s.resta) > 0) {
-      pair('Saldo pendiente', `S/ ${s.resta}`, { color: danger });
+      y = checkY(7, y);
+      pair('Saldo pendiente', money(s.resta), { color: danger });
       y += 7;
     }
 
-    // Footer
-    doc.setDrawColor(...line);
-    doc.setLineWidth(0.35);
-    doc.line(mg, H - 14, W - mg, H - 14);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.8);
-    doc.setTextColor(...muted);
-    doc.text('Livex Agency · Documento operativo', mg, H - 9);
-    doc.text(new Date().toLocaleString('es-PE'), W - mg, H - 9, { align: 'right' });
-
+    drawFooter();
     doc.save(`comprobante_${s.cel ?? 'cliente'}_${s.fecha ?? 'sin-fecha'}.pdf`);
   };
 

@@ -386,6 +386,28 @@ export async function getCustomerVentas(cel: string): Promise<(VentaDB & { anula
   return (data ?? []) as (VentaDB & { anulado?: boolean })[];
 }
 
+export interface ClientePrevio {
+  nom: string;
+  dni: string;
+  sede?: string;
+  provincia?: string;
+  depto?: string;
+  distrito?: string;
+  ubicacion?: string;
+}
+
+export async function buscarClientePrevio(cel: string): Promise<ClientePrevio | null> {
+  if (!cel || cel.length < 9) return null;
+  const { data } = await supabase
+    .from('ventas')
+    .select('nom, dni, sede, provincia, depto, distrito, ubicacion')
+    .eq('cel', cel)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (!data || !data.nom) return null;
+  return data as ClientePrevio;
+}
 
 
 // ── Metas de Vendedores ────────────────────────────────────────────
