@@ -1,11 +1,6 @@
-﻿import shalomSedesData from './shalomSedes.json';
+﻿const _normSede = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
 
-const _normSede = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
-
-export let SEDES = (shalomSedesData as any[]).map(s => ({
-  ...s,
-  _s: _normSede(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`),
-}));
+export let SEDES: any[] = [];
 export function updateSedes(newSedes: any[]) {
   const norm = (str: string) => (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
   SEDES = newSedes.map(s => ({ ...s, _s: norm(`${s.n} ${s.dist} ${s.prov} ${s.dep} ${s.addr}`) }));
@@ -166,7 +161,7 @@ export function checkCob(lon: number, lat: number) {
 }
 
 // Find nearest Shalom agency to given coordinates
-export function findNearestShalom(lat: number, lon: number, limit = 3): { sede: typeof SEDES[0]; distKm: number }[] {
+export function findNearestShalom(lat: number, lon: number, limit = 3): { sede: any; distKm: number }[] {
   return SEDES
     .map(s => ({ sede: s, distKm: calcularDistancia(lat, lon, s.lat, s.lon) }))
     .sort((a, b) => a.distKm - b.distKm)
