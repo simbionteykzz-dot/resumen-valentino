@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const uuid = `web-${crypto.randomUUID()}`;
     const time = Math.floor(Date.now() / 1000) + 30;
     const raw = `${uuid}@${time}`;
-    const hash = createHmac('sha256', '.Ov3rsku112024l4r43l.').update(raw).digest('hex');
+    const hash = createHmac('sha256', '.Overskull2023.').update(raw).digest('hex');
     const authToken = `${raw}@${hash}`;
 
     const form = new FormData();
